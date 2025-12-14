@@ -37,6 +37,7 @@ cp .env.example .env
 ```
 
 Required environment variables:
+
 - `MONGODB_CONNECTION_STRING`: Your MongoDB connection string
 - `ADMIN_USERNAME`: Your admin username
 - `ADMIN_PASSWORD_HASH`: Bcrypt hash of your password (see below)
@@ -53,6 +54,7 @@ npm run generate-secrets
 ```
 
 This will:
+
 - Generate a secure random JWT secret
 - Prompt you for your admin password
 - Generate a bcrypt hash of your password (salt rounds = 12)
@@ -98,8 +100,9 @@ npm run build
 ├── app/                      # Next.js app directory
 │   ├── dashboard/           # Main dashboard
 │   ├── login/               # Login page
-│   ├── health-logs/         # (Coming soon)
-│   ├── lab-results/         # (Coming soon)
+│   ├── health-logs/         # Health issue tracking
+│   ├── lab-results/         # Lab results tracking
+│   ├── workouts/            # Strava workouts and goals
 │   └── ...
 ├── components/              # React components
 ├── lib/                     # Utilities
@@ -117,23 +120,51 @@ npm run build
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/login` - Authenticate and get JWT token
-- `GET /api/auth/verify` - Verify JWT token
 
-### (Coming Soon)
-- Health logs CRUD
-- Lab results CRUD
-- Strava integration
+- `POST /api/auth-login` - Authenticate and get JWT token
+- `GET /api/auth-verify` - Verify JWT token
+
+### Health Logs
+
+- `GET /api/health-logs-query` - Query health logs with filtering
+- `POST /api/health-logs-create` - Create new health log
+- `PATCH /api/health-logs-update` - Update health log
+- `GET /api/health-incidents` - Get incident analytics
+
+### Lab Results
+
+- `GET /api/lab-results-query` - Query lab results
+- `POST /api/lab-results-create` - Create lab result
+- `PATCH /api/lab-results-update` - Update lab result
+- `GET /api/lab-results-trends` - Get trend data for charts
+
+### Strava Integration
+
+- `GET /api/strava-oauth` - OAuth callback handler
+- `POST /api/strava-sync` - Sync activities from Strava
+- `GET /api/strava-workouts` - Query cached workouts
+- `GET /api/fitness-goals` - Query fitness goals
+- `POST /api/fitness-goals` - Create fitness goal
+- `PATCH /api/fitness-goals` - Update fitness goal
+- `DELETE /api/fitness-goals` - Delete fitness goal
+
+### Coming Soon
+
 - AI chat and summaries
+- Doctor visit preparation
 
 ## Development Roadmap
 
 - [x] Phase 1: Project Setup & Authentication
-- [ ] Phase 2: Health Logs Integration
-- [ ] Phase 3: Lab Results Tracking
-- [ ] Phase 4: Strava Integration
+- [x] Phase 2: Health Logs Integration
+- [x] Phase 3: Lab Results Tracking
+- [x] Phase 4: Strava Integration
 - [ ] Phase 5: AI Chat & Summaries
 - [ ] Phase 6: Dashboard & Analytics
+
+## Strava Setup
+
+To enable Strava integration, see the detailed setup guide: [docs/strava-setup.md](docs/strava-setup.md)
 
 ## License
 
