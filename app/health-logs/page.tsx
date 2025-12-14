@@ -71,7 +71,7 @@ export default function HealthLogsPage() {
         ),
       });
 
-      const response = await fetch(`/api/health-logs/query?${params}`, {
+      const response = await fetch(`/api/health-logs-query?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

@@ -79,7 +79,7 @@ export default function DashboardPage() {
       }
 
       try {
-        const response = await fetch('/api/auth/verify', {
+        const response = await fetch('/api/auth-verify', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

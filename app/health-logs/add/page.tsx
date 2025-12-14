@@ -63,7 +63,7 @@ export default function AddHealthLogPage() {
     }
 
     try {
-      const response = await fetch('/api/health-logs/create', {
+      const response = await fetch('/api/health-logs-create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
