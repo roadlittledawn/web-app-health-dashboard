@@ -44,17 +44,21 @@ Required environment variables:
 - `ANTHROPIC_API_KEY`: Your Anthropic API key
 - `STRAVA_CLIENT_ID` & `STRAVA_CLIENT_SECRET`: (Optional) For Strava integration
 
-### 3. Generate Password Hash
+### 3. Generate Secrets
 
-To generate a bcrypt hash for your password:
+Run the built-in script to generate your JWT secret and password hash:
 
-```javascript
-const bcrypt = require('bcrypt');
-const password = 'your-password-here';
-bcrypt.hash(password, 12).then(hash => console.log(hash));
+```bash
+npm run generate-secrets
 ```
 
-Or use an online bcrypt generator with salt rounds = 12.
+This will:
+- Generate a secure random JWT secret
+- Prompt you for your admin password
+- Generate a bcrypt hash of your password (salt rounds = 12)
+- Display both values to copy into your `.env` file
+
+Copy the generated values into your `.env` file.
 
 ### 4. Database Setup
 

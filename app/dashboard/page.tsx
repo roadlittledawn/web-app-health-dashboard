@@ -2,6 +2,67 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import {
+  AppBar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardActions,
+  CircularProgress,
+  Container,
+  Grid,
+  Toolbar,
+  Typography,
+} from '@mui/material';
+import {
+  LocalHospital,
+  Biotech,
+  FitnessCenter,
+  Chat,
+  Assignment,
+  ArrowForward,
+  Logout,
+} from '@mui/icons-material';
+
+const dashboardCards = [
+  {
+    title: 'Health Logs',
+    description: 'Track and view your health issues',
+    icon: LocalHospital,
+    href: '/health-logs',
+    color: '#EF4444',
+  },
+  {
+    title: 'Lab Results',
+    description: 'Track lab results over time',
+    icon: Biotech,
+    href: '/lab-results',
+    color: '#3B82F6',
+  },
+  {
+    title: 'Workouts',
+    description: 'View Strava workouts and goals',
+    icon: FitnessCenter,
+    href: '/workouts',
+    color: '#10B981',
+  },
+  {
+    title: 'AI Chat',
+    description: 'Ask questions about your health data',
+    icon: Chat,
+    href: '/chat',
+    color: '#8B5CF6',
+  },
+  {
+    title: 'Doctor Visit Prep',
+    description: 'Generate summaries for appointments',
+    icon: Assignment,
+    href: '/doctor-prep',
+    color: '#F59E0B',
+  },
+];
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -51,137 +112,81 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                Health Dashboard
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {user?.username}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
+        <Toolbar>
+          <LocalHospital sx={{ mr: 2 }} />
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Health Dashboard
+          </Typography>
+          <Typography variant="body2" sx={{ mr: 2 }}>
+            {user?.username}
+          </Typography>
+          <Button
+            color="inherit"
+            onClick={handleLogout}
+            startIcon={<Logout />}
+          >
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Health Logs
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Track and view your health issues
-                </p>
-                <div className="mt-4">
-                  <a
-                    href="/health-logs"
-                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium"
-                  >
-                    View Health Logs →
-                  </a>
-                </div>
-              </div>
-            </div>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Welcome back!
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          Your personal health tracking dashboard
+        </Typography>
 
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Lab Results
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Track lab results over time
-                </p>
-                <div className="mt-4">
-                  <a
-                    href="/lab-results"
-                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium"
-                  >
-                    View Lab Results →
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Workouts
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  View Strava workouts and goals
-                </p>
-                <div className="mt-4">
-                  <a
-                    href="/workouts"
-                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium"
-                  >
-                    View Workouts →
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  AI Chat
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Ask questions about your health data
-                </p>
-                <div className="mt-4">
-                  <a
-                    href="/chat"
-                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium"
-                  >
-                    Open Chat →
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Doctor Visit Prep
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Generate summaries for appointments
-                </p>
-                <div className="mt-4">
-                  <a
-                    href="/doctor-prep"
-                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium"
-                  >
-                    Prepare for Visit →
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+        <Grid container spacing={3}>
+          {dashboardCards.map((card) => {
+            const IconComponent = card.icon;
+            return (
+              <Grid item xs={12} sm={6} md={4} key={card.title}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box display="flex" alignItems="center" mb={2}>
+                      <IconComponent
+                        sx={{ fontSize: 40, color: card.color, mr: 1 }}
+                      />
+                      <Typography variant="h6" component="h2">
+                        {card.title}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {card.description}
+                    </Typography>
+                  </CardContent>
+                  <CardActions>
+                    <Button
+                      size="small"
+                      component={Link}
+                      href={card.href}
+                      endIcon={<ArrowForward />}
+                    >
+                      Open
+                    </Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Container>
+    </Box>
   );
 }
