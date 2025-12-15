@@ -131,6 +131,8 @@ export const handler: Handler = async (
 
     // Check if token needs refresh
     const now = Math.floor(Date.now() / 1000);
+    let accessToken = stravaTokens.access_token;
+
     if (stravaTokens.expires_at <= now) {
       const refreshedTokens = await refreshStravaToken(stravaTokens.refresh_token);
 
@@ -147,7 +149,7 @@ export const handler: Handler = async (
         }
       );
 
-      stravaTokens = refreshedTokens;
+      accessToken = refreshedTokens.access_token;
     }
 
     // Parse request body for sync options
@@ -156,7 +158,7 @@ export const handler: Handler = async (
       : {};
 
     // Fetch activities from Strava
-    const activities = await getStravaActivities(stravaTokens.access_token, {
+    const activities = await getStravaActivities(accessToken, {
       page,
       perPage,
       after,

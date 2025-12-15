@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -50,7 +50,7 @@ interface Workout {
   calories?: number;
 }
 
-export default function WorkoutsPage() {
+function WorkoutsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -401,5 +401,17 @@ export default function WorkoutsPage() {
         )}
       </Container>
     </Box>
+  );
+}
+
+export default function WorkoutsPage() {
+  return (
+    <Suspense fallback={
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    }>
+      <WorkoutsPageContent />
+    </Suspense>
   );
 }

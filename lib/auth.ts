@@ -1,9 +1,10 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import type { StringValue } from "ms";
 
 const SALT_ROUNDS = 12;
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-development";
-const JWT_EXPIRATION = process.env.JWT_EXPIRATION || "24h";
+const JWT_SECRET: string = process.env.JWT_SECRET || "fallback-secret-for-development";
+const JWT_EXPIRATION: StringValue | number = (process.env.JWT_EXPIRATION || "24h") as StringValue;
 
 /**
  * Hash a password using bcrypt with work factor 12
