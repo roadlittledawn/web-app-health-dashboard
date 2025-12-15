@@ -7,7 +7,7 @@ export function proxy(request: NextRequest) {
                 request.headers.get('authorization')?.replace('Bearer ', '');
 
   // Public paths that don't require authentication
-  const publicPaths = ['/login', '/api/auth/login'];
+  const publicPaths = ['/login', '/api/auth-login'];
   const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path));
 
   // If accessing a public path, allow it
