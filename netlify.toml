@@ -3,7 +3,7 @@
   publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "20"  
+  NETLIFY_BUILD_DEBUG=1
 
 [functions]
   directory = "netlify/functions"
