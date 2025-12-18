@@ -87,7 +87,7 @@ export default function EditHealthLogPage() {
       }
 
       // Validate MongoDB ObjectId format (24 hex characters)
-      if (!logId || !/^[a-f0-9]{24}$/.test(logId)) {
+      if (!logId || !/^[a-fA-F0-9]{24}$/.test(logId)) {
         setFetchError('Invalid health log ID format');
         setLoading(false);
         return;
@@ -107,7 +107,8 @@ export default function EditHealthLogPage() {
         }
 
         // Fetch existing log data
-        const logResponse = await fetch(`/api/health-logs-query?_id=${logId}`, {
+        const params = new URLSearchParams({ _id: logId });
+        const logResponse = await fetch(`/api/health-logs-query?${params}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
