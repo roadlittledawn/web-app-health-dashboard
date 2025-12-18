@@ -87,7 +87,7 @@ export default function EditHealthLogPage() {
       }
 
       // Validate MongoDB ObjectId format (24 hex characters)
-      if (!logId || !/^[a-f\d]{24}$/i.test(logId)) {
+      if (!logId || !/^[a-f0-9]{24}$/.test(logId)) {
         setFetchError('Invalid health log ID format');
         setLoading(false);
         return;
