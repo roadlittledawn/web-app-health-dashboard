@@ -107,6 +107,26 @@ export const handler: Handler = async (
 
     // Get database and collection
     const db = await getDatabase();
+
+    // Check if Strava is connected (tokens exist)
+    const tokensCollection = db.collection('strava-tokens');
+    const stravaTokens = await tokensCollection.findOne({});
+
+    if (!stravaTokens) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          error: {
+            code: "STRAVA_NOT_CONNECTED",
+            message: "Strava account not connected. Please authorize first.",
+          },
+        } as ErrorResponse),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+    }
+
     const collection = db.collection<StravaWorkout>('strava-workouts');
 
     // Execute query with pagination
