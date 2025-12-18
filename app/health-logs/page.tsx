@@ -13,6 +13,7 @@ import {
   Container,
   FormControl,
   Grid,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -28,6 +29,7 @@ import {
   Add,
   FilterList,
   ArrowBack,
+  Edit,
 } from '@mui/icons-material';
 import { HealthLog } from '@/types/health';
 
@@ -283,6 +285,17 @@ export default function HealthLogsPage() {
                           <Typography variant="caption" color="text.secondary">
                             Incident ID: {log.incident_id}
                           </Typography>
+                        </Box>
+                        <Box>
+                          <IconButton
+                            component={Link}
+                            href={`/health-logs/edit/${log._id?.toString()}`}
+                            color="primary"
+                            aria-label="edit"
+                            title="Edit health log"
+                          >
+                            <Edit />
+                          </IconButton>
                         </Box>
                       </Box>
                     </CardContent>
