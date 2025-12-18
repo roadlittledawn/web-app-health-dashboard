@@ -72,7 +72,7 @@ function WorkoutsPageContent() {
     fetchWorkouts();
   }, []);
 
-  const fetchWorkouts = async () => {
+  const fetchWorkouts = async (filterType?: string) => {
     setLoading(true);
     setError('');
 
@@ -84,7 +84,8 @@ function WorkoutsPageContent() {
 
     try {
       const params = new URLSearchParams({ limit: '50' });
-      if (filter) params.append('type', filter);
+      const activeFilter = filterType !== undefined ? filterType : filter;
+      if (activeFilter) params.append('type', activeFilter);
 
       const response = await fetch(`/api/strava-workouts?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -309,8 +310,9 @@ function WorkoutsPageContent() {
                 value={filter}
                 label="Activity Type"
                 onChange={(e) => {
-                  setFilter(e.target.value);
-                  fetchWorkouts();
+                  const newFilter = e.target.value;
+                  setFilter(newFilter);
+                  fetchWorkouts(newFilter);
                 }}
               >
                 <MenuItem value="">All Activities</MenuItem>
