@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   AppBar,
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -28,11 +29,37 @@ import {
   Save,
 } from '@mui/icons-material';
 
+interface IncidentOption {
+  incident_id: string;
+  issue_type: string;
+  last_log: Date;
+  status: string;
+}
+
+interface AutocompleteData {
+  issue_types: string[];
+  body_areas: string[];
+  symptoms: string[];
+  triggers: string[];
+  activities: string[];
+  incident_ids: IncidentOption[];
+}
+
 export default function AddHealthLogPage() {
   const router = useRouter();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [autocompleteData, setAutocompleteData] = useState<AutocompleteData>({
+    issue_types: [],
+    body_areas: [],
+    symptoms: [],
+    triggers: [],
+    activities: [],
+    incident_ids: [],
+  });
 
   const [formData, setFormData] = useState({
     issue_type: '',
@@ -47,9 +74,35 @@ export default function AddHealthLogPage() {
     symptoms: [] as string[],
   });
 
-  const [activityInput, setActivityInput] = useState('');
-  const [triggerInput, setTriggerInput] = useState('');
-  const [symptomInput, setSymptomInput] = useState('');
+  // Fetch autocomplete data on mount
+  useEffect(() => {
+    const fetchAutocompleteData = async () => {
+      const token = localStorage.getItem('auth-token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/health-logs-autocomplete', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setAutocompleteData(data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch autocomplete data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAutocompleteData();
+  }, [router]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -90,25 +143,6 @@ export default function AddHealthLogPage() {
     }
   };
 
-  const handleAddItem = (type: 'activities' | 'triggers' | 'symptoms', value: string) => {
-    if (value.trim()) {
-      setFormData({
-        ...formData,
-        [type]: [...formData[type], value.trim()],
-      });
-      if (type === 'activities') setActivityInput('');
-      if (type === 'triggers') setTriggerInput('');
-      if (type === 'symptoms') setSymptomInput('');
-    }
-  };
-
-  const handleRemoveItem = (type: 'activities' | 'triggers' | 'symptoms', index: number) => {
-    setFormData({
-      ...formData,
-      [type]: formData[type].filter((_, i) => i !== index),
-    });
-  };
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
@@ -145,37 +179,76 @@ export default function AddHealthLogPage() {
             <Box component="form" onSubmit={handleSubmit} noValidate>
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="Issue Type"
+                  <Autocomplete
+                    freeSolo
+                    options={autocompleteData.issue_types}
                     value={formData.issue_type}
-                    onChange={(e) => setFormData({ ...formData, issue_type: e.target.value })}
-                    placeholder="e.g., back_pain, knee_pain"
-                    helperText="Use underscores for multi-word types"
+                    onChange={(_, newValue) => setFormData({ ...formData, issue_type: newValue || '' })}
+                    onInputChange={(_, newInputValue) => setFormData({ ...formData, issue_type: newInputValue })}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        required
+                        label="Issue Type"
+                        placeholder="e.g., back_pain, knee_pain"
+                        helperText="Use underscores for multi-word types"
+                      />
+                    )}
+                    disabled={loading}
                   />
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="Body Area"
+                  <Autocomplete
+                    freeSolo
+                    options={autocompleteData.body_areas}
                     value={formData.body_area}
-                    onChange={(e) => setFormData({ ...formData, body_area: e.target.value })}
-                    placeholder="e.g., lower back, right knee"
+                    onChange={(_, newValue) => setFormData({ ...formData, body_area: newValue || '' })}
+                    onInputChange={(_, newInputValue) => setFormData({ ...formData, body_area: newInputValue })}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        required
+                        label="Body Area"
+                        placeholder="e.g., lower back, right knee"
+                      />
+                    )}
+                    disabled={loading}
                   />
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="Incident ID"
+                  <Autocomplete
+                    freeSolo
+                    options={autocompleteData.incident_ids.map(i => i.incident_id)}
                     value={formData.incident_id}
-                    onChange={(e) => setFormData({ ...formData, incident_id: e.target.value })}
-                    placeholder="e.g., back_2024_12_001"
-                    helperText="Groups related logs together"
+                    onChange={(_, newValue) => setFormData({ ...formData, incident_id: newValue || '' })}
+                    onInputChange={(_, newInputValue) => setFormData({ ...formData, incident_id: newInputValue })}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        required
+                        label="Incident ID"
+                        placeholder="e.g., back_2024_12_001"
+                        helperText="Groups related logs together"
+                      />
+                    )}
+                    renderOption={(props, option) => {
+                      const incident = autocompleteData.incident_ids.find(i => i.incident_id === option);
+                      return (
+                        <li {...props}>
+                          <Box>
+                            <Typography variant="body2">{option}</Typography>
+                            {incident && (
+                              <Typography variant="caption" color="text.secondary">
+                                {incident.issue_type} - {incident.status}
+                              </Typography>
+                            )}
+                          </Box>
+                        </li>
+                      );
+                    }}
+                    disabled={loading}
                   />
                 </Grid>
 
@@ -236,95 +309,65 @@ export default function AddHealthLogPage() {
 
                 {/* Symptoms */}
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Symptoms
-                  </Typography>
-                  <Box display="flex" gap={1} mb={1}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={symptomInput}
-                      onChange={(e) => setSymptomInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddItem('symptoms', symptomInput);
-                        }
-                      }}
-                      placeholder="Add symptom and press Enter"
-                    />
-                  </Box>
-                  <Box display="flex" flexWrap="wrap" gap={0.5}>
-                    {formData.symptoms.map((symptom, idx) => (
-                      <Chip
-                        key={idx}
-                        label={symptom}
-                        onDelete={() => handleRemoveItem('symptoms', idx)}
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={autocompleteData.symptoms}
+                    value={formData.symptoms}
+                    onChange={(_, newValue) => {
+                      setFormData({ ...formData, symptoms: newValue });
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Symptoms"
+                        placeholder="Type and press Enter to add"
                       />
-                    ))}
-                  </Box>
+                    )}
+                    disabled={loading}
+                  />
                 </Grid>
 
                 {/* Activities */}
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Activities Before/During
-                  </Typography>
-                  <Box display="flex" gap={1} mb={1}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={activityInput}
-                      onChange={(e) => setActivityInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddItem('activities', activityInput);
-                        }
-                      }}
-                      placeholder="Add activity and press Enter"
-                    />
-                  </Box>
-                  <Box display="flex" flexWrap="wrap" gap={0.5}>
-                    {formData.activities.map((activity, idx) => (
-                      <Chip
-                        key={idx}
-                        label={activity}
-                        onDelete={() => handleRemoveItem('activities', idx)}
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={autocompleteData.activities}
+                    value={formData.activities}
+                    onChange={(_, newValue) => {
+                      setFormData({ ...formData, activities: newValue });
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Activities Before/During"
+                        placeholder="Type and press Enter to add"
                       />
-                    ))}
-                  </Box>
+                    )}
+                    disabled={loading}
+                  />
                 </Grid>
 
                 {/* Triggers */}
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Potential Triggers
-                  </Typography>
-                  <Box display="flex" gap={1} mb={1}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      value={triggerInput}
-                      onChange={(e) => setTriggerInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddItem('triggers', triggerInput);
-                        }
-                      }}
-                      placeholder="Add trigger and press Enter"
-                    />
-                  </Box>
-                  <Box display="flex" flexWrap="wrap" gap={0.5}>
-                    {formData.triggers.map((trigger, idx) => (
-                      <Chip
-                        key={idx}
-                        label={trigger}
-                        onDelete={() => handleRemoveItem('triggers', idx)}
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={autocompleteData.triggers}
+                    value={formData.triggers}
+                    onChange={(_, newValue) => {
+                      setFormData({ ...formData, triggers: newValue });
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Potential Triggers"
+                        placeholder="Type and press Enter to add"
                       />
-                    ))}
-                  </Box>
+                    )}
+                    disabled={loading}
+                  />
                 </Grid>
 
                 <Grid item xs={12}>
