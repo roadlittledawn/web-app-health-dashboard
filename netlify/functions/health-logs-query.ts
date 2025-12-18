@@ -4,6 +4,7 @@ import {
   HandlerContext,
   HandlerResponse,
 } from "@netlify/functions";
+import { ObjectId } from "mongodb";
 import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
 import { HealthLog } from "../../types/health";
@@ -79,6 +80,7 @@ export const handler: Handler = async (
     // Get query parameters
     const params = event.queryStringParameters || {};
     const {
+      _id,
       issue_type,
       incident_id,
       body_area,
@@ -95,6 +97,26 @@ export const handler: Handler = async (
 
     // Build filter
     const filter: any = {};
+
+    // Support filtering by MongoDB ObjectId
+    if (_id) {
+      try {
+        filter._id = new ObjectId(_id);
+      } catch (error) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            error: {
+              code: "INVALID_ID",
+              message: "Invalid MongoDB ObjectId format",
+            },
+          } as ErrorResponse),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+      }
+    }
 
     if (issue_type) filter.issue_type = issue_type;
     if (incident_id) filter.incident_id = incident_id;
