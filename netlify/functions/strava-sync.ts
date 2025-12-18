@@ -174,11 +174,14 @@ export const handler: Handler = async (
     for (const activity of activities) {
       const workout = convertActivityToWorkout(activity);
 
+      // Separate created_at and updated_at from workout data
+      const { created_at, updated_at, ...workoutData } = workout;
+
       const result = await workoutsCollection.updateOne(
         { strava_id: activity.id },
         {
           $set: {
-            ...workout,
+            ...workoutData,
             updated_at: new Date(),
           },
           $setOnInsert: {
