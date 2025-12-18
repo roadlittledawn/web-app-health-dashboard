@@ -86,6 +86,13 @@ export default function EditHealthLogPage() {
         return;
       }
 
+      // Validate MongoDB ObjectId format (24 hex characters)
+      if (!logId || !/^[a-f\d]{24}$/i.test(logId)) {
+        setFetchError('Invalid health log ID format');
+        setLoading(false);
+        return;
+      }
+
       try {
         // Fetch autocomplete data
         const autocompleteResponse = await fetch('/api/health-logs-autocomplete', {
