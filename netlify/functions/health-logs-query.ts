@@ -102,7 +102,8 @@ export const handler: Handler = async (
     if (_id) {
       try {
         filter._id = new ObjectId(_id);
-      } catch (error) {
+      } catch (err) {
+        console.error("Invalid ObjectId format:", err);
         return {
           statusCode: 400,
           body: JSON.stringify({
