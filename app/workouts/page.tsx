@@ -35,6 +35,7 @@ import {
   Pool,
   Hiking,
 } from '@mui/icons-material';
+import { formatLocalDateTime } from '@/lib/dateUtils';
 
 interface Workout {
   _id: string;
@@ -363,14 +364,7 @@ function WorkoutsPageContent() {
                             {workout.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary" gutterBottom>
-                            {new Date(workout.start_date).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                            })}
+                            {formatLocalDateTime(workout.start_date)}
                           </Typography>
                           <Box display="flex" gap={2} mt={1} flexWrap="wrap">
                             <Typography variant="body2">
