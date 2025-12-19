@@ -27,6 +27,7 @@ import {
   ArrowBack,
   Save,
 } from '@mui/icons-material';
+import { formatForDateTimeLocal } from '@/lib/dateUtils';
 
 interface IncidentOption {
   incident_id: string;
@@ -71,7 +72,7 @@ export default function EditHealthLogPage() {
     incident_id: '',
     body_area: '',
     status: 'active',
-    timestamp: new Date().toISOString().slice(0, 16),
+    timestamp: formatForDateTimeLocal(new Date()),
     activities: [] as string[],
     triggers: [] as string[],
     symptoms: [] as string[],
@@ -128,7 +129,7 @@ export default function EditHealthLogPage() {
             incident_id: log.incident_id || '',
             body_area: log.body_area || '',
             status: log.status || 'active',
-            timestamp: log.timestamp ? new Date(log.timestamp).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+            timestamp: log.timestamp ? formatForDateTimeLocal(log.timestamp) : formatForDateTimeLocal(new Date()),
             activities: log.activities || [],
             triggers: log.triggers || [],
             symptoms: log.symptoms || [],
