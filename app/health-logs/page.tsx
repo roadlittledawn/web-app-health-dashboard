@@ -32,6 +32,7 @@ import {
   Edit,
 } from '@mui/icons-material';
 import { HealthLog } from '@/types/health';
+import { formatLocalDateTime } from '@/lib/dateUtils';
 
 export default function HealthLogsPage() {
   const [logs, setLogs] = useState<HealthLog[]>([]);
@@ -258,7 +259,7 @@ export default function HealthLogsPage() {
                               }}
                             />
                             <Typography variant="caption" color="text.secondary">
-                              {new Date(log.timestamp).toLocaleDateString()}
+                              {formatLocalDateTime(log.timestamp)}
                             </Typography>
                           </Box>
                           <Typography variant="h6" gutterBottom>

@@ -26,6 +26,7 @@ import {
   TrendingUp,
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { formatLocalDate } from '@/lib/dateUtils';
 
 export default function LabResultsPage() {
   const [results, setResults] = useState<any[]>([]);
@@ -265,11 +266,7 @@ export default function LabResultsPage() {
                         <Box display="flex" justifyContent="space-between" alignItems="start" mb={2}>
                           <Box>
                             <Typography variant="h6">
-                              {new Date(result.test_date).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })}
+                              {formatLocalDate(result.test_date)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                               Ordered by: {result.ordered_by}
