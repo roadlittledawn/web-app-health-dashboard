@@ -189,8 +189,8 @@ async function checkMigration() {
     } else {
       console.log("✅ Pre-check PASSED. Ready to migrate!\n");
       console.log("To run the migration:");
-      console.log("  • Dry run: npm run migrate:health -- --dry-run");
-      console.log("  • Actual migration: npm run migrate:health\n");
+      console.log("  • Dry run: npm run migrate -- --dry-run");
+      console.log("  • Actual migration: npm run migrate\n");
     }
   } catch (error) {
     console.error("❌ Pre-check failed:", error);
@@ -449,7 +449,7 @@ if (require.main === module) {
 Health Data Migration Script
 
 Usage:
-  npm run migrate:health [options]
+  npm run migrate [options]
 
 Options:
   --check     Run pre-migration checks without migrating
@@ -457,9 +457,9 @@ Options:
   --help, -h  Show this help message
 
 Examples:
-  npm run migrate:health -- --check     # Check if ready to migrate
-  npm run migrate:health -- --dry-run   # Preview migration changes
-  npm run migrate:health                # Perform actual migration
+  npm run migrate -- --check     # Check if ready to migrate
+  npm run migrate -- --dry-run   # Preview migration changes
+  npm run migrate                # Perform actual migration
 `);
     process.exit(0);
   }
