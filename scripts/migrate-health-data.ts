@@ -47,12 +47,11 @@ interface NewHealthIncident {
 
 interface NewHealthLog {
   _id?: ObjectId;
-  timestamp: Date;
   incident_id: ObjectId;
   issue_type: "update" | "doctor_visit_notes";
   description: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: Date; // MongoDB managed - use old timestamp value
+  updated_at: Date; // MongoDB managed
 }
 
 async function checkMigration() {
@@ -375,11 +374,10 @@ async function migrateHealthData(options: MigrationOptions = {}) {
       logs.forEach((oldLog) => {
         const newLog: NewHealthLog = {
           _id: oldLog._id,
-          timestamp: new Date(oldLog.timestamp),
           incident_id: incident._id!,
           issue_type: "update",
           description: oldLog.description,
-          created_at: new Date(oldLog.created_at),
+          created_at: new Date(oldLog.timestamp), // Use old timestamp as created_at
           updated_at: new Date(oldLog.updated_at),
         };
         newLogs.push(newLog);

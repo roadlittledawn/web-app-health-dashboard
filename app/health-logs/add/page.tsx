@@ -69,7 +69,6 @@ export default function AddHealthLogPage() {
     incident_id: '',
     body_area: '',
     status: 'active',
-    timestamp: formatForDateTimeLocal(new Date()),
     activities: [] as string[],
     triggers: [] as string[],
     symptoms: [] as string[],
@@ -123,10 +122,7 @@ export default function AddHealthLogPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...formData,
-          timestamp: new Date(formData.timestamp).toISOString(),
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
@@ -268,19 +264,7 @@ export default function AddHealthLogPage() {
                   </FormControl>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    fullWidth
-                    type="datetime-local"
-                    label="Timestamp"
-                    value={formData.timestamp}
-                    onChange={(e) => setFormData({ ...formData, timestamp: e.target.value })}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12}>
                   <Typography gutterBottom>
                     Pain Level: {formData.pain_level}/10
                   </Typography>

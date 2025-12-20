@@ -259,7 +259,7 @@ export default function HealthLogsPage() {
                               }}
                             />
                             <Typography variant="caption" color="text.secondary">
-                              {formatLocalDateTime(log.timestamp)}
+                              {formatLocalDateTime(log.created_at)}
                             </Typography>
                           </Box>
                           <Typography variant="h6" gutterBottom>

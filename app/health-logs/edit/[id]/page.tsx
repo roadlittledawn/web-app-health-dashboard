@@ -72,7 +72,6 @@ export default function EditHealthLogPage() {
     incident_id: '',
     body_area: '',
     status: 'active',
-    timestamp: formatForDateTimeLocal(new Date()),
     activities: [] as string[],
     triggers: [] as string[],
     symptoms: [] as string[],
@@ -129,7 +128,6 @@ export default function EditHealthLogPage() {
             incident_id: log.incident_id || '',
             body_area: log.body_area || '',
             status: log.status || 'active',
-            timestamp: log.timestamp ? formatForDateTimeLocal(log.timestamp) : formatForDateTimeLocal(new Date()),
             activities: log.activities || [],
             triggers: log.triggers || [],
             symptoms: log.symptoms || [],
@@ -168,10 +166,7 @@ export default function EditHealthLogPage() {
         },
         body: JSON.stringify({
           id: logId,
-          updates: {
-            ...formData,
-            timestamp: new Date(formData.timestamp).toISOString(),
-          },
+          updates: formData,
         }),
       });
 
@@ -374,19 +369,7 @@ export default function EditHealthLogPage() {
                   </FormControl>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    fullWidth
-                    type="datetime-local"
-                    label="Timestamp"
-                    value={formData.timestamp}
-                    onChange={(e) => setFormData({ ...formData, timestamp: e.target.value })}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12}>
                   <Typography gutterBottom>
                     Pain Level: {formData.pain_level}/10
                   </Typography>

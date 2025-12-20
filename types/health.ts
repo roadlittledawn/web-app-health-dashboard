@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 export interface HealthIncident {
   _id?: ObjectId;
   painLocations: string[]; // Array to support multiple pain locations
-  painIntensity: number; // 0-10
+  painIntensity: number | null; // Optional 0-10 pain level
   dateStarted: Date;
   endDate?: Date | null; // Optional end date for resolved incidents
   injurySource: string;
@@ -106,12 +106,11 @@ export interface HealthIncident {
 // Refactored Health Log (Secondary Entity)
 export interface HealthLog {
   _id?: ObjectId;
-  timestamp: Date;
   incident_id: ObjectId; // Reference to HealthIncident
   issue_type: "update" | "doctor_visit_notes";
   description: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: Date; // MongoDB managed timestamp for when log was created
+  updated_at: Date; // MongoDB managed timestamp for when log was last updated
 }
 
 export interface HealthAnalytics {

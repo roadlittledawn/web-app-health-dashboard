@@ -179,7 +179,7 @@ export default function IncidentDetailPage() {
                           secondary={
                             <Box>
                               <Typography variant="caption" display="block">
-                                {formatLocalDateTime(log.timestamp)}
+                                {formatLocalDateTime(log.created_at)}
                               </Typography>
                               <Chip size="small" label={log.issue_type} />
                             </Box>
