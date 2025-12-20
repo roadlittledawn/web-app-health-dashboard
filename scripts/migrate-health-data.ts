@@ -33,7 +33,13 @@ interface NewHealthIncident {
   description: string;
   symptoms: any;
   treatments: any;
-  status: "active" | "improving" | "resolved";
+  status: {
+    worsening: boolean;
+    resolved: boolean;
+    improving: boolean;
+    constant: boolean;
+    occasional: boolean;
+  };
   created_at: Date;
   updated_at: Date;
 }
@@ -137,12 +143,12 @@ async function checkMigration() {
     }> = [];
 
     for (const [incidentId, logs] of incidentGroups) {
-      logs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      logs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       incidentDetails.push({
         id: incidentId,
         count: logs.length,
-        firstDate: logs[0].timestamp,
-        lastDate: logs[logs.length - 1].timestamp,
+        firstDate: new Date(logs[0].timestamp),
+        lastDate: new Date(logs[logs.length - 1].timestamp),
         bodyArea: logs[0].body_area || "unknown",
       });
     }
@@ -246,7 +252,7 @@ async function migrateHealthData(options: MigrationOptions = {}) {
 
     for (const [incidentId, logs] of incidentGroups) {
       // Sort logs by timestamp to get first log
-      logs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      logs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       const firstLog = logs[0];
       const lastLog = logs[logs.length - 1];
 
@@ -255,7 +261,7 @@ async function migrateHealthData(options: MigrationOptions = {}) {
         _id: new ObjectId(),
         painLocations: firstLog.body_area || "",
         painIntensity: firstLog.pain_level || 0,
-        dateStarted: firstLog.timestamp,
+        dateStarted: new Date(firstLog.timestamp),
         injurySource: "", // Will need manual input
         description: firstLog.description,
         symptoms: {
@@ -283,13 +289,6 @@ async function migrateHealthData(options: MigrationOptions = {}) {
             numbness: false,
             tingling: false,
             weakness: false,
-          },
-          status: {
-            worsening: false,
-            resolved: firstLog.status === "resolved",
-            improving: firstLog.status === "improving",
-            constant: firstLog.status === "active",
-            occasional: false,
           },
           timing: {
             whenMostSevere: {
@@ -364,8 +363,8 @@ async function migrateHealthData(options: MigrationOptions = {}) {
                 constant: false,
                 occasional: false,
               },
-        created_at: firstLog.created_at,
-        updated_at: lastLog.updated_at,
+        created_at: new Date(firstLog.created_at),
+        updated_at: new Date(lastLog.updated_at),
       };
 
       incidents.push(incident);
@@ -374,12 +373,12 @@ async function migrateHealthData(options: MigrationOptions = {}) {
       logs.forEach((oldLog) => {
         const newLog: NewHealthLog = {
           _id: oldLog._id,
-          timestamp: oldLog.timestamp,
+          timestamp: new Date(oldLog.timestamp),
           incident_id: incident._id!,
           issue_type: "update",
           description: oldLog.description,
-          created_at: oldLog.created_at,
-          updated_at: oldLog.updated_at,
+          created_at: new Date(oldLog.created_at),
+          updated_at: new Date(oldLog.updated_at),
         };
         newLogs.push(newLog);
       });
