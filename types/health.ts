@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb";
 // New Incident Schema (Primary Entity)
 export interface HealthIncident {
   _id?: ObjectId;
-  painLocations: string;
+  painLocations: string[]; // Array to support multiple pain locations
   painIntensity: number; // 0-10
   dateStarted: Date;
   injurySource: string;

@@ -98,7 +98,7 @@ export default function IncidentDetailPage() {
             <ArrowBack />
           </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            {incident.painLocations}
+            {incident.painLocations.join(', ') || 'Incident Details'}
           </Typography>
           <Button
             color="inherit"
@@ -118,10 +118,24 @@ export default function IncidentDetailPage() {
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h5">{incident.painLocations}</Typography>
-                <Chip 
-                  label={incident.status.resolved ? 'resolved' : incident.status.improving ? 'improving' : 'active'} 
-                  color={incident.status.resolved ? 'success' : 'warning'} 
+                <Box>
+                  <Typography variant="h5" gutterBottom>
+                    {incident.painLocations.join(', ') || 'No location specified'}
+                  </Typography>
+                  <Box display="flex" gap={0.5} flexWrap="wrap">
+                    {incident.painLocations.map((location, idx) => (
+                      <Chip
+                        key={idx}
+                        label={location}
+                        size="small"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+                <Chip
+                  label={incident.status.resolved ? 'resolved' : incident.status.improving ? 'improving' : 'active'}
+                  color={incident.status.resolved ? 'success' : 'warning'}
                 />
               </Box>
               

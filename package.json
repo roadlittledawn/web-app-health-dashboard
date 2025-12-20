@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "generate-secrets": "node scripts/generate-secrets.js",
-    "migrate": "npx ts-node scripts/migrate-health-data.ts",
-    "migrate:dev": "npx ts-node --project tsconfig.json scripts/migrate-health-data.ts"
+    "migrate": "npx ts-node scripts/migrate-health-data.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
@@ -20,6 +19,7 @@
     "@netlify/functions": "^2.8.2",
     "autoprefixer": "^10.4.20",
     "bcrypt": "^5.1.1",
+    "dotenv": "^17.2.3",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.12.0",
     "next": "^16.0.10",

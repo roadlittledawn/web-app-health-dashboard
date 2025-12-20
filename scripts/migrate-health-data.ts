@@ -26,7 +26,7 @@ interface OldHealthLog {
 
 interface NewHealthIncident {
   _id?: ObjectId;
-  painLocations: string;
+  painLocations: string[]; // Array to support multiple pain locations
   painIntensity: number;
   dateStarted: Date;
   injurySource: string;
@@ -259,7 +259,7 @@ async function migrateHealthData(options: MigrationOptions = {}) {
       // Create incident from first log data
       const incident: NewHealthIncident = {
         _id: new ObjectId(),
-        painLocations: firstLog.body_area || "",
+        painLocations: firstLog.body_area ? [firstLog.body_area] : [],
         painIntensity: firstLog.pain_level || 0,
         dateStarted: new Date(firstLog.timestamp),
         injurySource: "", // Will need manual input

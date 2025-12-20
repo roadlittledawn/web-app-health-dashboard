@@ -119,9 +119,21 @@ export default function IncidentsPage() {
             <Card>
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                  <Typography variant="h6" component="h2">
-                    {incident.painLocations}
-                  </Typography>
+                  <Box>
+                    <Typography variant="h6" component="h2" gutterBottom>
+                      {incident.painLocations.join(', ') || 'No location specified'}
+                    </Typography>
+                    <Box display="flex" gap={0.5} flexWrap="wrap">
+                      {incident.painLocations.map((location, idx) => (
+                        <Chip
+                          key={idx}
+                          label={location}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  </Box>
                   <Chip
                     label={getStatusDisplay(incident.status)}
                     color={getStatusColor(incident.status) as any}
