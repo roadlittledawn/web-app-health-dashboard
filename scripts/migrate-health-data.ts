@@ -29,6 +29,7 @@ interface NewHealthIncident {
   painLocations: string[]; // Array to support multiple pain locations
   painIntensity: number;
   dateStarted: Date;
+  endDate?: Date | null; // Optional end date for resolved incidents
   injurySource: string;
   description: string;
   symptoms: any;
@@ -262,6 +263,7 @@ async function migrateHealthData(options: MigrationOptions = {}) {
         painLocations: firstLog.body_area ? [firstLog.body_area] : [],
         painIntensity: firstLog.pain_level || 0,
         dateStarted: new Date(firstLog.timestamp),
+        endDate: null, // Will need manual review
         injurySource: "", // Will need manual input
         description: firstLog.description,
         symptoms: {

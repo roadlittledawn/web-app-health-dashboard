@@ -6,6 +6,7 @@ export interface HealthIncident {
   painLocations: string[]; // Array to support multiple pain locations
   painIntensity: number; // 0-10
   dateStarted: Date;
+  endDate?: Date | null; // Optional end date for resolved incidents
   injurySource: string;
   description: string;
   symptoms: {

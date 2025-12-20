@@ -47,6 +47,7 @@ export default function AddIncidentPage() {
     painLocations: [] as string[],
     painIntensity: 5,
     dateStarted: formatForDateTimeLocal(new Date()),
+    endDate: '',
     injurySource: '',
     description: '',
     symptoms: {
@@ -184,6 +185,7 @@ export default function AddIncidentPage() {
         body: JSON.stringify({
           ...formData,
           dateStarted: new Date(formData.dateStarted).toISOString(),
+          endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
         }),
       });
 
@@ -280,6 +282,18 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    type="datetime-local"
+                    label="End Date (Optional)"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                    helperText="Leave empty if incident is ongoing"
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
                   <Typography gutterBottom>
                     Pain Intensity: {formData.painIntensity}/10
                   </Typography>
