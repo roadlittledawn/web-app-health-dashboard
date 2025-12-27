@@ -97,3 +97,14 @@ export function formatOptionLabel(option: string): string {
     .replace(/^./, str => str.toUpperCase())
     .trim();
 }
+
+/**
+ * Helper function to toggle an item in a string array
+ */
+export function toggleArrayItem(array: string[], item: string): string[] {
+  if (array.includes(item)) {
+    return array.filter(i => i !== item);
+  } else {
+    return [...array, item];
+  }
+}

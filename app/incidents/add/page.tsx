@@ -20,6 +20,10 @@ import {
   Slider,
   Divider,
   InputAdornment,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  MenuItem,
 } from "@mui/material";
 import { ArrowBack, Save, Clear } from "@mui/icons-material";
 import { formatForDateTimeLocal } from "@/lib/dateUtils";
@@ -30,15 +34,16 @@ import {
   WHEN_MOST_SEVERE_OPTIONS,
   WHAT_MAKES_WORSE_OPTIONS,
   WHAT_MAKES_BETTER_OPTIONS,
-  PRIOR_PHYSICIAN_OPTIONS,
-  PRIOR_SURGERY_OPTIONS,
   TREATMENTS_TRIED_OPTIONS,
   STUDIES_COMPLETED_OPTIONS,
   STATUS_OPTIONS,
+  formatOptionLabel,
+  toggleArrayItem,
 } from "@/lib/healthIncidentOptions";
 
 interface AutocompleteData {
   body_areas: string[];
+  injury_sources: string[];
 }
 
 export default function AddIncidentPage() {
@@ -50,6 +55,7 @@ export default function AddIncidentPage() {
 
   const [autocompleteData, setAutocompleteData] = useState<AutocompleteData>({
     body_areas: [],
+    injury_sources: [],
   });
 
   const [formData, setFormData] = useState({
@@ -75,7 +81,7 @@ export default function AddIncidentPage() {
       treatmentsTried: [] as string[],
       studiesCompleted: [] as string[],
     },
-    status: ["constant"] as string[],
+    status: ["constant"],
   });
 
   // Fetch autocomplete data on mount
@@ -96,7 +102,10 @@ export default function AddIncidentPage() {
 
         if (response.ok) {
           const data = await response.json();
-          setAutocompleteData({ body_areas: data.data.body_areas || [] });
+          setAutocompleteData({
+            body_areas: data.data.body_areas || [],
+            injury_sources: data.data.injury_sources || [],
+          });
         }
       } catch (err) {
         console.error("Failed to fetch autocomplete data:", err);
@@ -298,14 +307,25 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Injury Source"
+                  <Autocomplete
+                    freeSolo
+                    options={autocompleteData.injury_sources}
                     value={formData.injurySource}
-                    onChange={(e) =>
-                      setFormData({ ...formData, injurySource: e.target.value })
+                    onChange={(_, newValue) =>
+                      setFormData({ ...formData, injurySource: newValue || "" })
                     }
-                    placeholder="How did this injury occur?"
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Injury Source"
+                        placeholder="How did this injury occur?"
+                        helperText="Select from existing or type new"
+                        onChange={(e) =>
+                          setFormData({ ...formData, injurySource: e.target.value })
+                        }
+                      />
+                    )}
+                    disabled={loading}
                   />
                 </Grid>
 
@@ -330,29 +350,31 @@ export default function AddIncidentPage() {
                     Pain Quality
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={PAIN_QUALITY_OPTIONS}
-                    value={formData.symptoms.painQuality}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        symptoms: {
-                          ...formData.symptoms,
-                          painQuality: newValue,
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Pain Quality"
-                        placeholder="Select or type pain qualities"
-                        helperText="Select multiple or add custom pain qualities"
+                  <FormGroup row>
+                    {PAIN_QUALITY_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.symptoms.painQuality.includes(option)}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  painQuality: toggleArrayItem(
+                                    formData.symptoms.painQuality,
+                                    option
+                                  ),
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
                       />
-                    )}
-                  />
+                    ))}
+                  </FormGroup>
                 </Grid>
 
                 {/* Other Symptoms */}
@@ -361,29 +383,31 @@ export default function AddIncidentPage() {
                     Other Symptoms
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={OTHER_SYMPTOMS_OPTIONS}
-                    value={formData.symptoms.otherSymptoms}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        symptoms: {
-                          ...formData.symptoms,
-                          otherSymptoms: newValue,
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Other Symptoms"
-                        placeholder="Select or type symptoms"
-                        helperText="Select multiple or add custom symptoms"
+                  <FormGroup row>
+                    {OTHER_SYMPTOMS_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.symptoms.otherSymptoms.includes(option)}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  otherSymptoms: toggleArrayItem(
+                                    formData.symptoms.otherSymptoms,
+                                    option
+                                  ),
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
                       />
-                    )}
-                  />
+                    ))}
+                  </FormGroup>
                 </Grid>
 
                 {/* Sensations */}
@@ -392,29 +416,31 @@ export default function AddIncidentPage() {
                     Physical Sensations
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={SENSATIONS_OPTIONS}
-                    value={formData.symptoms.sensations}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        symptoms: {
-                          ...formData.symptoms,
-                          sensations: newValue,
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Physical Sensations"
-                        placeholder="Select or type sensations"
-                        helperText="Select multiple or add custom sensations"
+                  <FormGroup row>
+                    {SENSATIONS_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.symptoms.sensations.includes(option)}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  sensations: toggleArrayItem(
+                                    formData.symptoms.sensations,
+                                    option
+                                  ),
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
                       />
-                    )}
-                  />
+                    ))}
+                  </FormGroup>
                 </Grid>
 
                 {/* Timing */}
@@ -425,88 +451,112 @@ export default function AddIncidentPage() {
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={WHEN_MOST_SEVERE_OPTIONS}
-                    value={formData.symptoms.timing.whenMostSevere}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        symptoms: {
-                          ...formData.symptoms,
-                          timing: {
-                            ...formData.symptoms.timing,
-                            whenMostSevere: newValue,
-                          },
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="When Most Severe"
-                        placeholder="Select or type when most severe"
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    When Most Severe
+                  </Typography>
+                  <FormGroup row>
+                    {WHEN_MOST_SEVERE_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.symptoms.timing.whenMostSevere.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  timing: {
+                                    ...formData.symptoms.timing,
+                                    whenMostSevere: toggleArrayItem(
+                                      formData.symptoms.timing.whenMostSevere,
+                                      option
+                                    ),
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
                       />
-                    )}
-                  />
+                    ))}
+                  </FormGroup>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={WHAT_MAKES_WORSE_OPTIONS}
-                    value={formData.symptoms.timing.whatMakesWorse}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        symptoms: {
-                          ...formData.symptoms,
-                          timing: {
-                            ...formData.symptoms.timing,
-                            whatMakesWorse: newValue,
-                          },
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="What Makes Worse"
-                        placeholder="Select or type what makes it worse"
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    What Makes Worse
+                  </Typography>
+                  <FormGroup row>
+                    {WHAT_MAKES_WORSE_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.symptoms.timing.whatMakesWorse.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  timing: {
+                                    ...formData.symptoms.timing,
+                                    whatMakesWorse: toggleArrayItem(
+                                      formData.symptoms.timing.whatMakesWorse,
+                                      option
+                                    ),
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
                       />
-                    )}
-                  />
+                    ))}
+                  </FormGroup>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={WHAT_MAKES_BETTER_OPTIONS}
-                    value={formData.symptoms.timing.whatMakesBetter}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        symptoms: {
-                          ...formData.symptoms,
-                          timing: {
-                            ...formData.symptoms.timing,
-                            whatMakesBetter: newValue,
-                          },
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="What Makes Better"
-                        placeholder="Select or type what makes it better"
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    What Makes Better
+                  </Typography>
+                  <FormGroup row>
+                    {WHAT_MAKES_BETTER_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.symptoms.timing.whatMakesBetter.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  timing: {
+                                    ...formData.symptoms.timing,
+                                    whatMakesBetter: toggleArrayItem(
+                                      formData.symptoms.timing.whatMakesBetter,
+                                      option
+                                    ),
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
                       />
-                    )}
-                  />
+                    ))}
+                  </FormGroup>
                 </Grid>
 
                 {/* Treatments */}
@@ -517,108 +567,70 @@ export default function AddIncidentPage() {
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={PRIOR_PHYSICIAN_OPTIONS}
-                    value={formData.treatments.priorPhysician}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        treatments: {
-                          ...formData.treatments,
-                          priorPhysician: newValue,
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Prior Physician"
-                        placeholder="Select or add details"
-                        helperText='Select "seen" or "not_seen", add provider and when details'
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Treatments Tried
+                  </Typography>
+                  <FormGroup row>
+                    {TREATMENTS_TRIED_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.treatments.treatmentsTried.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                treatments: {
+                                  ...formData.treatments,
+                                  treatmentsTried: toggleArrayItem(
+                                    formData.treatments.treatmentsTried,
+                                    option
+                                  ),
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
                       />
-                    )}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={PRIOR_SURGERY_OPTIONS}
-                    value={formData.treatments.priorSurgery}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        treatments: {
-                          ...formData.treatments,
-                          priorSurgery: newValue,
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Prior Surgery"
-                        placeholder="Select or add details"
-                        helperText='Select "had" or "not_had", add surgery and when details'
-                      />
-                    )}
-                  />
+                    ))}
+                  </FormGroup>
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={TREATMENTS_TRIED_OPTIONS}
-                    value={formData.treatments.treatmentsTried}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        treatments: {
-                          ...formData.treatments,
-                          treatmentsTried: newValue,
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Treatments Tried"
-                        placeholder="Select or type treatments"
-                        helperText="You can add suffixes like 'treatment_helpful' or 'treatment_not_helpful'"
+                  <Typography variant="subtitle2" gutterBottom>
+                    Studies Completed
+                  </Typography>
+                  <FormGroup row>
+                    {STUDIES_COMPLETED_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.treatments.studiesCompleted.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                treatments: {
+                                  ...formData.treatments,
+                                  studiesCompleted: toggleArrayItem(
+                                    formData.treatments.studiesCompleted,
+                                    option
+                                  ),
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
                       />
-                    )}
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={STUDIES_COMPLETED_OPTIONS}
-                    value={formData.treatments.studiesCompleted}
-                    onChange={(_, newValue) =>
-                      setFormData({
-                        ...formData,
-                        treatments: {
-                          ...formData.treatments,
-                          studiesCompleted: newValue,
-                        },
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Studies Completed"
-                        placeholder="Select or type studies"
-                        helperText="Select multiple or add custom studies"
-                      />
-                    )}
-                  />
+                    ))}
+                  </FormGroup>
                 </Grid>
 
                 {/* Current Status */}
@@ -627,26 +639,25 @@ export default function AddIncidentPage() {
                     Current Status
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={STATUS_OPTIONS}
-                    value={formData.status}
-                    onChange={(_, newValue) =>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Status"
+                    value={formData.status[0] || ""}
+                    onChange={(e) =>
                       setFormData({
                         ...formData,
-                        status: newValue,
+                        status: [e.target.value],
                       })
                     }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Status"
-                        placeholder="Select or type status"
-                        helperText="Select multiple status options"
-                      />
-                    )}
-                  />
+                    helperText="Select the current status of this incident"
+                  >
+                    {STATUS_OPTIONS.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        {formatOptionLabel(option)}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </Grid>
 
                 <Grid item xs={12}>
