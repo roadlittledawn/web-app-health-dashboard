@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, FormEvent, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useState, FormEvent, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import {
   AppBar,
   Autocomplete,
@@ -12,26 +12,40 @@ import {
   CardContent,
   Container,
   Grid,
+  IconButton,
   TextField,
   Toolbar,
   Typography,
   Alert,
   Slider,
+  Divider,
+  InputAdornment,
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Divider,
+  MenuItem,
   CircularProgress,
-} from '@mui/material';
+} from "@mui/material";
+import { ArrowBack, Save, Clear } from "@mui/icons-material";
+import { formatForDateTimeLocal } from "@/lib/dateUtils";
+import { HealthIncident } from "@/types/health";
 import {
-  ArrowBack,
-  Save,
-} from '@mui/icons-material';
-import { formatForDateTimeLocal } from '@/lib/dateUtils';
-import { HealthIncident } from '@/types/health';
+  PAIN_QUALITY_OPTIONS,
+  OTHER_SYMPTOMS_OPTIONS,
+  SENSATIONS_OPTIONS,
+  WHEN_MOST_SEVERE_OPTIONS,
+  WHAT_MAKES_WORSE_OPTIONS,
+  WHAT_MAKES_BETTER_OPTIONS,
+  TREATMENTS_TRIED_OPTIONS,
+  STUDIES_COMPLETED_OPTIONS,
+  STATUS_OPTIONS,
+  formatOptionLabel,
+  toggleArrayItem,
+} from "@/lib/healthIncidentOptions";
 
 interface AutocompleteData {
   body_areas: string[];
+  injury_sources: string[];
 }
 
 export default function EditIncidentPage() {
@@ -39,204 +53,156 @@ export default function EditIncidentPage() {
   const params = useParams();
   const incidentId = params.id as string;
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState('');
 
   const [autocompleteData, setAutocompleteData] = useState<AutocompleteData>({
     body_areas: [],
+    injury_sources: [],
   });
 
   const [formData, setFormData] = useState({
     painLocations: [] as string[],
     painIntensity: 5,
     dateStarted: formatForDateTimeLocal(new Date()),
-    endDate: '',
-    injurySource: '',
-    description: '',
+    endDate: "",
+    injurySource: "",
+    description: "",
     symptoms: {
-      painQuality: {
-        sharp: false,
-        dull: false,
-        throbbing: false,
-        stabbing: false,
-        aching: false,
-        heavy: false,
-        burning: false,
-        other: '',
-      },
-      otherSymptoms: {
-        stiffness: false,
-        instability: false,
-        catching: false,
-        popping: false,
-        locking: false,
-        other: '',
-      },
-      sensations: {
-        bruising: false,
-        swelling: false,
-        numbness: false,
-        tingling: false,
-        weakness: false,
-      },
+      painQuality: [] as string[],
+      otherSymptoms: [] as string[],
+      sensations: [] as string[],
       timing: {
-        whenMostSevere: {
-          morning: false,
-          afternoon: false,
-          evening: false,
-          consistentAllDay: false,
-          interruptsSleep: false,
-          other: '',
-        },
-        whatMakesWorse: {
-          rest: false,
-          activity: false,
-          sleeping: false,
-          kneeling: false,
-          other: '',
-        },
-        whatMakesBetter: {
-          rest: false,
-          activity: false,
-          ice: false,
-          medication: false,
-          brace: false,
-          other: '',
-        },
+        whenMostSevere: [] as string[],
+        whatMakesWorse: [] as string[],
+        whatMakesBetter: [] as string[],
       },
     },
     treatments: {
-      priorPhysician: { seen: null, provider: '', when: '' },
-      priorSurgery: { had: null, surgery: '', when: '' },
-      treatmentsTried: {
-        massageTherapy: { tried: false, helpful: null },
-        physicalTherapy: { tried: false, helpful: null },
-        chiropracticTherapy: { tried: false, helpful: null },
-        acupuncture: { tried: false, helpful: null },
-        bracing: { tried: false, helpful: null },
-        injections: { tried: false, helpful: null },
-        medication: { tried: false, helpful: null },
-        other: { tried: false, helpful: null, description: '' },
-      },
-      studiesCompleted: {
-        xRays: false,
-        mri: false,
-        ctScan: false,
-        emgNerveStudy: false,
-        boneScan: false,
-        ultrasound: false,
-        other: '',
-      },
+      priorPhysician: [] as string[],
+      priorSurgery: [] as string[],
+      treatmentsTried: [] as string[],
+      studiesCompleted: [] as string[],
     },
-    status: {
-      worsening: false,
-      resolved: false,
-      improving: false,
-      constant: true,
-      occasional: false,
-    },
+    status: ["constant"],
   });
 
-  // Fetch existing incident data and autocomplete data on mount
+  // Fetch autocomplete data and incident data on mount
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("auth-token");
       if (!token) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
       try {
         // Fetch autocomplete data
-        const autocompleteResponse = await fetch('/api/health-logs-autocomplete', {
+        const autocompleteResponse = await fetch("/api/health-logs-autocomplete", {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
         if (autocompleteResponse.ok) {
           const data = await autocompleteResponse.json();
-          setAutocompleteData({ body_areas: data.data.body_areas || [] });
+          setAutocompleteData({
+            body_areas: data.data.body_areas || [],
+            injury_sources: data.data.injury_sources || [],
+          });
         }
 
-        // Fetch existing incident data
+        // Fetch incident data
         const incidentResponse = await fetch(`/api/incidents-query?_id=${incidentId}`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
         if (!incidentResponse.ok) {
-          throw new Error('Failed to fetch incident');
+          throw new Error("Failed to fetch incident");
         }
 
         const incidentData = await incidentResponse.json();
-        if (incidentData.data && incidentData.data.length > 0) {
-          const incident: HealthIncident = incidentData.data[0];
+        const incident: HealthIncident = incidentData.data[0];
+
+        if (incident) {
           setFormData({
             painLocations: incident.painLocations || [],
             painIntensity: incident.painIntensity || 5,
-            dateStarted: incident.dateStarted ? formatForDateTimeLocal(incident.dateStarted) : formatForDateTimeLocal(new Date()),
-            endDate: incident.endDate ? formatForDateTimeLocal(incident.endDate) : '',
-            injurySource: incident.injurySource || '',
-            description: incident.description || '',
-            symptoms: incident.symptoms || formData.symptoms,
-            treatments: incident.treatments || formData.treatments,
-            status: incident.status || formData.status,
+            dateStarted: formatForDateTimeLocal(new Date(incident.dateStarted)),
+            endDate: incident.endDate ? formatForDateTimeLocal(new Date(incident.endDate)) : "",
+            injurySource: incident.injurySource || "",
+            description: incident.description || "",
+            symptoms: {
+              painQuality: incident.symptoms?.painQuality || [],
+              otherSymptoms: incident.symptoms?.otherSymptoms || [],
+              sensations: incident.symptoms?.sensations || [],
+              timing: {
+                whenMostSevere: incident.symptoms?.timing?.whenMostSevere || [],
+                whatMakesWorse: incident.symptoms?.timing?.whatMakesWorse || [],
+                whatMakesBetter: incident.symptoms?.timing?.whatMakesBetter || [],
+              },
+            },
+            treatments: {
+              priorPhysician: incident.treatments?.priorPhysician || [],
+              priorSurgery: incident.treatments?.priorSurgery || [],
+              treatmentsTried: incident.treatments?.treatmentsTried || [],
+              studiesCompleted: incident.treatments?.studiesCompleted || [],
+            },
+            status: incident.status || ["constant"],
           });
-        } else {
-          throw new Error('Incident not found');
         }
-      } catch (err: any) {
-        console.error('Failed to fetch data:', err);
-        setFetchError(err.message || 'Failed to load incident');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load incident");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [router, incidentId]);
+  }, [incidentId, router]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setSaving(true);
 
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("auth-token");
     if (!token) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     try {
-      const response = await fetch('/api/incidents-update', {
-        method: 'PATCH',
+      const response = await fetch("/api/incidents-update", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id: incidentId,
           updates: {
             ...formData,
             dateStarted: new Date(formData.dateStarted).toISOString(),
-            endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
+            endDate: formData.endDate
+              ? new Date(formData.endDate).toISOString()
+              : null,
           },
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error?.message || 'Failed to update incident');
+        throw new Error(data.error?.message || "Failed to update incident");
       }
 
       setSuccess(true);
       setTimeout(() => {
-        router.push(`/incidents/${incidentId}`);
+        router.push("/incidents");
       }, 1500);
     } catch (err: any) {
       setError(err.message);
@@ -246,63 +212,8 @@ export default function EditIncidentPage() {
 
   if (loading) {
     return (
-      <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
-          <Toolbar>
-            <Button
-              color="inherit"
-              component={Link}
-              href="/incidents"
-              startIcon={<ArrowBack />}
-            >
-              Back to Incidents
-            </Button>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 2 }}>
-              Edit Incident
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-          <Box display="flex" justifyContent="center" my={4}>
-            <CircularProgress />
-          </Box>
-        </Container>
-      </Box>
-    );
-  }
-
-  if (fetchError) {
-    return (
-      <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
-          <Toolbar>
-            <Button
-              color="inherit"
-              component={Link}
-              href="/incidents"
-              startIcon={<ArrowBack />}
-            >
-              Back to Incidents
-            </Button>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 2 }}>
-              Edit Incident
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-          <Alert severity="error">
-            {fetchError}
-          </Alert>
-          <Box mt={2}>
-            <Button
-              variant="contained"
-              component={Link}
-              href="/incidents"
-            >
-              Return to Incidents
-            </Button>
-          </Box>
-        </Container>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
       </Box>
     );
   }
@@ -314,13 +225,13 @@ export default function EditIncidentPage() {
           <Button
             color="inherit"
             component={Link}
-            href={`/incidents/${incidentId}`}
+            href="/incidents"
             startIcon={<ArrowBack />}
           >
-            Back to Incident
+            Back to Incidents
           </Button>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 2 }}>
-            Edit Incident
+            Edit Health Incident
           </Typography>
         </Toolbar>
       </AppBar>
@@ -378,20 +289,52 @@ export default function EditIncidentPage() {
                     type="datetime-local"
                     label="Date Started"
                     value={formData.dateStarted}
-                    onChange={(e) => setFormData({ ...formData, dateStarted: e.target.value })}
-                    InputLabelProps={{ shrink: true }}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dateStarted: e.target.value })
+                    }
+                    slotProps={{
+                      inputLabel: { shrink: true },
+                    }}
                   />
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    type="datetime-local"
+                    type={formData.endDate ? "datetime-local" : "text"}
                     label="End Date (Optional)"
                     value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    InputLabelProps={{ shrink: true }}
-                    helperText="Leave empty if incident is ongoing"
+                    onChange={(e) =>
+                      setFormData({ ...formData, endDate: e.target.value })
+                    }
+                    onFocus={() => {
+                      if (!formData.endDate) {
+                        setFormData({
+                          ...formData,
+                          endDate: formatForDateTimeLocal(new Date()),
+                        });
+                      }
+                    }}
+                    placeholder="Click to set end date"
+                    slotProps={{
+                      input: {
+                        endAdornment: formData.endDate ? (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() =>
+                                setFormData({ ...formData, endDate: "" })
+                              }
+                              edge="end"
+                              size="small"
+                              title="Clear end date"
+                            >
+                              <Clear />
+                            </IconButton>
+                          </InputAdornment>
+                        ) : null,
+                      },
+                    }}
+                    helperText="Fill in when incident resolves (leave empty for ongoing)"
                   />
                 </Grid>
 
@@ -401,22 +344,45 @@ export default function EditIncidentPage() {
                   </Typography>
                   <Slider
                     value={formData.painIntensity}
-                    onChange={(_, value) => setFormData({ ...formData, painIntensity: value as number })}
+                    onChange={(_, value) =>
+                      setFormData({
+                        ...formData,
+                        painIntensity: value as number,
+                      })
+                    }
                     min={0}
                     max={10}
                     marks
                     valueLabelDisplay="auto"
-                    color={formData.painIntensity >= 8 ? 'error' : formData.painIntensity >= 5 ? 'warning' : 'success'}
+                    color={
+                      formData.painIntensity >= 8
+                        ? "error"
+                        : formData.painIntensity >= 5
+                        ? "warning"
+                        : "success"
+                    }
                   />
                 </Grid>
 
                 <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Injury Source"
+                  <Autocomplete
+                    freeSolo
+                    options={autocompleteData.injury_sources}
                     value={formData.injurySource}
-                    onChange={(e) => setFormData({ ...formData, injurySource: e.target.value })}
-                    placeholder="How did this injury occur?"
+                    onChange={(_, newValue) =>
+                      setFormData({ ...formData, injurySource: newValue || "" })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Injury Source"
+                        placeholder="How did this injury occur?"
+                        helperText="Select from existing or type new"
+                        onChange={(e) =>
+                          setFormData({ ...formData, injurySource: e.target.value })
+                        }
+                      />
+                    )}
                   />
                 </Grid>
 
@@ -428,7 +394,9 @@ export default function EditIncidentPage() {
                     rows={4}
                     label="Description"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     placeholder="Describe the incident and symptoms in detail..."
                   />
                 </Grid>
@@ -440,41 +408,30 @@ export default function EditIncidentPage() {
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   <FormGroup row>
-                    {Object.keys(formData.symptoms.painQuality).filter(key => key !== 'other').map((key) => (
+                    {PAIN_QUALITY_OPTIONS.map((option) => (
                       <FormControlLabel
-                        key={key}
+                        key={option}
                         control={
                           <Checkbox
-                            checked={formData.symptoms.painQuality[key as keyof typeof formData.symptoms.painQuality] as boolean}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              symptoms: {
-                                ...formData.symptoms,
-                                painQuality: {
-                                  ...formData.symptoms.painQuality,
-                                  [key]: e.target.checked,
+                            checked={formData.symptoms.painQuality.includes(option)}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  painQuality: toggleArrayItem(
+                                    formData.symptoms.painQuality,
+                                    option
+                                  ),
                                 },
-                              },
-                            })}
+                              })
+                            }
                           />
                         }
-                        label={key.charAt(0).toUpperCase() + key.slice(1)}
+                        label={formatOptionLabel(option)}
                       />
                     ))}
                   </FormGroup>
-                  <TextField
-                    fullWidth
-                    label="Other Pain Quality"
-                    value={formData.symptoms.painQuality.other}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      symptoms: {
-                        ...formData.symptoms,
-                        painQuality: { ...formData.symptoms.painQuality, other: e.target.value },
-                      },
-                    })}
-                    sx={{ mt: 2 }}
-                  />
                 </Grid>
 
                 {/* Other Symptoms */}
@@ -484,41 +441,30 @@ export default function EditIncidentPage() {
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   <FormGroup row>
-                    {Object.keys(formData.symptoms.otherSymptoms).filter(key => key !== 'other').map((key) => (
+                    {OTHER_SYMPTOMS_OPTIONS.map((option) => (
                       <FormControlLabel
-                        key={key}
+                        key={option}
                         control={
                           <Checkbox
-                            checked={formData.symptoms.otherSymptoms[key as keyof typeof formData.symptoms.otherSymptoms] as boolean}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              symptoms: {
-                                ...formData.symptoms,
-                                otherSymptoms: {
-                                  ...formData.symptoms.otherSymptoms,
-                                  [key]: e.target.checked,
+                            checked={formData.symptoms.otherSymptoms.includes(option)}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  otherSymptoms: toggleArrayItem(
+                                    formData.symptoms.otherSymptoms,
+                                    option
+                                  ),
                                 },
-                              },
-                            })}
+                              })
+                            }
                           />
                         }
-                        label={key.charAt(0).toUpperCase() + key.slice(1)}
+                        label={formatOptionLabel(option)}
                       />
                     ))}
                   </FormGroup>
-                  <TextField
-                    fullWidth
-                    label="Other Symptoms"
-                    value={formData.symptoms.otherSymptoms.other}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      symptoms: {
-                        ...formData.symptoms,
-                        otherSymptoms: { ...formData.symptoms.otherSymptoms, other: e.target.value },
-                      },
-                    })}
-                    sx={{ mt: 2 }}
-                  />
                 </Grid>
 
                 {/* Sensations */}
@@ -528,25 +474,217 @@ export default function EditIncidentPage() {
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   <FormGroup row>
-                    {Object.keys(formData.symptoms.sensations).map((key) => (
+                    {SENSATIONS_OPTIONS.map((option) => (
                       <FormControlLabel
-                        key={key}
+                        key={option}
                         control={
                           <Checkbox
-                            checked={formData.symptoms.sensations[key as keyof typeof formData.symptoms.sensations] as boolean}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              symptoms: {
-                                ...formData.symptoms,
-                                sensations: {
-                                  ...formData.symptoms.sensations,
-                                  [key]: e.target.checked,
+                            checked={formData.symptoms.sensations.includes(option)}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  sensations: toggleArrayItem(
+                                    formData.symptoms.sensations,
+                                    option
+                                  ),
                                 },
-                              },
-                            })}
+                              })
+                            }
                           />
                         }
-                        label={key.charAt(0).toUpperCase() + key.slice(1)}
+                        label={formatOptionLabel(option)}
+                      />
+                    ))}
+                  </FormGroup>
+                </Grid>
+
+                {/* Timing */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                    Timing
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    When Most Severe
+                  </Typography>
+                  <FormGroup row>
+                    {WHEN_MOST_SEVERE_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.symptoms.timing.whenMostSevere.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  timing: {
+                                    ...formData.symptoms.timing,
+                                    whenMostSevere: toggleArrayItem(
+                                      formData.symptoms.timing.whenMostSevere,
+                                      option
+                                    ),
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
+                      />
+                    ))}
+                  </FormGroup>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    What Makes Worse
+                  </Typography>
+                  <FormGroup row>
+                    {WHAT_MAKES_WORSE_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.symptoms.timing.whatMakesWorse.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  timing: {
+                                    ...formData.symptoms.timing,
+                                    whatMakesWorse: toggleArrayItem(
+                                      formData.symptoms.timing.whatMakesWorse,
+                                      option
+                                    ),
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
+                      />
+                    ))}
+                  </FormGroup>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    What Makes Better
+                  </Typography>
+                  <FormGroup row>
+                    {WHAT_MAKES_BETTER_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.symptoms.timing.whatMakesBetter.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                symptoms: {
+                                  ...formData.symptoms,
+                                  timing: {
+                                    ...formData.symptoms.timing,
+                                    whatMakesBetter: toggleArrayItem(
+                                      formData.symptoms.timing.whatMakesBetter,
+                                      option
+                                    ),
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
+                      />
+                    ))}
+                  </FormGroup>
+                </Grid>
+
+                {/* Treatments */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                    Treatments
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Treatments Tried
+                  </Typography>
+                  <FormGroup row>
+                    {TREATMENTS_TRIED_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.treatments.treatmentsTried.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                treatments: {
+                                  ...formData.treatments,
+                                  treatmentsTried: toggleArrayItem(
+                                    formData.treatments.treatmentsTried,
+                                    option
+                                  ),
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
+                      />
+                    ))}
+                  </FormGroup>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Studies Completed
+                  </Typography>
+                  <FormGroup row>
+                    {STUDIES_COMPLETED_OPTIONS.map((option) => (
+                      <FormControlLabel
+                        key={option}
+                        control={
+                          <Checkbox
+                            checked={formData.treatments.studiesCompleted.includes(
+                              option
+                            )}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                treatments: {
+                                  ...formData.treatments,
+                                  studiesCompleted: toggleArrayItem(
+                                    formData.treatments.studiesCompleted,
+                                    option
+                                  ),
+                                },
+                              })
+                            }
+                          />
+                        }
+                        label={formatOptionLabel(option)}
                       />
                     ))}
                   </FormGroup>
@@ -558,26 +696,25 @@ export default function EditIncidentPage() {
                     Current Status
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <FormGroup row>
-                    {Object.keys(formData.status).map((key) => (
-                      <FormControlLabel
-                        key={key}
-                        control={
-                          <Checkbox
-                            checked={formData.status[key as keyof typeof formData.status]}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              status: {
-                                ...formData.status,
-                                [key]: e.target.checked,
-                              },
-                            })}
-                          />
-                        }
-                        label={key.charAt(0).toUpperCase() + key.slice(1)}
-                      />
+                  <TextField
+                    select
+                    fullWidth
+                    label="Status"
+                    value={formData.status[0] || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        status: [e.target.value],
+                      })
+                    }
+                    helperText="Select the current status of this incident"
+                  >
+                    {STATUS_OPTIONS.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        {formatOptionLabel(option)}
+                      </MenuItem>
                     ))}
-                  </FormGroup>
+                  </TextField>
                 </Grid>
 
                 <Grid item xs={12}>
@@ -585,7 +722,7 @@ export default function EditIncidentPage() {
                     <Button
                       variant="outlined"
                       component={Link}
-                      href={`/incidents/${incidentId}`}
+                      href="/incidents"
                       disabled={saving}
                     >
                       Cancel
@@ -596,7 +733,7 @@ export default function EditIncidentPage() {
                       startIcon={<Save />}
                       disabled={saving}
                     >
-                      {saving ? 'Saving...' : 'Update Incident'}
+                      {saving ? "Saving..." : "Update Incident"}
                     </Button>
                   </Box>
                 </Grid>
