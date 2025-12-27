@@ -10,95 +10,22 @@ export interface HealthIncident {
   injurySource: string;
   description: string;
   symptoms: {
-    painQuality: {
-      sharp: boolean;
-      dull: boolean;
-      throbbing: boolean;
-      stabbing: boolean;
-      aching: boolean;
-      heavy: boolean;
-      burning: boolean;
-      other: string;
-    };
-    otherSymptoms: {
-      stiffness: boolean;
-      instability: boolean;
-      catching: boolean;
-      popping: boolean;
-      locking: boolean;
-      other: string;
-    };
-    sensations: {
-      bruising: boolean;
-      swelling: boolean;
-      numbness: boolean;
-      tingling: boolean;
-      weakness: boolean;
-    };
+    painQuality: string[]; // e.g., ['sharp', 'dull', 'throbbing', 'stabbing', 'aching', 'heavy', 'burning', ...]
+    otherSymptoms: string[]; // e.g., ['stiffness', 'instability', 'catching', 'popping', 'locking', ...]
+    sensations: string[]; // e.g., ['bruising', 'swelling', 'numbness', 'tingling', 'weakness']
     timing: {
-      whenMostSevere: {
-        morning: boolean;
-        afternoon: boolean;
-        evening: boolean;
-        consistentAllDay: boolean;
-        interruptsSleep: boolean;
-        other: string;
-      };
-      whatMakesWorse: {
-        rest: boolean;
-        activity: boolean;
-        sleeping: boolean;
-        kneeling: boolean;
-        other: string;
-      };
-      whatMakesBetter: {
-        rest: boolean;
-        activity: boolean;
-        ice: boolean;
-        medication: boolean;
-        brace: boolean;
-        other: string;
-      };
+      whenMostSevere: string[]; // e.g., ['morning', 'afternoon', 'evening', 'consistentAllDay', 'interruptsSleep', ...]
+      whatMakesWorse: string[]; // e.g., ['rest', 'activity', 'sleeping', 'kneeling', ...]
+      whatMakesBetter: string[]; // e.g., ['rest', 'activity', 'ice', 'medication', 'brace', ...]
     };
   };
   treatments: {
-    priorPhysician: {
-      seen: boolean | null;
-      provider: string;
-      when: string;
-    };
-    priorSurgery: {
-      had: boolean | null;
-      surgery: string;
-      when: string;
-    };
-    treatmentsTried: {
-      massageTherapy: { tried: boolean; helpful: boolean | null };
-      physicalTherapy: { tried: boolean; helpful: boolean | null };
-      chiropracticTherapy: { tried: boolean; helpful: boolean | null };
-      acupuncture: { tried: boolean; helpful: boolean | null };
-      bracing: { tried: boolean; helpful: boolean | null };
-      injections: { tried: boolean; helpful: boolean | null };
-      medication: { tried: boolean; helpful: boolean | null };
-      other: { tried: boolean; helpful: boolean | null; description: string };
-    };
-    studiesCompleted: {
-      xRays: boolean;
-      mri: boolean;
-      ctScan: boolean;
-      emgNerveStudy: boolean;
-      boneScan: boolean;
-      ultrasound: boolean;
-      other: string;
-    };
+    priorPhysician: string[]; // e.g., ['seen', 'provider: Dr. Smith', 'when: 2024-01-15'] or ['not_seen']
+    priorSurgery: string[]; // e.g., ['had', 'surgery: ACL reconstruction', 'when: 2023-06-10'] or ['not_had']
+    treatmentsTried: string[]; // e.g., ['massageTherapy', 'massageTherapy_helpful', 'physicalTherapy', 'physicalTherapy_not_helpful', ...]
+    studiesCompleted: string[]; // e.g., ['xRays', 'mri', 'ctScan', 'emgNerveStudy', 'boneScan', 'ultrasound', ...]
   };
-  status: {
-    worsening: boolean;
-    resolved: boolean;
-    improving: boolean;
-    constant: boolean;
-    occasional: boolean;
-  };
+  status: string[]; // e.g., ['worsening'], ['resolved'], ['improving'], ['constant', 'occasional'], etc.
   created_at: Date;
   updated_at: Date;
 }
@@ -109,8 +36,7 @@ export interface HealthLog {
   incident_id: ObjectId; // Reference to HealthIncident
   issue_type: "update" | "doctor_visit_notes";
   description: string;
-  created_at: Date; // MongoDB managed timestamp for when log was created
-  updated_at: Date; // MongoDB managed timestamp for when log was last updated
+  timestamp: Date; // User-editable timestamp for when the log entry occurred
 }
 
 export interface HealthAnalytics {
