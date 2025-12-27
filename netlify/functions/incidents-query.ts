@@ -30,7 +30,8 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
 
     const filter: any = {};
     if (_id) filter._id = new ObjectId(_id);
-    if (status) filter.status = status;
+    // Status is now an array, so we check if it contains the specified value
+    if (status) filter.status = { $in: [status] };
 
     const db = await getDatabase();
     const collection = db.collection<HealthIncident>('health-incidents');

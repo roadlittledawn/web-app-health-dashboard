@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, FormEvent, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState, FormEvent, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AppBar,
   Autocomplete,
@@ -12,21 +12,30 @@ import {
   CardContent,
   Container,
   Grid,
+  IconButton,
   TextField,
   Toolbar,
   Typography,
   Alert,
   Slider,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
   Divider,
-} from '@mui/material';
+  InputAdornment,
+} from "@mui/material";
+import { ArrowBack, Save, Clear } from "@mui/icons-material";
+import { formatForDateTimeLocal } from "@/lib/dateUtils";
 import {
-  ArrowBack,
-  Save,
-} from '@mui/icons-material';
-import { formatForDateTimeLocal } from '@/lib/dateUtils';
+  PAIN_QUALITY_OPTIONS,
+  OTHER_SYMPTOMS_OPTIONS,
+  SENSATIONS_OPTIONS,
+  WHEN_MOST_SEVERE_OPTIONS,
+  WHAT_MAKES_WORSE_OPTIONS,
+  WHAT_MAKES_BETTER_OPTIONS,
+  PRIOR_PHYSICIAN_OPTIONS,
+  PRIOR_SURGERY_OPTIONS,
+  TREATMENTS_TRIED_OPTIONS,
+  STUDIES_COMPLETED_OPTIONS,
+  STATUS_OPTIONS,
+} from "@/lib/healthIncidentOptions";
 
 interface AutocompleteData {
   body_areas: string[];
@@ -34,7 +43,7 @@ interface AutocompleteData {
 
 export default function AddIncidentPage() {
   const router = useRouter();
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -47,106 +56,41 @@ export default function AddIncidentPage() {
     painLocations: [] as string[],
     painIntensity: 5,
     dateStarted: formatForDateTimeLocal(new Date()),
-    endDate: '',
-    injurySource: '',
-    description: '',
+    endDate: "",
+    injurySource: "",
+    description: "",
     symptoms: {
-      painQuality: {
-        sharp: false,
-        dull: false,
-        throbbing: false,
-        stabbing: false,
-        aching: false,
-        heavy: false,
-        burning: false,
-        other: '',
-      },
-      otherSymptoms: {
-        stiffness: false,
-        instability: false,
-        catching: false,
-        popping: false,
-        locking: false,
-        other: '',
-      },
-      sensations: {
-        bruising: false,
-        swelling: false,
-        numbness: false,
-        tingling: false,
-        weakness: false,
-      },
+      painQuality: [] as string[],
+      otherSymptoms: [] as string[],
+      sensations: [] as string[],
       timing: {
-        whenMostSevere: {
-          morning: false,
-          afternoon: false,
-          evening: false,
-          consistentAllDay: false,
-          interruptsSleep: false,
-          other: '',
-        },
-        whatMakesWorse: {
-          rest: false,
-          activity: false,
-          sleeping: false,
-          kneeling: false,
-          other: '',
-        },
-        whatMakesBetter: {
-          rest: false,
-          activity: false,
-          ice: false,
-          medication: false,
-          brace: false,
-          other: '',
-        },
+        whenMostSevere: [] as string[],
+        whatMakesWorse: [] as string[],
+        whatMakesBetter: [] as string[],
       },
     },
     treatments: {
-      priorPhysician: { seen: null, provider: '', when: '' },
-      priorSurgery: { had: null, surgery: '', when: '' },
-      treatmentsTried: {
-        massageTherapy: { tried: false, helpful: null },
-        physicalTherapy: { tried: false, helpful: null },
-        chiropracticTherapy: { tried: false, helpful: null },
-        acupuncture: { tried: false, helpful: null },
-        bracing: { tried: false, helpful: null },
-        injections: { tried: false, helpful: null },
-        medication: { tried: false, helpful: null },
-        other: { tried: false, helpful: null, description: '' },
-      },
-      studiesCompleted: {
-        xRays: false,
-        mri: false,
-        ctScan: false,
-        emgNerveStudy: false,
-        boneScan: false,
-        ultrasound: false,
-        other: '',
-      },
+      priorPhysician: [] as string[],
+      priorSurgery: [] as string[],
+      treatmentsTried: [] as string[],
+      studiesCompleted: [] as string[],
     },
-    status: {
-      worsening: false,
-      resolved: false,
-      improving: false,
-      constant: true,
-      occasional: false,
-    },
+    status: ["constant"] as string[],
   });
 
   // Fetch autocomplete data on mount
   useEffect(() => {
     const fetchAutocompleteData = async () => {
-      const token = localStorage.getItem('auth-token');
+      const token = localStorage.getItem("auth-token");
       if (!token) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
       try {
-        const response = await fetch('/api/health-logs-autocomplete', {
+        const response = await fetch("/api/health-logs-autocomplete", {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -155,7 +99,7 @@ export default function AddIncidentPage() {
           setAutocompleteData({ body_areas: data.data.body_areas || [] });
         }
       } catch (err) {
-        console.error('Failed to fetch autocomplete data:', err);
+        console.error("Failed to fetch autocomplete data:", err);
       } finally {
         setLoading(false);
       }
@@ -166,37 +110,39 @@ export default function AddIncidentPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setSaving(true);
 
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem("auth-token");
     if (!token) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     try {
-      const response = await fetch('/api/incidents-create', {
-        method: 'POST',
+      const response = await fetch("/api/incidents-create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,
           dateStarted: new Date(formData.dateStarted).toISOString(),
-          endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
+          endDate: formData.endDate
+            ? new Date(formData.endDate).toISOString()
+            : null,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error?.message || 'Failed to create incident');
+        throw new Error(data.error?.message || "Failed to create incident");
       }
 
       setSuccess(true);
       setTimeout(() => {
-        router.push('/incidents');
+        router.push("/incidents");
       }, 1500);
     } catch (err: any) {
       setError(err.message);
@@ -276,20 +222,52 @@ export default function AddIncidentPage() {
                     type="datetime-local"
                     label="Date Started"
                     value={formData.dateStarted}
-                    onChange={(e) => setFormData({ ...formData, dateStarted: e.target.value })}
-                    InputLabelProps={{ shrink: true }}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dateStarted: e.target.value })
+                    }
+                    slotProps={{
+                      inputLabel: { shrink: true },
+                    }}
                   />
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    type="datetime-local"
+                    type={formData.endDate ? "datetime-local" : "text"}
                     label="End Date (Optional)"
                     value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    InputLabelProps={{ shrink: true }}
-                    helperText="Leave empty if incident is ongoing"
+                    onChange={(e) =>
+                      setFormData({ ...formData, endDate: e.target.value })
+                    }
+                    onFocus={() => {
+                      if (!formData.endDate) {
+                        setFormData({
+                          ...formData,
+                          endDate: formatForDateTimeLocal(new Date()),
+                        });
+                      }
+                    }}
+                    placeholder="Click to set end date"
+                    slotProps={{
+                      input: {
+                        endAdornment: formData.endDate ? (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() =>
+                                setFormData({ ...formData, endDate: "" })
+                              }
+                              edge="end"
+                              size="small"
+                              title="Clear end date"
+                            >
+                              <Clear />
+                            </IconButton>
+                          </InputAdornment>
+                        ) : null,
+                      },
+                    }}
+                    helperText="Fill in when incident resolves (leave empty for ongoing)"
                   />
                 </Grid>
 
@@ -299,12 +277,23 @@ export default function AddIncidentPage() {
                   </Typography>
                   <Slider
                     value={formData.painIntensity}
-                    onChange={(_, value) => setFormData({ ...formData, painIntensity: value as number })}
+                    onChange={(_, value) =>
+                      setFormData({
+                        ...formData,
+                        painIntensity: value as number,
+                      })
+                    }
                     min={0}
                     max={10}
                     marks
                     valueLabelDisplay="auto"
-                    color={formData.painIntensity >= 8 ? 'error' : formData.painIntensity >= 5 ? 'warning' : 'success'}
+                    color={
+                      formData.painIntensity >= 8
+                        ? "error"
+                        : formData.painIntensity >= 5
+                        ? "warning"
+                        : "success"
+                    }
                   />
                 </Grid>
 
@@ -313,7 +302,9 @@ export default function AddIncidentPage() {
                     fullWidth
                     label="Injury Source"
                     value={formData.injurySource}
-                    onChange={(e) => setFormData({ ...formData, injurySource: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, injurySource: e.target.value })
+                    }
                     placeholder="How did this injury occur?"
                   />
                 </Grid>
@@ -326,7 +317,9 @@ export default function AddIncidentPage() {
                     rows={4}
                     label="Description"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     placeholder="Describe the incident and symptoms in detail..."
                   />
                 </Grid>
@@ -337,41 +330,28 @@ export default function AddIncidentPage() {
                     Pain Quality
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <FormGroup row>
-                    {Object.keys(formData.symptoms.painQuality).filter(key => key !== 'other').map((key) => (
-                      <FormControlLabel
-                        key={key}
-                        control={
-                          <Checkbox
-                            checked={formData.symptoms.painQuality[key as keyof typeof formData.symptoms.painQuality] as boolean}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              symptoms: {
-                                ...formData.symptoms,
-                                painQuality: {
-                                  ...formData.symptoms.painQuality,
-                                  [key]: e.target.checked,
-                                },
-                              },
-                            })}
-                          />
-                        }
-                        label={key.charAt(0).toUpperCase() + key.slice(1)}
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={PAIN_QUALITY_OPTIONS}
+                    value={formData.symptoms.painQuality}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          painQuality: newValue,
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Pain Quality"
+                        placeholder="Select or type pain qualities"
+                        helperText="Select multiple or add custom pain qualities"
                       />
-                    ))}
-                  </FormGroup>
-                  <TextField
-                    fullWidth
-                    label="Other Pain Quality"
-                    value={formData.symptoms.painQuality.other}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      symptoms: {
-                        ...formData.symptoms,
-                        painQuality: { ...formData.symptoms.painQuality, other: e.target.value },
-                      },
-                    })}
-                    sx={{ mt: 2 }}
+                    )}
                   />
                 </Grid>
 
@@ -381,41 +361,28 @@ export default function AddIncidentPage() {
                     Other Symptoms
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <FormGroup row>
-                    {Object.keys(formData.symptoms.otherSymptoms).filter(key => key !== 'other').map((key) => (
-                      <FormControlLabel
-                        key={key}
-                        control={
-                          <Checkbox
-                            checked={formData.symptoms.otherSymptoms[key as keyof typeof formData.symptoms.otherSymptoms] as boolean}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              symptoms: {
-                                ...formData.symptoms,
-                                otherSymptoms: {
-                                  ...formData.symptoms.otherSymptoms,
-                                  [key]: e.target.checked,
-                                },
-                              },
-                            })}
-                          />
-                        }
-                        label={key.charAt(0).toUpperCase() + key.slice(1)}
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={OTHER_SYMPTOMS_OPTIONS}
+                    value={formData.symptoms.otherSymptoms}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          otherSymptoms: newValue,
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Other Symptoms"
+                        placeholder="Select or type symptoms"
+                        helperText="Select multiple or add custom symptoms"
                       />
-                    ))}
-                  </FormGroup>
-                  <TextField
-                    fullWidth
-                    label="Other Symptoms"
-                    value={formData.symptoms.otherSymptoms.other}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      symptoms: {
-                        ...formData.symptoms,
-                        otherSymptoms: { ...formData.symptoms.otherSymptoms, other: e.target.value },
-                      },
-                    })}
-                    sx={{ mt: 2 }}
+                    )}
                   />
                 </Grid>
 
@@ -425,29 +392,233 @@ export default function AddIncidentPage() {
                     Physical Sensations
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <FormGroup row>
-                    {Object.keys(formData.symptoms.sensations).map((key) => (
-                      <FormControlLabel
-                        key={key}
-                        control={
-                          <Checkbox
-                            checked={formData.symptoms.sensations[key as keyof typeof formData.symptoms.sensations] as boolean}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              symptoms: {
-                                ...formData.symptoms,
-                                sensations: {
-                                  ...formData.symptoms.sensations,
-                                  [key]: e.target.checked,
-                                },
-                              },
-                            })}
-                          />
-                        }
-                        label={key.charAt(0).toUpperCase() + key.slice(1)}
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={SENSATIONS_OPTIONS}
+                    value={formData.symptoms.sensations}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          sensations: newValue,
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Physical Sensations"
+                        placeholder="Select or type sensations"
+                        helperText="Select multiple or add custom sensations"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
+                </Grid>
+
+                {/* Timing */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                    Timing
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={WHEN_MOST_SEVERE_OPTIONS}
+                    value={formData.symptoms.timing.whenMostSevere}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          timing: {
+                            ...formData.symptoms.timing,
+                            whenMostSevere: newValue,
+                          },
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="When Most Severe"
+                        placeholder="Select or type when most severe"
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={WHAT_MAKES_WORSE_OPTIONS}
+                    value={formData.symptoms.timing.whatMakesWorse}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          timing: {
+                            ...formData.symptoms.timing,
+                            whatMakesWorse: newValue,
+                          },
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="What Makes Worse"
+                        placeholder="Select or type what makes it worse"
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={WHAT_MAKES_BETTER_OPTIONS}
+                    value={formData.symptoms.timing.whatMakesBetter}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          timing: {
+                            ...formData.symptoms.timing,
+                            whatMakesBetter: newValue,
+                          },
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="What Makes Better"
+                        placeholder="Select or type what makes it better"
+                      />
+                    )}
+                  />
+                </Grid>
+
+                {/* Treatments */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                    Treatments
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={PRIOR_PHYSICIAN_OPTIONS}
+                    value={formData.treatments.priorPhysician}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        treatments: {
+                          ...formData.treatments,
+                          priorPhysician: newValue,
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Prior Physician"
+                        placeholder="Select or add details"
+                        helperText='Select "seen" or "not_seen", add provider and when details'
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={PRIOR_SURGERY_OPTIONS}
+                    value={formData.treatments.priorSurgery}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        treatments: {
+                          ...formData.treatments,
+                          priorSurgery: newValue,
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Prior Surgery"
+                        placeholder="Select or add details"
+                        helperText='Select "had" or "not_had", add surgery and when details'
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={TREATMENTS_TRIED_OPTIONS}
+                    value={formData.treatments.treatmentsTried}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        treatments: {
+                          ...formData.treatments,
+                          treatmentsTried: newValue,
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Treatments Tried"
+                        placeholder="Select or type treatments"
+                        helperText="You can add suffixes like 'treatment_helpful' or 'treatment_not_helpful'"
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={STUDIES_COMPLETED_OPTIONS}
+                    value={formData.treatments.studiesCompleted}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        treatments: {
+                          ...formData.treatments,
+                          studiesCompleted: newValue,
+                        },
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Studies Completed"
+                        placeholder="Select or type studies"
+                        helperText="Select multiple or add custom studies"
+                      />
+                    )}
+                  />
                 </Grid>
 
                 {/* Current Status */}
@@ -456,26 +627,26 @@ export default function AddIncidentPage() {
                     Current Status
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <FormGroup row>
-                    {Object.keys(formData.status).map((key) => (
-                      <FormControlLabel
-                        key={key}
-                        control={
-                          <Checkbox
-                            checked={formData.status[key as keyof typeof formData.status]}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              status: {
-                                ...formData.status,
-                                [key]: e.target.checked,
-                              },
-                            })}
-                          />
-                        }
-                        label={key.charAt(0).toUpperCase() + key.slice(1)}
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={STATUS_OPTIONS}
+                    value={formData.status}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        status: newValue,
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Status"
+                        placeholder="Select or type status"
+                        helperText="Select multiple status options"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
                 </Grid>
 
                 <Grid item xs={12}>
@@ -494,7 +665,7 @@ export default function AddIncidentPage() {
                       startIcon={<Save />}
                       disabled={saving}
                     >
-                      {saving ? 'Saving...' : 'Save Incident'}
+                      {saving ? "Saving..." : "Save Incident"}
                     </Button>
                   </Box>
                 </Grid>
