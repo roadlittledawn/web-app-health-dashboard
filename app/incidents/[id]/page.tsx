@@ -47,8 +47,8 @@ export default function IncidentDetailPage() {
 
   const fetchIncidentData = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      
+      const token = localStorage.getItem('auth-token');
+
       // Fetch incident details
       const incidentResponse = await fetch(`/api/incidents-query?_id=${incidentId}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -62,10 +62,14 @@ export default function IncidentDetailPage() {
       const logsResponse = await fetch(`/api/health-logs-query?incident_id=${incidentId}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
-      
+
       if (!logsResponse.ok) throw new Error('Failed to fetch logs');
       const logsData = await logsResponse.json();
-      setLogs(logsData.data);
+      // Sort logs by timestamp in descending order (most recent first)
+      const sortedLogs = logsData.data.sort((a: HealthLog, b: HealthLog) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      setLogs(sortedLogs);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -134,8 +138,8 @@ export default function IncidentDetailPage() {
                   </Box>
                 </Box>
                 <Chip
-                  label={incident.status.resolved ? 'resolved' : incident.status.improving ? 'improving' : 'active'}
-                  color={incident.status.resolved ? 'success' : 'warning'}
+                  label={incident.status.includes('resolved') ? 'resolved' : incident.status.includes('improving') ? 'improving' : 'active'}
+                  color={incident.status.includes('resolved') ? 'success' : 'warning'}
                 />
               </Box>
               
@@ -179,7 +183,7 @@ export default function IncidentDetailPage() {
                           secondary={
                             <Box>
                               <Typography variant="caption" display="block">
-                                {formatLocalDateTime(log.created_at)}
+                                {formatLocalDateTime(log.timestamp)}
                               </Typography>
                               <Chip size="small" label={log.issue_type} />
                             </Box>
