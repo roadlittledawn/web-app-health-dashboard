@@ -32,6 +32,7 @@ import {
 } from "@mui/icons-material";
 import { HealthIncident } from "@/types/health";
 import { formatLocalDateTime } from "@/lib/dateUtils";
+import { STATUS_OPTIONS, formatOptionLabel } from "@/lib/healthIncidentOptions";
 
 export default function IncidentsPage() {
   const [incidents, setIncidents] = useState<HealthIncident[]>([]);
@@ -74,16 +75,15 @@ export default function IncidentsPage() {
       if (filters.status) {
         filteredIncidents = filteredIncidents.filter(
           (incident: HealthIncident) => {
-            const status = getStatusDisplay(incident.status);
-            return status === filters.status;
+            return incident.status.includes(filters.status);
           }
         );
       }
 
-      // Sort by created_at date (most recent first)
+      // Sort by dateStarted (most recent first)
       filteredIncidents = filteredIncidents.sort(
         (a: HealthIncident, b: HealthIncident) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(b.dateStarted).getTime() - new Date(a.dateStarted).getTime()
       );
 
       setIncidents(filteredIncidents);
@@ -94,26 +94,12 @@ export default function IncidentsPage() {
     }
   };
 
-  const getStatusDisplay = (status: string[]) => {
-    if (status.includes("resolved")) return "resolved";
-    if (status.includes("improving")) return "improving";
-    if (status.includes("worsening") || status.includes("constant"))
-      return "active";
-    return "unknown";
-  };
-
   const getStatusColor = (status: string[]) => {
-    const display = getStatusDisplay(status);
-    switch (display) {
-      case "resolved":
-        return "success";
-      case "improving":
-        return "warning";
-      case "active":
-        return "error";
-      default:
-        return "default";
-    }
+    if (status.includes("resolved")) return "success";
+    if (status.includes("improving")) return "warning";
+    if (status.includes("worsening") || status.includes("constant")) return "error";
+    if (status.includes("occasional")) return "info";
+    return "default";
   };
 
   return (
@@ -164,9 +150,11 @@ export default function IncidentsPage() {
                     }
                   >
                     <MenuItem value="">All</MenuItem>
-                    <MenuItem value="active">Active</MenuItem>
-                    <MenuItem value="improving">Improving</MenuItem>
-                    <MenuItem value="resolved">Resolved</MenuItem>
+                    {STATUS_OPTIONS.map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {formatOptionLabel(status)}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>
@@ -231,11 +219,16 @@ export default function IncidentsPage() {
                           ))}
                         </Box>
                       </Box>
-                      <Chip
-                        label={getStatusDisplay(incident.status)}
-                        color={getStatusColor(incident.status) as any}
-                        size="small"
-                      />
+                      <Box display="flex" gap={0.5} flexWrap="wrap">
+                        {incident.status.map((status, idx) => (
+                          <Chip
+                            key={idx}
+                            label={formatOptionLabel(status)}
+                            color={getStatusColor(incident.status) as any}
+                            size="small"
+                          />
+                        ))}
+                      </Box>
                     </Box>
 
                     <Typography
