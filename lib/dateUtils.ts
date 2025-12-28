@@ -7,9 +7,14 @@
  * @param date - Date object or ISO string
  * @returns Formatted date string in user's local timezone
  */
-export function formatLocalDateTime(date: Date | string): string {
+export function formatLocalDateTime(date: Date | string | null | undefined): string {
+  if (!date) return 'N/A';
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
+
+  // Check if date is valid
+  if (!dateObj || isNaN(dateObj.getTime())) return 'Invalid date';
+
   return dateObj.toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -25,9 +30,14 @@ export function formatLocalDateTime(date: Date | string): string {
  * @param date - Date object or ISO string
  * @returns Formatted date string in user's local timezone
  */
-export function formatLocalDate(date: Date | string): string {
+export function formatLocalDate(date: Date | string | null | undefined): string {
+  if (!date) return 'N/A';
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
+
+  // Check if date is valid
+  if (!dateObj || isNaN(dateObj.getTime())) return 'Invalid date';
+
   return dateObj.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -40,8 +50,14 @@ export function formatLocalDate(date: Date | string): string {
  * @param date - Date object or ISO string
  * @returns Relative time string
  */
-export function formatRelativeTime(date: Date | string): string {
+export function formatRelativeTime(date: Date | string | null | undefined): string {
+  if (!date) return 'N/A';
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  // Check if date is valid
+  if (!dateObj || isNaN(dateObj.getTime())) return 'Invalid date';
+
   const now = new Date();
   const diffMs = now.getTime() - dateObj.getTime();
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
