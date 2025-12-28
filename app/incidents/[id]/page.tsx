@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   Chip,
-  Container,
   Grid,
   IconButton,
   List,
@@ -28,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import { HealthIncident, HealthLog } from '@/types/health';
 import { formatLocalDateTime } from '@/lib/dateUtils';
+import { formatOptionLabel } from '@/lib/healthIncidentOptions';
 import Link from 'next/link';
 
 export default function IncidentDetailPage() {
@@ -88,14 +88,14 @@ export default function IncidentDetailPage() {
 
   if (!incident) {
     return (
-      <Container maxWidth="lg">
+      <Box sx={{ p: 3 }}>
         <Alert severity="error">Incident not found</Alert>
-      </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="lg">
+    <Box>
       <AppBar position="static" sx={{ mb: 3 }}>
         <Toolbar>
           <IconButton edge="start" color="inherit" onClick={() => router.push('/incidents')}>
@@ -115,9 +115,10 @@ export default function IncidentDetailPage() {
         </Toolbar>
       </AppBar>
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      <Box sx={{ p: 3 }}>
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-      <Grid container spacing={3}>
+        <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
@@ -200,20 +201,154 @@ export default function IncidentDetailPage() {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card>
+          {/* Symptoms Card */}
+          <Card sx={{ mb: 2 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>Symptoms</Typography>
-              {/* Display symptoms data - simplified for now */}
-              <Typography variant="body2">
-                Status: {Object.entries(incident.status)
-                  .filter(([_, value]) => value)
-                  .map(([key]) => key)
-                  .join(', ') || 'None specified'}
-              </Typography>
+
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>Pain Quality</Typography>
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {incident.symptoms?.painQuality?.length ? (
+                    incident.symptoms.painQuality.map((item, idx) => (
+                      <Chip key={idx} label={formatOptionLabel(item)} size="small" />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">None specified</Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>Other Symptoms</Typography>
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {incident.symptoms?.otherSymptoms?.length ? (
+                    incident.symptoms.otherSymptoms.map((item, idx) => (
+                      <Chip key={idx} label={formatOptionLabel(item)} size="small" />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">None specified</Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>Sensations</Typography>
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {incident.symptoms?.sensations?.length ? (
+                    incident.symptoms.sensations.map((item, idx) => (
+                      <Chip key={idx} label={formatOptionLabel(item)} size="small" />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">None specified</Typography>
+                  )}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Timing Card */}
+          <Card sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Timing</Typography>
+
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>When Most Severe</Typography>
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {incident.symptoms?.timing?.whenMostSevere?.length ? (
+                    incident.symptoms.timing.whenMostSevere.map((item, idx) => (
+                      <Chip key={idx} label={formatOptionLabel(item)} size="small" />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">None specified</Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>What Makes Worse</Typography>
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {incident.symptoms?.timing?.whatMakesWorse?.length ? (
+                    incident.symptoms.timing.whatMakesWorse.map((item, idx) => (
+                      <Chip key={idx} label={formatOptionLabel(item)} size="small" />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">None specified</Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>What Makes Better</Typography>
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {incident.symptoms?.timing?.whatMakesBetter?.length ? (
+                    incident.symptoms.timing.whatMakesBetter.map((item, idx) => (
+                      <Chip key={idx} label={formatOptionLabel(item)} size="small" />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">None specified</Typography>
+                  )}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Treatments Card */}
+          <Card sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Treatments</Typography>
+
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>Treatments Tried</Typography>
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {incident.treatments?.treatmentsTried?.length ? (
+                    incident.treatments.treatmentsTried.map((item, idx) => (
+                      <Chip key={idx} label={formatOptionLabel(item)} size="small" />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">None specified</Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>Studies Completed</Typography>
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {incident.treatments?.studiesCompleted?.length ? (
+                    incident.treatments.studiesCompleted.map((item, idx) => (
+                      <Chip key={idx} label={formatOptionLabel(item)} size="small" />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">None specified</Typography>
+                  )}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Status Card */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Status</Typography>
+              <Box display="flex" gap={0.5} flexWrap="wrap">
+                {incident.status?.length ? (
+                  incident.status.map((item, idx) => (
+                    <Chip
+                      key={idx}
+                      label={formatOptionLabel(item)}
+                      size="small"
+                      color={item === 'resolved' ? 'success' : item === 'improving' ? 'info' : 'default'}
+                    />
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">None specified</Typography>
+                )}
+              </Box>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
-    </Container>
+      </Box>
+    </Box>
   );
 }
