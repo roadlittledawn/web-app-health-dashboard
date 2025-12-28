@@ -41,11 +41,8 @@ export default function HealthLogsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
-    status: '',
+    incident_id: '',
     issue_type: '',
-    body_area: '',
-    start_date: '',
-    end_date: '',
   });
   const router = useRouter();
 
@@ -85,7 +82,11 @@ export default function HealthLogsPage() {
       }
 
       const data = await response.json();
-      setLogs(data.data);
+      // Sort logs by timestamp in descending order (most recent first)
+      const sortedLogs = data.data.sort((a: HealthLog, b: HealthLog) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      setLogs(sortedLogs);
       setTotal(data.pagination.total);
     } catch (err) {
       setError('Failed to load health logs');
@@ -93,25 +94,6 @@ export default function HealthLogsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'error';
-      case 'improving':
-        return 'warning';
-      case 'resolved':
-        return 'success';
-      default:
-        return 'default';
-    }
-  };
-
-  const getPainLevelColor = (level: number) => {
-    if (level >= 8) return '#EF4444'; // Red
-    if (level >= 5) return '#F59E0B'; // Amber
-    return '#10B981'; // Green
   };
 
   return (
@@ -151,59 +133,43 @@ export default function HealthLogsPage() {
               <Typography variant="h6">Filters</Typography>
             </Box>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Incident ID"
+                  value={filters.incident_id}
+                  onChange={(e) => {
+                    setFilters({ ...filters, incident_id: e.target.value });
+                    setPage(1);
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Status</InputLabel>
+                  <InputLabel>Log Type</InputLabel>
                   <Select
-                    value={filters.status}
-                    label="Status"
+                    value={filters.issue_type}
+                    label="Log Type"
                     onChange={(e) => {
-                      setFilters({ ...filters, status: e.target.value });
+                      setFilters({ ...filters, issue_type: e.target.value });
                       setPage(1);
                     }}
                   >
                     <MenuItem value="">All</MenuItem>
-                    <MenuItem value="active">Active</MenuItem>
-                    <MenuItem value="improving">Improving</MenuItem>
-                    <MenuItem value="resolved">Resolved</MenuItem>
+                    <MenuItem value="update">Update</MenuItem>
+                    <MenuItem value="doctor_visit_notes">Doctor Visit Notes</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Issue Type"
-                  value={filters.issue_type}
-                  onChange={(e) => {
-                    setFilters({ ...filters, issue_type: e.target.value });
-                    setPage(1);
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Body Area"
-                  value={filters.body_area}
-                  onChange={(e) => {
-                    setFilters({ ...filters, body_area: e.target.value });
-                    setPage(1);
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <Button
                   fullWidth
                   variant="outlined"
                   onClick={() => {
                     setFilters({
-                      status: '',
+                      incident_id: '',
                       issue_type: '',
-                      body_area: '',
-                      start_date: '',
-                      end_date: '',
                     });
                     setPage(1);
                   }}
@@ -246,45 +212,22 @@ export default function HealthLogsPage() {
                         <Box flexGrow={1}>
                           <Box display="flex" alignItems="center" gap={1} mb={1}>
                             <Chip
-                              label={log.status.toUpperCase()}
-                              color={getStatusColor(log.status) as any}
+                              label={log.issue_type.replace(/_/g, ' ').toUpperCase()}
+                              color="primary"
                               size="small"
+                              variant="outlined"
                             />
-                            <Chip
-                              label={`Pain: ${log.pain_level}/10`}
-                              size="small"
-                              sx={{
-                                bgcolor: getPainLevelColor(log.pain_level),
-                                color: 'white',
-                              }}
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                              {formatLocalDateTime(log.created_at)}
-                            </Typography>
+                            {log.timestamp && (
+                              <Typography variant="caption" color="text.secondary">
+                                {formatLocalDateTime(log.timestamp)}
+                              </Typography>
+                            )}
                           </Box>
-                          <Typography variant="h6" gutterBottom>
-                            {log.issue_type.replace(/_/g, ' ').toUpperCase()} - {log.body_area}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" paragraph>
+                          <Typography variant="body1" paragraph>
                             {log.description}
                           </Typography>
-                          {log.symptoms.length > 0 && (
-                            <Box mb={1}>
-                              <Typography variant="caption" color="text.secondary">
-                                Symptoms:
-                              </Typography>
-                              {log.symptoms.map((symptom, idx) => (
-                                <Chip
-                                  key={idx}
-                                  label={symptom}
-                                  size="small"
-                                  sx={{ ml: 0.5 }}
-                                />
-                              ))}
-                            </Box>
-                          )}
                           <Typography variant="caption" color="text.secondary">
-                            Incident ID: {log.incident_id}
+                            Incident ID: {log.incident_id?.toString()}
                           </Typography>
                         </Box>
                         <Box>
