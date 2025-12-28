@@ -83,10 +83,6 @@ export const handler: Handler = async (
       _id,
       issue_type,
       incident_id,
-      body_area,
-      status,
-      pain_level_min,
-      pain_level_max,
       start_date,
       end_date,
       limit = "50",
@@ -120,14 +116,24 @@ export const handler: Handler = async (
     }
 
     if (issue_type) filter.issue_type = issue_type;
-    if (incident_id) filter.incident_id = incident_id;
-    if (body_area) filter.body_area = body_area;
-    if (status) filter.status = status;
-
-    if (pain_level_min || pain_level_max) {
-      filter.pain_level = {};
-      if (pain_level_min) filter.pain_level.$gte = parseInt(pain_level_min);
-      if (pain_level_max) filter.pain_level.$lte = parseInt(pain_level_max);
+    if (incident_id) {
+      try {
+        filter.incident_id = new ObjectId(incident_id);
+      } catch (err) {
+        console.error("Invalid incident_id ObjectId format:", err);
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            error: {
+              code: "INVALID_INCIDENT_ID",
+              message: "Invalid incident_id ObjectId format",
+            },
+          } as ErrorResponse),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+      }
     }
 
     if (start_date || end_date) {

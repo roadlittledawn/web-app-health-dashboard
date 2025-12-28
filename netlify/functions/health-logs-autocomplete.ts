@@ -6,7 +6,7 @@ import {
 } from "@netlify/functions";
 import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
-import { HealthLog } from "../../types/health";
+import { HealthLog, HealthIncident } from "../../types/health";
 
 interface ErrorResponse {
   error: {
@@ -18,6 +18,7 @@ interface ErrorResponse {
 interface AutocompleteData {
   issue_types: string[];
   body_areas: string[];
+  injury_sources: string[];
   symptoms: string[];
   triggers: string[];
   activities: string[];
@@ -90,15 +91,30 @@ export const handler: Handler = async (
       };
     }
 
-    // Get database and collection
+    // Get database and collections
     const db = await getDatabase();
     const collection = db.collection<HealthLog>('health-logs');
+    const incidentsCollection = db.collection<HealthIncident>('health-incidents');
 
     // Get unique issue types
     const issue_types = await collection.distinct('issue_type');
 
-    // Get unique body areas
+    // Get unique body areas from health-logs
     const body_areas = await collection.distinct('body_area');
+
+    // Get unique pain locations and injury sources from health-incidents
+    const painLocationsAgg = await incidentsCollection.aggregate([
+      { $unwind: '$painLocations' },
+      { $group: { _id: '$painLocations' } },
+      { $sort: { _id: 1 } }
+    ]).toArray();
+    const painLocations = painLocationsAgg.map(doc => doc._id).filter(Boolean);
+
+    // Combine body_areas from logs with painLocations from incidents
+    const combinedBodyAreas = Array.from(new Set([...body_areas, ...painLocations])).sort();
+
+    // Get unique injury sources from health-incidents
+    const injury_sources = await incidentsCollection.distinct('injurySource');
 
     // Get all unique symptoms (from array fields)
     const symptomsAgg = await collection.aggregate([
@@ -145,11 +161,17 @@ export const handler: Handler = async (
           status: 1,
         }
       }
-    ]).toArray();
+    ]).toArray() as Array<{
+      incident_id: string;
+      issue_type: string;
+      last_log: Date;
+      status: string;
+    }>;
 
     const autocompleteData: AutocompleteData = {
       issue_types: issue_types.filter(Boolean).sort(),
-      body_areas: body_areas.filter(Boolean).sort(),
+      body_areas: combinedBodyAreas,
+      injury_sources: injury_sources.filter(Boolean).sort(),
       symptoms,
       triggers,
       activities,
