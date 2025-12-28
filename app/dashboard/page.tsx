@@ -29,17 +29,10 @@ import {
 const dashboardCards = [
   {
     title: 'Health Incidents',
-    description: 'Track and manage health incidents',
+    description: 'Track and manage health incidents and logs',
     icon: LocalHospital,
     href: '/incidents',
     color: '#EF4444',
-  },
-  {
-    title: 'Health Logs',
-    description: 'View detailed log entries',
-    icon: Assignment,
-    href: '/health-logs',
-    color: '#F59E0B',
   },
   {
     title: 'Lab Results',

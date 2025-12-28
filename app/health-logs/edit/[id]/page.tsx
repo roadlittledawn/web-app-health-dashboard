@@ -160,7 +160,7 @@ export default function EditHealthLogPage() {
 
       setSuccess(true);
       setTimeout(() => {
-        router.push('/health-logs');
+        router.push('/incidents');
       }, 1500);
     } catch (err: any) {
       setError(err.message);
@@ -221,9 +221,9 @@ export default function EditHealthLogPage() {
             <Button
               variant="contained"
               component={Link}
-              href="/health-logs"
+              href="/incidents"
             >
-              Return to Health Logs
+              Return to Incidents
             </Button>
           </Box>
         </Container>
@@ -238,10 +238,10 @@ export default function EditHealthLogPage() {
           <Button
             color="inherit"
             component={Link}
-            href="/health-logs"
+            href="/incidents"
             startIcon={<ArrowBack />}
           >
-            Back to Health Logs
+            Back to Incidents
           </Button>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 2 }}>
             Edit Health Log
@@ -347,7 +347,7 @@ export default function EditHealthLogPage() {
                     <Button
                       variant="outlined"
                       component={Link}
-                      href="/health-logs"
+                      href="/incidents"
                       disabled={saving}
                     >
                       Cancel

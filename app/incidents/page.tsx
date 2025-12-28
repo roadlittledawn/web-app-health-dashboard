@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AppBar,
   Box,
@@ -21,7 +21,7 @@ import {
   Typography,
   CircularProgress,
   Alert,
-} from '@mui/material';
+} from "@mui/material";
 import {
   LocalHospital,
   Add,
@@ -29,16 +29,16 @@ import {
   Edit,
   Visibility,
   FilterList,
-} from '@mui/icons-material';
-import { HealthIncident } from '@/types/health';
-import { formatLocalDateTime } from '@/lib/dateUtils';
+} from "@mui/icons-material";
+import { HealthIncident } from "@/types/health";
+import { formatLocalDateTime } from "@/lib/dateUtils";
 
 export default function IncidentsPage() {
   const [incidents, setIncidents] = useState<HealthIncident[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [filters, setFilters] = useState({
-    status: '',
+    status: "",
   });
   const router = useRouter();
 
@@ -48,58 +48,71 @@ export default function IncidentsPage() {
 
   const fetchIncidents = async () => {
     setLoading(true);
-    setError('');
+    setError("");
 
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem("auth-token");
     if (!token) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     try {
-      const response = await fetch('/api/incidents-query', {
+      const response = await fetch("/api/incidents-query", {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch incidents');
+        throw new Error("Failed to fetch incidents");
       }
 
       const data = await response.json();
 
-      // Apply client-side filtering
+      // Apply client-side filtering and sorting
       let filteredIncidents = data.data;
       if (filters.status) {
-        filteredIncidents = filteredIncidents.filter((incident: HealthIncident) => {
-          const status = getStatusDisplay(incident.status);
-          return status === filters.status;
-        });
+        filteredIncidents = filteredIncidents.filter(
+          (incident: HealthIncident) => {
+            const status = getStatusDisplay(incident.status);
+            return status === filters.status;
+          }
+        );
       }
+
+      // Sort by created_at date (most recent first)
+      filteredIncidents = filteredIncidents.sort(
+        (a: HealthIncident, b: HealthIncident) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
       setIncidents(filteredIncidents);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusDisplay = (status: any) => {
-    if (status.resolved) return 'resolved';
-    if (status.improving) return 'improving';
-    if (status.worsening) return 'active';
-    return 'unknown';
+  const getStatusDisplay = (status: string[]) => {
+    if (status.includes("resolved")) return "resolved";
+    if (status.includes("improving")) return "improving";
+    if (status.includes("worsening") || status.includes("constant"))
+      return "active";
+    return "unknown";
   };
 
-  const getStatusColor = (status: any) => {
+  const getStatusColor = (status: string[]) => {
     const display = getStatusDisplay(status);
     switch (display) {
-      case 'resolved': return 'success';
-      case 'improving': return 'warning';
-      case 'active': return 'error';
-      default: return 'default';
+      case "resolved":
+        return "success";
+      case "improving":
+        return "warning";
+      case "active":
+        return "error";
+      default:
+        return "default";
     }
   };
 
@@ -146,7 +159,9 @@ export default function IncidentsPage() {
                   <Select
                     value={filters.status}
                     label="Status"
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                    onChange={(e) =>
+                      setFilters({ ...filters, status: e.target.value })
+                    }
                   >
                     <MenuItem value="">All</MenuItem>
                     <MenuItem value="active">Active</MenuItem>
@@ -159,7 +174,7 @@ export default function IncidentsPage() {
                 <Button
                   fullWidth
                   variant="outlined"
-                  onClick={() => setFilters({ status: '' })}
+                  onClick={() => setFilters({ status: "" })}
                 >
                   Clear Filters
                 </Button>
@@ -191,13 +206,19 @@ export default function IncidentsPage() {
         {!loading && incidents.length > 0 && (
           <Grid container spacing={2}>
             {incidents.map((incident) => (
-              <Grid item xs={12} md={6} key={incident._id?.toString()}>
+              <Grid item xs={12} key={incident._id?.toString()}>
                 <Card>
                   <CardContent>
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="flex-start"
+                      mb={2}
+                    >
                       <Box>
                         <Typography variant="h6" component="h2" gutterBottom>
-                          {incident.painLocations.join(', ') || 'No location specified'}
+                          {incident.painLocations.join(", ") ||
+                            "No location specified"}
                         </Typography>
                         <Box display="flex" gap={0.5} flexWrap="wrap">
                           {incident.painLocations.map((location, idx) => (
@@ -217,13 +238,23 @@ export default function IncidentsPage() {
                       />
                     </Box>
 
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       Started: {formatLocalDateTime(incident.dateStarted)}
                     </Typography>
 
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Pain Level: {incident.painIntensity}/10
-                    </Typography>
+                    {incident.painIntensity !== null && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        Pain Level: {incident.painIntensity}/10
+                      </Typography>
+                    )}
 
                     <Typography variant="body2" paragraph>
                       {incident.description}

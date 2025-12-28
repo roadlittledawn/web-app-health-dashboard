@@ -120,7 +120,7 @@ export default function AddHealthLogPage() {
 
       setSuccess(true);
       setTimeout(() => {
-        router.push('/health-logs');
+        router.push('/incidents');
       }, 1500);
     } catch (err: any) {
       setError(err.message);
@@ -135,10 +135,10 @@ export default function AddHealthLogPage() {
           <Button
             color="inherit"
             component={Link}
-            href="/health-logs"
+            href="/incidents"
             startIcon={<ArrowBack />}
           >
-            Back to Health Logs
+            Back to Incidents
           </Button>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 2 }}>
             Add Health Log
@@ -245,7 +245,7 @@ export default function AddHealthLogPage() {
                     <Button
                       variant="outlined"
                       component={Link}
-                      href="/health-logs"
+                      href="/incidents"
                       disabled={saving}
                     >
                       Cancel
