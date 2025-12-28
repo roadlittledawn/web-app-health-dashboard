@@ -11,8 +11,12 @@ import {
   CardContent,
   Chip,
   Container,
+  FormControl,
   Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   Toolbar,
   Typography,
   CircularProgress,
@@ -24,6 +28,7 @@ import {
   ArrowBack,
   Edit,
   Visibility,
+  FilterList,
 } from '@mui/icons-material';
 import { HealthIncident } from '@/types/health';
 import { formatLocalDateTime } from '@/lib/dateUtils';
@@ -32,15 +37,26 @@ export default function IncidentsPage() {
   const [incidents, setIncidents] = useState<HealthIncident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filters, setFilters] = useState({
+    status: '',
+  });
   const router = useRouter();
 
   useEffect(() => {
     fetchIncidents();
-  }, []);
+  }, [filters]);
 
   const fetchIncidents = async () => {
+    setLoading(true);
+    setError('');
+
+    const token = localStorage.getItem('auth-token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/incidents-query', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -52,7 +68,17 @@ export default function IncidentsPage() {
       }
 
       const data = await response.json();
-      setIncidents(data.data);
+
+      // Apply client-side filtering
+      let filteredIncidents = data.data;
+      if (filters.status) {
+        filteredIncidents = filteredIncidents.filter((incident: HealthIncident) => {
+          const status = getStatusDisplay(incident.status);
+          return status === filters.status;
+        });
+      }
+
+      setIncidents(filteredIncidents);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -77,121 +103,157 @@ export default function IncidentsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
-    <Container maxWidth="lg">
-      <AppBar position="static" sx={{ mb: 3 }}>
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
         <Toolbar>
-          <IconButton edge="start" color="inherit" onClick={() => router.push('/dashboard')}>
-            <ArrowBack />
-          </IconButton>
+          <Button
+            color="inherit"
+            component={Link}
+            href="/dashboard"
+            startIcon={<ArrowBack />}
+            sx={{ mr: 2 }}
+          >
+            Dashboard
+          </Button>
           <LocalHospital sx={{ mr: 2 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Health Incidents
           </Typography>
           <Button
             color="inherit"
-            startIcon={<Add />}
             component={Link}
             href="/incidents/add"
+            startIcon={<Add />}
           >
             New Incident
           </Button>
         </Toolbar>
       </AppBar>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        {/* Filters */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box display="flex" alignItems="center" mb={2}>
+              <FilterList sx={{ mr: 1 }} />
+              <Typography variant="h6">Filters</Typography>
+            </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={4}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={filters.status}
+                    label="Status"
+                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="improving">Improving</MenuItem>
+                    <MenuItem value="resolved">Resolved</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => setFilters({ status: '' })}
+                >
+                  Clear Filters
+                </Button>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
 
-      <Grid container spacing={3}>
-        {incidents.map((incident) => (
-          <Grid item xs={12} md={6} key={incident._id?.toString()}>
-            <Card>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                  <Box>
-                    <Typography variant="h6" component="h2" gutterBottom>
-                      {incident.painLocations.join(', ') || 'No location specified'}
-                    </Typography>
-                    <Box display="flex" gap={0.5} flexWrap="wrap">
-                      {incident.painLocations.map((location, idx) => (
-                        <Chip
-                          key={idx}
-                          label={location}
-                          size="small"
-                          variant="outlined"
-                        />
-                      ))}
+        {/* Loading / Error States */}
+        {loading && (
+          <Box display="flex" justifyContent="center" my={4}>
+            <CircularProgress />
+          </Box>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Incidents List */}
+        {!loading && incidents.length === 0 && (
+          <Alert severity="info">
+            No incidents found. Click "New Incident" to create one.
+          </Alert>
+        )}
+
+        {!loading && incidents.length > 0 && (
+          <Grid container spacing={2}>
+            {incidents.map((incident) => (
+              <Grid item xs={12} md={6} key={incident._id?.toString()}>
+                <Card>
+                  <CardContent>
+                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                      <Box>
+                        <Typography variant="h6" component="h2" gutterBottom>
+                          {incident.painLocations.join(', ') || 'No location specified'}
+                        </Typography>
+                        <Box display="flex" gap={0.5} flexWrap="wrap">
+                          {incident.painLocations.map((location, idx) => (
+                            <Chip
+                              key={idx}
+                              label={location}
+                              size="small"
+                              variant="outlined"
+                            />
+                          ))}
+                        </Box>
+                      </Box>
+                      <Chip
+                        label={getStatusDisplay(incident.status)}
+                        color={getStatusColor(incident.status) as any}
+                        size="small"
+                      />
                     </Box>
-                  </Box>
-                  <Chip
-                    label={getStatusDisplay(incident.status)}
-                    color={getStatusColor(incident.status) as any}
-                    size="small"
-                  />
-                </Box>
-                
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Started: {formatLocalDateTime(incident.dateStarted)}
-                </Typography>
-                
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Pain Level: {incident.painIntensity}/10
-                </Typography>
-                
-                <Typography variant="body2" paragraph>
-                  {incident.description}
-                </Typography>
 
-                <Box display="flex" gap={1} mt={2}>
-                  <Button
-                    size="small"
-                    startIcon={<Visibility />}
-                    component={Link}
-                    href={`/incidents/${incident._id}`}
-                  >
-                    View Details
-                  </Button>
-                  <Button
-                    size="small"
-                    startIcon={<Edit />}
-                    component={Link}
-                    href={`/incidents/edit/${incident._id}`}
-                  >
-                    Edit
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Started: {formatLocalDateTime(incident.dateStarted)}
+                    </Typography>
+
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Pain Level: {incident.painIntensity}/10
+                    </Typography>
+
+                    <Typography variant="body2" paragraph>
+                      {incident.description}
+                    </Typography>
+
+                    <Box display="flex" gap={1} mt={2}>
+                      <Button
+                        size="small"
+                        startIcon={<Visibility />}
+                        component={Link}
+                        href={`/incidents/${incident._id}`}
+                      >
+                        View Details
+                      </Button>
+                      <Button
+                        size="small"
+                        startIcon={<Edit />}
+                        component={Link}
+                        href={`/incidents/edit/${incident._id}`}
+                      >
+                        Edit
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
-        ))}
-      </Grid>
-
-      {incidents.length === 0 && !loading && (
-        <Box textAlign="center" py={8}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No incidents found
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            component={Link}
-            href="/incidents/add"
-          >
-            Create Your First Incident
-          </Button>
-        </Box>
-      )}
-    </Container>
+        )}
+      </Container>
+    </Box>
   );
 }
