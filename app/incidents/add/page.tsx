@@ -20,9 +20,6 @@ import {
   Slider,
   Divider,
   InputAdornment,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
   MenuItem,
 } from "@mui/material";
 import { ArrowBack, Save, Clear } from "@mui/icons-material";
@@ -38,7 +35,6 @@ import {
   STUDIES_COMPLETED_OPTIONS,
   STATUS_OPTIONS,
   formatOptionLabel,
-  toggleArrayItem,
 } from "@/lib/healthIncidentOptions";
 
 interface AutocompleteData {
@@ -350,31 +346,29 @@ export default function AddIncidentPage() {
                     Pain Quality
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <FormGroup row>
-                    {PAIN_QUALITY_OPTIONS.map((option) => (
-                      <FormControlLabel
-                        key={option}
-                        control={
-                          <Checkbox
-                            checked={formData.symptoms.painQuality.includes(option)}
-                            onChange={() =>
-                              setFormData({
-                                ...formData,
-                                symptoms: {
-                                  ...formData.symptoms,
-                                  painQuality: toggleArrayItem(
-                                    formData.symptoms.painQuality,
-                                    option
-                                  ),
-                                },
-                              })
-                            }
-                          />
-                        }
-                        label={formatOptionLabel(option)}
+                  <Autocomplete
+                    multiple
+                    options={PAIN_QUALITY_OPTIONS}
+                    value={formData.symptoms.painQuality}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          painQuality: newValue,
+                        },
+                      })
+                    }
+                    getOptionLabel={(option) => formatOptionLabel(option)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Pain Quality"
+                        placeholder="Select pain qualities"
+                        helperText="Select multiple options"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
                 </Grid>
 
                 {/* Other Symptoms */}
@@ -383,31 +377,29 @@ export default function AddIncidentPage() {
                     Other Symptoms
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <FormGroup row>
-                    {OTHER_SYMPTOMS_OPTIONS.map((option) => (
-                      <FormControlLabel
-                        key={option}
-                        control={
-                          <Checkbox
-                            checked={formData.symptoms.otherSymptoms.includes(option)}
-                            onChange={() =>
-                              setFormData({
-                                ...formData,
-                                symptoms: {
-                                  ...formData.symptoms,
-                                  otherSymptoms: toggleArrayItem(
-                                    formData.symptoms.otherSymptoms,
-                                    option
-                                  ),
-                                },
-                              })
-                            }
-                          />
-                        }
-                        label={formatOptionLabel(option)}
+                  <Autocomplete
+                    multiple
+                    options={OTHER_SYMPTOMS_OPTIONS}
+                    value={formData.symptoms.otherSymptoms}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          otherSymptoms: newValue,
+                        },
+                      })
+                    }
+                    getOptionLabel={(option) => formatOptionLabel(option)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Other Symptoms"
+                        placeholder="Select symptoms"
+                        helperText="Select multiple options"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
                 </Grid>
 
                 {/* Sensations */}
@@ -416,31 +408,29 @@ export default function AddIncidentPage() {
                     Physical Sensations
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <FormGroup row>
-                    {SENSATIONS_OPTIONS.map((option) => (
-                      <FormControlLabel
-                        key={option}
-                        control={
-                          <Checkbox
-                            checked={formData.symptoms.sensations.includes(option)}
-                            onChange={() =>
-                              setFormData({
-                                ...formData,
-                                symptoms: {
-                                  ...formData.symptoms,
-                                  sensations: toggleArrayItem(
-                                    formData.symptoms.sensations,
-                                    option
-                                  ),
-                                },
-                              })
-                            }
-                          />
-                        }
-                        label={formatOptionLabel(option)}
+                  <Autocomplete
+                    multiple
+                    options={SENSATIONS_OPTIONS}
+                    value={formData.symptoms.sensations}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          sensations: newValue,
+                        },
+                      })
+                    }
+                    getOptionLabel={(option) => formatOptionLabel(option)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Physical Sensations"
+                        placeholder="Select sensations"
+                        helperText="Select multiple options"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
                 </Grid>
 
                 {/* Timing */}
@@ -452,111 +442,90 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    When Most Severe
-                  </Typography>
-                  <FormGroup row>
-                    {WHEN_MOST_SEVERE_OPTIONS.map((option) => (
-                      <FormControlLabel
-                        key={option}
-                        control={
-                          <Checkbox
-                            checked={formData.symptoms.timing.whenMostSevere.includes(
-                              option
-                            )}
-                            onChange={() =>
-                              setFormData({
-                                ...formData,
-                                symptoms: {
-                                  ...formData.symptoms,
-                                  timing: {
-                                    ...formData.symptoms.timing,
-                                    whenMostSevere: toggleArrayItem(
-                                      formData.symptoms.timing.whenMostSevere,
-                                      option
-                                    ),
-                                  },
-                                },
-                              })
-                            }
-                          />
-                        }
-                        label={formatOptionLabel(option)}
+                  <Autocomplete
+                    multiple
+                    options={WHEN_MOST_SEVERE_OPTIONS}
+                    value={formData.symptoms.timing.whenMostSevere}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          timing: {
+                            ...formData.symptoms.timing,
+                            whenMostSevere: newValue,
+                          },
+                        },
+                      })
+                    }
+                    getOptionLabel={(option) => formatOptionLabel(option)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="When Most Severe"
+                        placeholder="Select when pain is most severe"
+                        helperText="Select multiple options"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    What Makes Worse
-                  </Typography>
-                  <FormGroup row>
-                    {WHAT_MAKES_WORSE_OPTIONS.map((option) => (
-                      <FormControlLabel
-                        key={option}
-                        control={
-                          <Checkbox
-                            checked={formData.symptoms.timing.whatMakesWorse.includes(
-                              option
-                            )}
-                            onChange={() =>
-                              setFormData({
-                                ...formData,
-                                symptoms: {
-                                  ...formData.symptoms,
-                                  timing: {
-                                    ...formData.symptoms.timing,
-                                    whatMakesWorse: toggleArrayItem(
-                                      formData.symptoms.timing.whatMakesWorse,
-                                      option
-                                    ),
-                                  },
-                                },
-                              })
-                            }
-                          />
-                        }
-                        label={formatOptionLabel(option)}
+                  <Autocomplete
+                    multiple
+                    options={WHAT_MAKES_WORSE_OPTIONS}
+                    value={formData.symptoms.timing.whatMakesWorse}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          timing: {
+                            ...formData.symptoms.timing,
+                            whatMakesWorse: newValue,
+                          },
+                        },
+                      })
+                    }
+                    getOptionLabel={(option) => formatOptionLabel(option)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="What Makes Worse"
+                        placeholder="Select what makes pain worse"
+                        helperText="Select multiple options"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    What Makes Better
-                  </Typography>
-                  <FormGroup row>
-                    {WHAT_MAKES_BETTER_OPTIONS.map((option) => (
-                      <FormControlLabel
-                        key={option}
-                        control={
-                          <Checkbox
-                            checked={formData.symptoms.timing.whatMakesBetter.includes(
-                              option
-                            )}
-                            onChange={() =>
-                              setFormData({
-                                ...formData,
-                                symptoms: {
-                                  ...formData.symptoms,
-                                  timing: {
-                                    ...formData.symptoms.timing,
-                                    whatMakesBetter: toggleArrayItem(
-                                      formData.symptoms.timing.whatMakesBetter,
-                                      option
-                                    ),
-                                  },
-                                },
-                              })
-                            }
-                          />
-                        }
-                        label={formatOptionLabel(option)}
+                  <Autocomplete
+                    multiple
+                    options={WHAT_MAKES_BETTER_OPTIONS}
+                    value={formData.symptoms.timing.whatMakesBetter}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        symptoms: {
+                          ...formData.symptoms,
+                          timing: {
+                            ...formData.symptoms.timing,
+                            whatMakesBetter: newValue,
+                          },
+                        },
+                      })
+                    }
+                    getOptionLabel={(option) => formatOptionLabel(option)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="What Makes Better"
+                        placeholder="Select what makes pain better"
+                        helperText="Select multiple options"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
                 </Grid>
 
                 {/* Treatments */}
@@ -568,69 +537,55 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Treatments Tried
-                  </Typography>
-                  <FormGroup row>
-                    {TREATMENTS_TRIED_OPTIONS.map((option) => (
-                      <FormControlLabel
-                        key={option}
-                        control={
-                          <Checkbox
-                            checked={formData.treatments.treatmentsTried.includes(
-                              option
-                            )}
-                            onChange={() =>
-                              setFormData({
-                                ...formData,
-                                treatments: {
-                                  ...formData.treatments,
-                                  treatmentsTried: toggleArrayItem(
-                                    formData.treatments.treatmentsTried,
-                                    option
-                                  ),
-                                },
-                              })
-                            }
-                          />
-                        }
-                        label={formatOptionLabel(option)}
+                  <Autocomplete
+                    multiple
+                    options={TREATMENTS_TRIED_OPTIONS}
+                    value={formData.treatments.treatmentsTried}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        treatments: {
+                          ...formData.treatments,
+                          treatmentsTried: newValue,
+                        },
+                      })
+                    }
+                    getOptionLabel={(option) => formatOptionLabel(option)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Treatments Tried"
+                        placeholder="Select treatments tried"
+                        helperText="Select multiple options"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Studies Completed
-                  </Typography>
-                  <FormGroup row>
-                    {STUDIES_COMPLETED_OPTIONS.map((option) => (
-                      <FormControlLabel
-                        key={option}
-                        control={
-                          <Checkbox
-                            checked={formData.treatments.studiesCompleted.includes(
-                              option
-                            )}
-                            onChange={() =>
-                              setFormData({
-                                ...formData,
-                                treatments: {
-                                  ...formData.treatments,
-                                  studiesCompleted: toggleArrayItem(
-                                    formData.treatments.studiesCompleted,
-                                    option
-                                  ),
-                                },
-                              })
-                            }
-                          />
-                        }
-                        label={formatOptionLabel(option)}
+                  <Autocomplete
+                    multiple
+                    options={STUDIES_COMPLETED_OPTIONS}
+                    value={formData.treatments.studiesCompleted}
+                    onChange={(_, newValue) =>
+                      setFormData({
+                        ...formData,
+                        treatments: {
+                          ...formData.treatments,
+                          studiesCompleted: newValue,
+                        },
+                      })
+                    }
+                    getOptionLabel={(option) => formatOptionLabel(option)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Studies Completed"
+                        placeholder="Select studies completed"
+                        helperText="Select multiple options"
                       />
-                    ))}
-                  </FormGroup>
+                    )}
+                  />
                 </Grid>
 
                 {/* Current Status */}
