@@ -23,11 +23,12 @@ import {
 import {
   ArrowBack,
   Edit,
-  Add,
 } from '@mui/icons-material';
 import { HealthIncident, HealthLog } from '@/types/health';
 import { formatLocalDateTime } from '@/lib/dateUtils';
 import { formatOptionLabel } from '@/lib/healthIncidentOptions';
+import HealthLogForm from '@/components/HealthLogForm';
+import HealthLogEdit from '@/components/HealthLogEdit';
 import Link from 'next/link';
 
 export default function IncidentDetailPage() {
@@ -65,9 +66,9 @@ export default function IncidentDetailPage() {
 
       if (!logsResponse.ok) throw new Error('Failed to fetch logs');
       const logsData = await logsResponse.json();
-      // Sort logs by timestamp in descending order (most recent first)
+      // Sort logs by timestamp (or created_at if no timestamp) in descending order
       const sortedLogs = logsData.data.sort((a: HealthLog, b: HealthLog) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        new Date(b.timestamp || b.created_at).getTime() - new Date(a.timestamp || a.created_at).getTime()
       );
       setLogs(sortedLogs);
       
@@ -161,34 +162,21 @@ export default function IncidentDetailPage() {
 
           <Card>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6">Log Entries</Typography>
-                <Button
-                  startIcon={<Add />}
-                  component={Link}
-                  href={`/health-logs/add?incident_id=${incidentId}`}
-                >
-                  Add Entry
-                </Button>
-              </Box>
+              <Typography variant="h6" mb={2}>Log Entries</Typography>
+              <HealthLogForm 
+                incidentId={incidentId} 
+                onSuccess={fetchIncidentData}
+              />
               
               {logs.length === 0 ? (
-                <Typography color="text.secondary">No log entries yet</Typography>
+                <Typography color="text.secondary" sx={{ mt: 2 }}>No log entries yet</Typography>
               ) : (
-                <List>
+                <List sx={{ mt: 2 }}>
                   {logs.map((log, index) => (
                     <div key={log._id?.toString()}>
                       <ListItem>
                         <ListItemText
-                          primary={log.description}
-                          secondary={
-                            <Box>
-                              <Typography variant="caption" display="block">
-                                {formatLocalDateTime(log.timestamp)}
-                              </Typography>
-                              <Chip size="small" label={log.issue_type} />
-                            </Box>
-                          }
+                          primary={<HealthLogEdit log={log} incidentId={incidentId} onSuccess={fetchIncidentData} />}
                         />
                       </ListItem>
                       {index < logs.length - 1 && <Divider />}
