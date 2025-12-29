@@ -1,123 +1,85 @@
-import { Handler, HandlerEvent, HandlerContext, HandlerResponse } from "@netlify/functions";
-import { ObjectId } from "mongodb";
-import { getDatabase } from "../../lib/mongodb";
-import { verifyToken, extractToken } from "../../lib/auth";
-import { HealthIncident } from "../../types/health";
+import { Handler } from '@netlify/functions';
+import { MongoClient, ObjectId } from 'mongodb';
+import jwt from 'jsonwebtoken';
 
-interface ErrorResponse {
-  error: {
-    code: string;
-    message: string;
-  };
-}
-
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext): Promise<HandlerResponse> => {
-  if (event.httpMethod !== "PATCH") {
+const handler: Handler = async (event) => {
+  if (event.httpMethod !== 'PATCH') {
     return {
       statusCode: 405,
-      body: JSON.stringify({
-        error: {
-          code: "METHOD_NOT_ALLOWED",
-          message: "Only PATCH requests are allowed"
-        }
-      } as ErrorResponse),
-      headers: { "Content-Type": "application/json", "Allow": "PATCH" },
+      body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
   try {
-    const token = extractToken(event.headers.authorization);
-    if (!token) {
+    // Verify JWT token
+    const authHeader = event.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return {
         statusCode: 401,
-        body: JSON.stringify({
-          error: {
-            code: "NO_TOKEN",
-            message: "No authentication token provided"
-          }
-        } as ErrorResponse),
-        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: 'No token provided' }),
       };
     }
 
-    verifyToken(token);
+    const token = authHeader.substring(7);
+    jwt.verify(token, process.env.JWT_SECRET!);
 
-    const { id, updates } = JSON.parse(event.body || '{}');
+    const { _id, ...updateData } = JSON.parse(event.body || '{}');
 
-    if (!id) {
+    if (!_id) {
       return {
         statusCode: 400,
-        body: JSON.stringify({
-          error: {
-            code: "MISSING_ID",
-            message: "Incident ID is required"
-          }
-        } as ErrorResponse),
-        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: 'Incident ID is required' }),
       };
     }
 
-    // Validate MongoDB ObjectId format
-    if (!ObjectId.isValid(id)) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          error: {
-            code: "INVALID_ID",
-            message: "Invalid incident ID format"
-          }
-        } as ErrorResponse),
-        headers: { "Content-Type": "application/json" },
-      };
+    const client = new MongoClient(process.env.MONGODB_CONNECTION_STRING!);
+    await client.connect();
+
+    const db = client.db('health-fitness');
+    const collection = db.collection('health-incidents');
+
+    // Convert painIntensityOverTime dates to proper Date objects if present
+    if (updateData.painIntensityOverTime) {
+      updateData.painIntensityOverTime = updateData.painIntensityOverTime.map((entry: any) => ({
+        ...entry,
+        date: new Date(entry.date)
+      }));
     }
 
-    const db = await getDatabase();
-
-    // Convert date fields to Date objects if they exist
-    const updateData: any = { ...updates };
-    if (updateData.dateStarted) {
-      updateData.dateStarted = new Date(updateData.dateStarted);
-    }
-    updateData.updated_at = new Date();
-
-    const result = await db.collection<HealthIncident>('health-incidents').findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $set: updateData },
-      { returnDocument: 'after' }
+    const result = await collection.updateOne(
+      { _id: new ObjectId(_id) },
+      { 
+        $set: {
+          ...updateData,
+          updated_at: new Date()
+        }
+      }
     );
 
-    if (!result) {
+    await client.close();
+
+    if (result.matchedCount === 0) {
       return {
         statusCode: 404,
-        body: JSON.stringify({
-          error: {
-            code: "NOT_FOUND",
-            message: "Incident not found"
-          }
-        } as ErrorResponse),
-        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: 'Incident not found' }),
       };
     }
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
+      body: JSON.stringify({ 
         success: true,
-        data: result,
+        modifiedCount: result.modifiedCount 
       }),
-      headers: { "Content-Type": "application/json" },
     };
+
   } catch (error) {
-    console.error("Update incident error:", error);
+    console.error('Error updating incident:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "An error occurred while updating incident"
-        }
-      } as ErrorResponse),
-      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 };
+
+export { handler };

@@ -141,11 +141,16 @@ export const handler: Handler = async (
       };
     }
 
-    // Add updated_at timestamp
+    // Add updated_at timestamp and convert incident_id to ObjectId if present
     const updateData = {
       ...updates,
       updated_at: new Date(),
     };
+
+    // Convert incident_id to ObjectId if it exists in updates
+    if (updateData.incident_id) {
+      updateData.incident_id = new ObjectId(updateData.incident_id);
+    }
 
     // Get database and collection
     const db = await getDatabase();
