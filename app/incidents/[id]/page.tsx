@@ -29,6 +29,8 @@ import { formatLocalDateTime } from '@/lib/dateUtils';
 import { formatOptionLabel } from '@/lib/healthIncidentOptions';
 import HealthLogForm from '@/components/HealthLogForm';
 import HealthLogEdit from '@/components/HealthLogEdit';
+import PainLevelChart from '@/components/PainLevelChart';
+import PainLevelForm from '@/components/PainLevelForm';
 import Link from 'next/link';
 
 export default function IncidentDetailPage() {
@@ -157,6 +159,20 @@ export default function IncidentDetailPage() {
                   <Typography variant="body2">{incident.painIntensity}/10</Typography>
                 </Grid>
               </Grid>
+            </CardContent>
+          </Card>
+
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" mb={2}>Pain Levels Over Time</Typography>
+              <PainLevelChart data={incident.painIntensityOverTime || []} />
+              <Box mt={2}>
+                <PainLevelForm 
+                  incidentId={incidentId}
+                  painLevels={incident.painIntensityOverTime || []}
+                  onUpdate={fetchIncidentData}
+                />
+              </Box>
             </CardContent>
           </Card>
 

@@ -4,7 +4,11 @@ import { ObjectId } from "mongodb";
 export interface HealthIncident {
   _id?: ObjectId;
   painLocations: string[]; // Array to support multiple pain locations
-  painIntensity: number | null; // Optional 0-10 pain level
+  painIntensity: number | null; // Optional 0-10 pain level (max pain intensity)
+  painIntensityOverTime?: Array<{
+    date: Date;
+    intensity: number;
+  }>; // Pain levels tracked over time
   dateStarted: Date;
   endDate?: Date | null; // Optional end date for resolved incidents
   injurySource: string;
