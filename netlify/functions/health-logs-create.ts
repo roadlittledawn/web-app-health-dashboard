@@ -7,6 +7,7 @@ import {
 import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
 import { HealthLog } from "../../types/health";
+import { ObjectId } from "mongodb";
 
 interface ErrorResponse {
   error: {
@@ -36,7 +37,7 @@ export const handler: Handler = async (
       } as ErrorResponse),
       headers: {
         "Content-Type": "application/json",
-        "Allow": "POST",
+        Allow: "POST",
       },
     };
   }
@@ -95,13 +96,7 @@ export const handler: Handler = async (
     const data = JSON.parse(event.body);
 
     // Validate required fields
-    const requiredFields = [
-      'issue_type',
-      'pain_level',
-      'description',
-      'incident_id',
-      'body_area',
-    ];
+    const requiredFields = ["issue_type", "description", "incident_id"];
 
     for (const field of requiredFields) {
       if (!data[field]) {
@@ -120,42 +115,17 @@ export const handler: Handler = async (
       }
     }
 
-    // Validate pain level
-    if (data.pain_level < 1 || data.pain_level > 10) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          error: {
-            code: "INVALID_PAIN_LEVEL",
-            message: "Pain level must be between 1 and 10",
-          },
-        } as ErrorResponse),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-    }
-
     // Create health log object
-    const now = new Date();
     const healthLog: HealthLog = {
-      timestamp: data.timestamp ? new Date(data.timestamp) : now,
+      incident_id: new ObjectId(data.incident_id),
       issue_type: data.issue_type,
-      pain_level: data.pain_level,
       description: data.description,
-      incident_id: data.incident_id,
-      activities: data.activities || [],
-      triggers: data.triggers || [],
-      symptoms: data.symptoms || [],
-      body_area: data.body_area,
-      status: data.status || 'active',
-      created_at: now,
-      updated_at: now,
+      timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
     };
 
     // Get database and collection
     const db = await getDatabase();
-    const collection = db.collection<HealthLog>('health-logs');
+    const collection = db.collection<HealthLog>("health-logs");
 
     // Insert the log
     const result = await collection.insertOne(healthLog);
