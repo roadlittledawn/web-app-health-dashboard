@@ -25,6 +25,7 @@ import {
 } from "@mui/material";
 import { ArrowBack, Save, Clear } from "@mui/icons-material";
 import { formatForDateTimeLocal } from "@/lib/dateUtils";
+import { generateIncidentId } from "@/lib/incidentUtils";
 import { HealthIncident } from "@/types/health";
 import {
   PAIN_QUALITY_OPTIONS,
@@ -60,6 +61,7 @@ export default function EditIncidentPage() {
   });
 
   const [formData, setFormData] = useState({
+    incidentId: "",
     painLocations: [] as string[],
     painIntensity: 5,
     dateStarted: formatForDateTimeLocal(new Date()),
@@ -126,8 +128,9 @@ export default function EditIncidentPage() {
 
         if (incident) {
           setFormData({
+            incidentId: incident.incidentId || "",
             painLocations: incident.painLocations || [],
-            painIntensity: incident.painIntensity || 5,
+            painIntensity: incident.painIntensity ?? 5,
             dateStarted: formatForDateTimeLocal(new Date(incident.dateStarted)),
             endDate: incident.endDate ? formatForDateTimeLocal(new Date(incident.endDate)) : "",
             injurySource: incident.injurySource || "",
@@ -160,6 +163,15 @@ export default function EditIncidentPage() {
 
     fetchData();
   }, [incidentId, router]);
+
+  // Auto-generate incident ID when painLocations or dateStarted changes (if incidentId is empty)
+  useEffect(() => {
+    if (!formData.incidentId && formData.painLocations.length > 0 && formData.dateStarted) {
+      const date = new Date(formData.dateStarted);
+      const generatedId = generateIncidentId(date, formData.painLocations);
+      setFormData(prev => ({ ...prev, incidentId: generatedId }));
+    }
+  }, [formData.painLocations, formData.dateStarted, formData.incidentId]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -258,6 +270,19 @@ export default function EditIncidentPage() {
                 </Grid>
 
                 <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Incident ID"
+                    value={formData.incidentId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, incidentId: e.target.value })
+                    }
+                    helperText="Auto-generated from date and pain location. You can edit if needed."
+                    placeholder="e.g., 2025-12-10_right-knee"
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
                   <Autocomplete
                     multiple
                     freeSolo
@@ -266,6 +291,7 @@ export default function EditIncidentPage() {
                     onChange={(_, newValue) => {
                       setFormData({ ...formData, painLocations: newValue });
                     }}
+                    filterSelectedOptions
                     renderInput={(params) => (
                       <TextField
                         {...params}
