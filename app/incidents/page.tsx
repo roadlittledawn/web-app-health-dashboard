@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import {
   AppBar,
   Box,
@@ -97,7 +98,8 @@ export default function IncidentsPage() {
   const getStatusColor = (status: string[]) => {
     if (status.includes("resolved")) return "success";
     if (status.includes("improving")) return "warning";
-    if (status.includes("worsening") || status.includes("constant")) return "error";
+    if (status.includes("worsening") || status.includes("constant"))
+      return "error";
     if (status.includes("occasional")) return "info";
     return "default";
   };
@@ -250,9 +252,9 @@ export default function IncidentsPage() {
                       </Typography>
                     )}
 
-                    <Typography variant="body2" paragraph>
-                      {incident.description}
-                    </Typography>
+                    <Box sx={{ typography: 'body2', '& > *': { mb: 1 } }}>
+                      <ReactMarkdown>{incident.description}</ReactMarkdown>
+                    </Box>
 
                     <Box display="flex" gap={1} mt={2}>
                       <Button
