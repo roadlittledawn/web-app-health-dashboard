@@ -24,6 +24,7 @@ import {
 } from "@mui/material";
 import { ArrowBack, Save, Clear } from "@mui/icons-material";
 import { formatForDateTimeLocal } from "@/lib/dateUtils";
+import { generateIncidentId } from "@/lib/incidentUtils";
 import {
   PAIN_QUALITY_OPTIONS,
   OTHER_SYMPTOMS_OPTIONS,
@@ -55,6 +56,7 @@ export default function AddIncidentPage() {
   });
 
   const [formData, setFormData] = useState({
+    incidentId: "",
     painLocations: [] as string[],
     painIntensity: 5,
     dateStarted: formatForDateTimeLocal(new Date()),
@@ -112,6 +114,15 @@ export default function AddIncidentPage() {
 
     fetchAutocompleteData();
   }, [router]);
+
+  // Auto-generate incident ID when painLocations or dateStarted changes
+  useEffect(() => {
+    if (formData.painLocations.length > 0 && formData.dateStarted) {
+      const date = new Date(formData.dateStarted);
+      const generatedId = generateIncidentId(date, formData.painLocations);
+      setFormData(prev => ({ ...prev, incidentId: generatedId }));
+    }
+  }, [formData.painLocations, formData.dateStarted]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -199,6 +210,19 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Incident ID"
+                    value={formData.incidentId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, incidentId: e.target.value })
+                    }
+                    helperText="Auto-generated from date and pain location. You can edit if needed."
+                    placeholder="e.g., 2025-12-10_right-knee"
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
                   <Autocomplete
                     multiple
                     freeSolo
@@ -207,6 +231,7 @@ export default function AddIncidentPage() {
                     onChange={(_, newValue) => {
                       setFormData({ ...formData, painLocations: newValue });
                     }}
+                    filterSelectedOptions
                     renderInput={(params) => (
                       <TextField
                         {...params}

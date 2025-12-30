@@ -25,7 +25,31 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     verifyToken(token);
 
     const incidentData: Partial<HealthIncident> = JSON.parse(event.body || '{}');
-    
+
+    // Validate that incidentId is provided
+    if (!incidentData.incidentId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: { code: "MISSING_INCIDENT_ID", message: "Incident ID is required" } }),
+        headers: { "Content-Type": "application/json" },
+      };
+    }
+
+    const db = await getDatabase();
+
+    // Check if incident ID already exists
+    const existingIncident = await db.collection<HealthIncident>('health-incidents').findOne({
+      incidentId: incidentData.incidentId
+    });
+
+    if (existingIncident) {
+      return {
+        statusCode: 409,
+        body: JSON.stringify({ error: { code: "DUPLICATE_INCIDENT_ID", message: "An incident with this ID already exists" } }),
+        headers: { "Content-Type": "application/json" },
+      };
+    }
+
     const now = new Date();
     const incident: HealthIncident = {
       ...incidentData,
@@ -34,7 +58,6 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       updated_at: now,
     } as HealthIncident;
 
-    const db = await getDatabase();
     const result = await db.collection<HealthIncident>('health-incidents').insertOne(incident);
 
     return {
