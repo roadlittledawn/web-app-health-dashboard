@@ -27,6 +27,7 @@ export const SENSATIONS_OPTIONS = [
   "numbness",
   "tingling",
   "weakness",
+  "dizziness",
 ];
 
 export const WHEN_MOST_SEVERE_OPTIONS = [
@@ -37,7 +38,13 @@ export const WHEN_MOST_SEVERE_OPTIONS = [
   "interruptsSleep",
 ];
 
-export const WHAT_MAKES_WORSE_OPTIONS = ["rest", "activity", "sleeping", "kneeling"];
+export const WHAT_MAKES_WORSE_OPTIONS = [
+  "rest",
+  "activity",
+  "sleeping",
+  "kneeling",
+  "standing",
+];
 
 export const WHAT_MAKES_BETTER_OPTIONS = [
   "rest",
@@ -84,17 +91,17 @@ export const STATUS_OPTIONS = [
  */
 export function formatOptionLabel(option: string): string {
   // Handle snake_case
-  if (option.includes('_')) {
+  if (option.includes("_")) {
     return option
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 
   // Handle camelCase
   return option
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, str => str.toUpperCase())
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (str) => str.toUpperCase())
     .trim();
 }
 
@@ -103,7 +110,7 @@ export function formatOptionLabel(option: string): string {
  */
 export function toggleArrayItem(array: string[], item: string): string[] {
   if (array.includes(item)) {
-    return array.filter(i => i !== item);
+    return array.filter((i) => i !== item);
   } else {
     return [...array, item];
   }
