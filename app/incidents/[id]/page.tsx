@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
 import {
   AppBar,
   Box,
@@ -147,7 +148,9 @@ export default function IncidentDetailPage() {
                 />
               </Box>
               
-              <Typography variant="body1" paragraph>{incident.description}</Typography>
+              <Box sx={{ typography: 'body1', mb: 2, '& > *': { mb: 1 } }}>
+                <ReactMarkdown>{incident.description}</ReactMarkdown>
+              </Box>
               
               <Grid container spacing={2}>
                 <Grid item xs={6}>
