@@ -23,7 +23,10 @@ const handler: Handler = async (event) => {
     const token = authHeader.substring(7);
     jwt.verify(token, process.env.JWT_SECRET!);
 
-    const { _id, ...updateData } = JSON.parse(event.body || '{}');
+    const body = JSON.parse(event.body || '{}');
+    const _id = body._id || body.id;
+    const { _id: _, id: __, updates, ...rest } = body;
+    const updateData = updates || rest;
 
     if (!_id) {
       return {
@@ -37,6 +40,22 @@ const handler: Handler = async (event) => {
 
     const db = client.db('health-fitness');
     const collection = db.collection('health-incidents');
+
+    // If incidentId is being updated, check for uniqueness
+    if (updateData.incidentId) {
+      const existingIncident = await collection.findOne({
+        incidentId: updateData.incidentId,
+        _id: { $ne: new ObjectId(_id) } // Exclude current incident
+      });
+
+      if (existingIncident) {
+        await client.close();
+        return {
+          statusCode: 409,
+          body: JSON.stringify({ error: 'An incident with this ID already exists' }),
+        };
+      }
+    }
 
     // Convert painIntensityOverTime dates to proper Date objects if present
     if (updateData.painIntensityOverTime) {
