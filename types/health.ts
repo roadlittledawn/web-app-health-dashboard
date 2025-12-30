@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 // New Incident Schema (Primary Entity)
 export interface HealthIncident {
   _id?: ObjectId;
+  incidentId: string; // Human-readable unique identifier (e.g., "2025-12-10_right-knee")
   painLocations: string[]; // Array to support multiple pain locations
   painIntensity: number | null; // Optional 0-10 pain level (max pain intensity)
   painIntensityOverTime?: Array<{

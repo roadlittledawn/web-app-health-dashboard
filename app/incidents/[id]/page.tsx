@@ -105,7 +105,7 @@ export default function IncidentDetailPage() {
             <ArrowBack />
           </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            {incident.painLocations.join(', ') || 'Incident Details'}
+            {incident.incidentId || incident.painLocations.join(', ') || 'Incident Details'}
           </Typography>
           <Button
             color="inherit"
@@ -128,7 +128,7 @@ export default function IncidentDetailPage() {
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                 <Box>
                   <Typography variant="h5" gutterBottom>
-                    {incident.painLocations.join(', ') || 'No location specified'}
+                    {incident.incidentId || incident.painLocations.join(', ') || 'No location specified'}
                   </Typography>
                   <Box display="flex" gap={0.5} flexWrap="wrap">
                     {incident.painLocations.map((location, idx) => (

@@ -205,7 +205,8 @@ export default function IncidentsPage() {
                     >
                       <Box>
                         <Typography variant="h6" component="h2" gutterBottom>
-                          {incident.painLocations.join(", ") ||
+                          {incident.incidentId ||
+                            incident.painLocations.join(", ") ||
                             "No location specified"}
                         </Typography>
                         <Box display="flex" gap={0.5} flexWrap="wrap">
