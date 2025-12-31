@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
+import MarkdownContent from "@/components/MarkdownContent";
 import {
   AppBar,
   Box,
@@ -206,7 +206,7 @@ export default function IncidentsPage() {
                       mb={2}
                     >
                       <Box>
-                        <Typography variant="h6" component="h2" gutterBottom>
+                        <Typography variant="h3" component="h2" gutterBottom>
                           {incident.incidentId ||
                             incident.painLocations.join(", ") ||
                             "No location specified"}
@@ -252,9 +252,9 @@ export default function IncidentsPage() {
                       </Typography>
                     )}
 
-                    <Box sx={{ typography: 'body2', '& > *': { mb: 1 } }}>
-                      <ReactMarkdown>{incident.description}</ReactMarkdown>
-                    </Box>
+                    <MarkdownContent variant="body2">
+                      {incident.description}
+                    </MarkdownContent>
 
                     <Box display="flex" gap={1} mt={2}>
                       <Button
