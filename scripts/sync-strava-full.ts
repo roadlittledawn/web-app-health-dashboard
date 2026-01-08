@@ -120,6 +120,7 @@ async function syncAllStravaActivities() {
     let totalFetched = 0;
     let totalNew = 0;
     let totalUpdated = 0;
+    let totalUnchanged = 0;
     let totalErrors = 0;
 
     console.log('Starting full sync of Strava activities...\n');
@@ -148,19 +149,17 @@ async function syncAllStravaActivities() {
         // Store activities in database
         let pageNewCount = 0;
         let pageUpdatedCount = 0;
+        let pageUnchangedCount = 0;
 
         for (const activity of activities) {
           try {
             const workout = convertActivityToWorkout(activity);
 
-            // Separate created_at and updated_at from workout data
-            const { created_at, updated_at, ...workoutData } = workout;
-
             const result = await workoutsCollection.updateOne(
               { strava_id: activity.id },
               {
                 $set: {
-                  ...workoutData,
+                  ...workout,
                   updated_at: new Date(),
                 },
                 $setOnInsert: {
@@ -176,6 +175,9 @@ async function syncAllStravaActivities() {
             } else if (result.modifiedCount > 0) {
               pageUpdatedCount++;
               totalUpdated++;
+            } else {
+              pageUnchangedCount++;
+              totalUnchanged++;
             }
 
             // Display progress for each activity
@@ -190,7 +192,7 @@ async function syncAllStravaActivities() {
           }
         }
 
-        console.log(`\n   Page ${currentPage} summary: ${pageNewCount} new, ${pageUpdatedCount} updated\n`);
+        console.log(`\n   Page ${currentPage} summary: ${pageNewCount} new, ${pageUpdatedCount} updated, ${pageUnchangedCount} unchanged\n`);
 
         // Move to next page
         currentPage++;
@@ -224,7 +226,7 @@ async function syncAllStravaActivities() {
     console.log(`Total activities fetched: ${totalFetched}`);
     console.log(`New activities: ${totalNew}`);
     console.log(`Updated activities: ${totalUpdated}`);
-    console.log(`Unchanged activities: ${totalFetched - totalNew - totalUpdated - totalErrors}`);
+    console.log(`Unchanged activities: ${totalUnchanged}`);
     console.log(`Errors: ${totalErrors}`);
     console.log(`Total pages processed: ${currentPage - 1}`);
 

@@ -50,7 +50,7 @@ Starting full sync of Strava activities...
    ↻ UPD | 2024-01-13 | Swim        | Pool Workout
    ...
 
-   Page 1 summary: 150 new, 25 updated
+   Page 1 summary: 150 new, 25 updated, 25 unchanged
 
 📥 Fetching page 2 (200 activities per page)...
    ...
@@ -89,6 +89,8 @@ The script automatically:
 - Once run, the normal `strava-sync` API endpoint can be used for incremental syncs
 - The script is idempotent - safe to run multiple times
 - All activities are stored/updated using upsert operations based on `strava_id`
+- Activities are processed page-by-page to manage memory usage
+- For users with thousands of activities, the sync may take several minutes
 
 ## Other Migration Scripts
 
