@@ -21,10 +21,15 @@ import { StravaOAuthTokens, StravaWorkout, StravaActivity } from '../types/strav
 // Load environment variables
 dotenv.config({ path: '.env.local' });
 
+// Constants
+const STRAVA_MAX_PER_PAGE = 200; // Max allowed by Strava API
+const RATE_LIMIT_WAIT_MS = 15 * 60 * 1000; // 15 minutes
+const PAGE_DELAY_MS = 1000; // 1 second between pages
+
 /**
  * Convert Strava API activity to our MongoDB workout format
  */
-function convertActivityToWorkout(activity: StravaActivity): Omit<StravaWorkout, '_id'> {
+function convertActivityToWorkout(activity: StravaActivity): Omit<StravaWorkout, '_id' | 'created_at' | 'updated_at'> {
   return {
     strava_id: activity.id,
     athlete_id: activity.athlete.id,
@@ -47,8 +52,6 @@ function convertActivityToWorkout(activity: StravaActivity): Omit<StravaWorkout,
     trainer: activity.trainer,
     commute: activity.commute,
     sync_date: new Date(),
-    created_at: new Date(),
-    updated_at: new Date(),
   };
 }
 
@@ -114,7 +117,7 @@ async function syncAllStravaActivities() {
     }
 
     // Pagination settings
-    const perPage = 200; // Max allowed by Strava API
+    const perPage = STRAVA_MAX_PER_PAGE;
     let currentPage = 1;
     let hasMorePages = true;
     let totalFetched = 0;
@@ -181,8 +184,15 @@ async function syncAllStravaActivities() {
             }
 
             // Display progress for each activity
-            const status = result.upsertedCount > 0 ? '✓ NEW' : 
-                          result.modifiedCount > 0 ? '↻ UPD' : '= SKP';
+            let status: string;
+            if (result.upsertedCount > 0) {
+              status = '✓ NEW';
+            } else if (result.modifiedCount > 0) {
+              status = '↻ UPD';
+            } else {
+              status = '= SKP';
+            }
+            
             const dateStr = new Date(activity.start_date_local).toISOString().split('T')[0];
             console.log(`   ${status} | ${dateStr} | ${activity.type.padEnd(12)} | ${activity.name}`);
 
@@ -200,8 +210,8 @@ async function syncAllStravaActivities() {
         // Rate limiting: Strava has limits of 100 requests per 15 minutes, 1000 per day
         // Add a small delay between pages to be respectful
         if (hasMorePages && activities.length === perPage) {
-          console.log('   ⏳ Waiting 1 second before next page...\n');
-          await sleep(1000);
+          console.log(`   ⏳ Waiting ${PAGE_DELAY_MS / 1000} second(s) before next page...\n`);
+          await sleep(PAGE_DELAY_MS);
         }
 
       } catch (error) {
@@ -209,8 +219,8 @@ async function syncAllStravaActivities() {
         
         // Check if it's a rate limit error
         if (error instanceof Error && error.message.includes('429')) {
-          console.log('\n⚠️  Rate limit reached. Waiting 15 minutes before retrying...\n');
-          await sleep(15 * 60 * 1000); // Wait 15 minutes
+          console.log(`\n⚠️  Rate limit reached. Waiting ${RATE_LIMIT_WAIT_MS / 1000 / 60} minutes before retrying...\n`);
+          await sleep(RATE_LIMIT_WAIT_MS);
           continue; // Retry same page
         }
         

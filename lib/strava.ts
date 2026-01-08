@@ -2,6 +2,7 @@ import { StravaActivity, StravaOAuthTokens, StravaAthlete } from '../types/strav
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const STRAVA_OAUTH_BASE = 'https://www.strava.com/oauth';
+const STRAVA_MAX_PER_PAGE = 200; // Max allowed by Strava API
 
 /**
  * Refresh Strava access token
@@ -118,7 +119,7 @@ export async function getStravaActivities(
 
   const params = new URLSearchParams({
     page: page.toString(),
-    per_page: Math.min(perPage, 200).toString(),
+    per_page: Math.min(perPage, STRAVA_MAX_PER_PAGE).toString(),
   });
 
   if (after) params.append('after', after.toString());
@@ -153,7 +154,7 @@ export async function getAllStravaActivities(
   onProgress?: (page: number, activities: StravaActivity[]) => void
 ): Promise<StravaActivity[]> {
   const allActivities: StravaActivity[] = [];
-  const perPage = 200; // Max allowed by Strava API
+  const perPage = STRAVA_MAX_PER_PAGE;
   let currentPage = 1;
   let hasMorePages = true;
 
