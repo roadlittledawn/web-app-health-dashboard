@@ -209,7 +209,7 @@ async function syncAllStravaActivities() {
 
         // Rate limiting: Strava has limits of 100 requests per 15 minutes, 1000 per day
         // Add a small delay between pages to be respectful
-        if (hasMorePages && activities.length === perPage) {
+        if (hasMorePages) {
           console.log(`   ⏳ Waiting ${PAGE_DELAY_MS / 1000} second(s) before next page...\n`);
           await sleep(PAGE_DELAY_MS);
         }
@@ -217,8 +217,8 @@ async function syncAllStravaActivities() {
       } catch (error) {
         console.error(`\n✗ Error fetching page ${currentPage}:`, error);
         
-        // Check if it's a rate limit error
-        if (error instanceof Error && error.message.includes('429')) {
+        // Check if it's a rate limit error (HTTP 429)
+        if (error instanceof Error && (error.message.includes('429') || error.message.includes('Rate limit'))) {
           console.log(`\n⚠️  Rate limit reached. Waiting ${RATE_LIMIT_WAIT_MS / 1000 / 60} minutes before retrying...\n`);
           await sleep(RATE_LIMIT_WAIT_MS);
           continue; // Retry same page

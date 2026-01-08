@@ -166,6 +166,7 @@ export async function getAllStravaActivities(
       before: options.before,
     });
 
+    // If no activities returned, we've reached the end
     if (activities.length === 0) {
       hasMorePages = false;
       break;
@@ -178,12 +179,7 @@ export async function getAllStravaActivities(
       onProgress(currentPage, activities);
     }
 
-    // If we got fewer activities than requested, we've reached the end
-    if (activities.length < perPage) {
-      hasMorePages = false;
-    } else {
-      currentPage++;
-    }
+    currentPage++;
   }
 
   return allActivities;
