@@ -9,7 +9,8 @@
     "lint": "next lint",
     "generate-secrets": "node scripts/generate-secrets.js",
     "migrate": "npx ts-node scripts/migrate-health-data.ts",
-    "migrate:arrays": "npx ts-node scripts/migrate-health-to-arrays.ts"
+    "migrate:arrays": "npx ts-node scripts/migrate-health-to-arrays.ts",
+    "sync-strava-full": "npx ts-node scripts/sync-strava-full.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",

@@ -3,6 +3,9 @@ import { StravaActivity, StravaOAuthTokens, StravaAthlete } from '../types/strav
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const STRAVA_OAUTH_BASE = 'https://www.strava.com/oauth';
 
+// Export for use in scripts
+export const STRAVA_MAX_PER_PAGE = 200; // Max allowed by Strava API
+
 /**
  * Refresh Strava access token
  */
@@ -118,7 +121,7 @@ export async function getStravaActivities(
 
   const params = new URLSearchParams({
     page: page.toString(),
-    per_page: Math.min(perPage, 200).toString(),
+    per_page: Math.min(perPage, STRAVA_MAX_PER_PAGE).toString(),
   });
 
   if (after) params.append('after', after.toString());
@@ -131,10 +134,57 @@ export async function getStravaActivities(
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch Strava activities: ${response.statusText}`);
+    // Include status code in error message for better error handling (e.g., rate limits)
+    throw new Error(`Failed to fetch Strava activities: ${response.status} ${response.statusText}`);
   }
 
   return response.json();
+}
+
+/**
+ * Fetch all activities from Strava with automatic pagination
+ * @param accessToken Strava access token
+ * @param options Optional filters (after, before)
+ * @param onProgress Optional callback for progress updates (page, activities fetched)
+ */
+export async function getAllStravaActivities(
+  accessToken: string,
+  options: {
+    after?: number;
+    before?: number;
+  } = {},
+  onProgress?: (page: number, activities: StravaActivity[]) => void
+): Promise<StravaActivity[]> {
+  const allActivities: StravaActivity[] = [];
+  const perPage = STRAVA_MAX_PER_PAGE;
+  let currentPage = 1;
+  let hasMorePages = true;
+
+  while (hasMorePages) {
+    const activities = await getStravaActivities(accessToken, {
+      page: currentPage,
+      perPage,
+      after: options.after,
+      before: options.before,
+    });
+
+    // If no activities returned, we've reached the end
+    if (activities.length === 0) {
+      hasMorePages = false;
+      break;
+    }
+
+    allActivities.push(...activities);
+
+    // Call progress callback if provided
+    if (onProgress) {
+      onProgress(currentPage, activities);
+    }
+
+    currentPage++;
+  }
+
+  return allActivities;
 }
 
 /**
