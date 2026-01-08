@@ -15,14 +15,13 @@
 
 import { MongoClient } from 'mongodb';
 import * as dotenv from 'dotenv';
-import { getStravaActivities, refreshStravaToken } from '../lib/strava';
+import { getStravaActivities, refreshStravaToken, STRAVA_MAX_PER_PAGE } from '../lib/strava';
 import { StravaOAuthTokens, StravaWorkout, StravaActivity } from '../types/strava';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
 
 // Constants
-const STRAVA_MAX_PER_PAGE = 200; // Max allowed by Strava API
 const RATE_LIMIT_WAIT_MS = 15 * 60 * 1000; // 15 minutes
 const PAGE_DELAY_MS = 1000; // 1 second between pages
 

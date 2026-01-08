@@ -2,7 +2,9 @@ import { StravaActivity, StravaOAuthTokens, StravaAthlete } from '../types/strav
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const STRAVA_OAUTH_BASE = 'https://www.strava.com/oauth';
-const STRAVA_MAX_PER_PAGE = 200; // Max allowed by Strava API
+
+// Export for use in scripts
+export const STRAVA_MAX_PER_PAGE = 200; // Max allowed by Strava API
 
 /**
  * Refresh Strava access token
