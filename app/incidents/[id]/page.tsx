@@ -49,10 +49,6 @@ export default function IncidentDetailPage() {
   const fetchIncidentData = async () => {
     try {
       const token = localStorage.getItem("auth-token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
 
       // Fetch incident details
       const incidentResponse = await fetch(
