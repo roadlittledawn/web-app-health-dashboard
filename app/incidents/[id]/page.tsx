@@ -49,6 +49,10 @@ export default function IncidentDetailPage() {
   const fetchIncidentData = async () => {
     try {
       const token = localStorage.getItem("auth-token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
 
       // Fetch incident details
       const incidentResponse = await fetch(
@@ -58,7 +62,14 @@ export default function IncidentDetailPage() {
         }
       );
 
-      if (!incidentResponse.ok) throw new Error("Failed to fetch incident");
+      if (!incidentResponse.ok) {
+        if (incidentResponse.status === 401) {
+          localStorage.removeItem("auth-token");
+          router.push("/login");
+          return;
+        }
+        throw new Error("Failed to fetch incident");
+      }
       const incidentData = await incidentResponse.json();
       setIncident(incidentData.data[0]);
 
@@ -70,7 +81,14 @@ export default function IncidentDetailPage() {
         }
       );
 
-      if (!logsResponse.ok) throw new Error("Failed to fetch logs");
+      if (!logsResponse.ok) {
+        if (logsResponse.status === 401) {
+          localStorage.removeItem("auth-token");
+          router.push("/login");
+          return;
+        }
+        throw new Error("Failed to fetch logs");
+      }
       const logsData = await logsResponse.json();
       // Sort logs by timestamp (or created_at if no timestamp) in descending order
       const sortedLogs = logsData.data.sort(

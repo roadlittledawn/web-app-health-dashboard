@@ -104,6 +104,10 @@ export default function AddIncidentPage() {
             body_areas: data.data.body_areas || [],
             injury_sources: data.data.injury_sources || [],
           });
+        } else if (response.status === 401) {
+          localStorage.removeItem("auth-token");
+          router.push("/login");
+          return;
         }
       } catch (err) {
         console.error("Failed to fetch autocomplete data:", err);
@@ -152,6 +156,11 @@ export default function AddIncidentPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("auth-token");
+          router.push("/login");
+          return;
+        }
         const data = await response.json();
         throw new Error(data.error?.message || "Failed to create incident");
       }

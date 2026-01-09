@@ -119,6 +119,11 @@ export default function AddLabResultPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('auth-token');
+          router.push('/login');
+          return;
+        }
         const data = await response.json();
         throw new Error(data.error?.message || 'Failed to create lab result');
       }

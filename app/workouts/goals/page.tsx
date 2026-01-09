@@ -92,6 +92,11 @@ export default function FitnessGoalsPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('auth-token');
+          router.push('/login');
+          return;
+        }
         throw new Error('Failed to fetch goals');
       }
 
@@ -126,6 +131,11 @@ export default function FitnessGoalsPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('auth-token');
+          router.push('/login');
+          return;
+        }
         const data = await response.json();
         throw new Error(data.error?.message || 'Failed to create goal');
       }
@@ -157,6 +167,11 @@ export default function FitnessGoalsPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('auth-token');
+          router.push('/login');
+          return;
+        }
         throw new Error('Failed to delete goal');
       }
 
@@ -184,6 +199,11 @@ export default function FitnessGoalsPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('auth-token');
+          router.push('/login');
+          return;
+        }
         throw new Error('Failed to update goal');
       }
 

@@ -66,6 +66,11 @@ export default function IncidentsPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("auth-token");
+          router.push("/login");
+          return;
+        }
         throw new Error("Failed to fetch incidents");
       }
 

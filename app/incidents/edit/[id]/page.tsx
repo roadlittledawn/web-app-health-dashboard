@@ -110,6 +110,10 @@ export default function EditIncidentPage() {
             body_areas: data.data.body_areas || [],
             injury_sources: data.data.injury_sources || [],
           });
+        } else if (autocompleteResponse.status === 401) {
+          localStorage.removeItem("auth-token");
+          router.push("/login");
+          return;
         }
 
         // Fetch incident data
@@ -120,6 +124,11 @@ export default function EditIncidentPage() {
         });
 
         if (!incidentResponse.ok) {
+          if (incidentResponse.status === 401) {
+            localStorage.removeItem("auth-token");
+            router.push("/login");
+            return;
+          }
           throw new Error("Failed to fetch incident");
         }
 
@@ -204,6 +213,11 @@ export default function EditIncidentPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("auth-token");
+          router.push("/login");
+          return;
+        }
         const data = await response.json();
         throw new Error(data.error?.message || "Failed to update incident");
       }

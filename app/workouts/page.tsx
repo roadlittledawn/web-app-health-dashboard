@@ -96,6 +96,10 @@ function WorkoutsPageContent() {
         const data = await response.json();
         setWorkouts(data.data);
         setConnected(true);
+      } else if (response.status === 401) {
+        localStorage.removeItem('auth-token');
+        router.push('/login');
+        return;
       } else if (response.status === 404) {
         // Strava not connected
         setConnected(false);

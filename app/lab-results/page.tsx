@@ -63,6 +63,11 @@ export default function LabResultsPage() {
       ]);
 
       if (!resultsRes.ok || !trendsRes.ok) {
+        if (resultsRes.status === 401 || trendsRes.status === 401) {
+          localStorage.removeItem('auth-token');
+          router.push('/login');
+          return;
+        }
         throw new Error('Failed to fetch lab results');
       }
 
