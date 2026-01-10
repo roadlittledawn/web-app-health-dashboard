@@ -21,7 +21,14 @@ const handler: Handler = async (event) => {
     }
 
     const token = authHeader.substring(7);
-    jwt.verify(token, process.env.JWT_SECRET!);
+    try {
+      jwt.verify(token, process.env.JWT_SECRET!);
+    } catch (error) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ error: 'Invalid or expired token' }),
+      };
+    }
 
     const body = JSON.parse(event.body || '{}');
     const _id = body._id || body.id;

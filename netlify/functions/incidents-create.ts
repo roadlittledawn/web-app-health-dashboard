@@ -22,7 +22,15 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       };
     }
 
-    verifyToken(token);
+    try {
+      verifyToken(token);
+    } catch (error) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ error: { code: "INVALID_TOKEN", message: "Invalid or expired token" } }),
+        headers: { "Content-Type": "application/json" },
+      };
+    }
 
     const incidentData: Partial<HealthIncident> = JSON.parse(event.body || '{}');
 
