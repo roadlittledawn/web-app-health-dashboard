@@ -340,6 +340,11 @@ function WorkoutsPageContent() {
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               InputLabelProps={{ shrink: true }}
+              slotProps={{
+                htmlInput: {
+                  max: "9999-12-31"
+                }
+              }}
               sx={{ minWidth: 160 }}
             />
             <TextField
@@ -348,6 +353,11 @@ function WorkoutsPageContent() {
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               InputLabelProps={{ shrink: true }}
+              slotProps={{
+                htmlInput: {
+                  max: "9999-12-31"
+                }
+              }}
               sx={{ minWidth: 160 }}
             />
             <Button
