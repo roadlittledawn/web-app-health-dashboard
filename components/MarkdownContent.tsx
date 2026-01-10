@@ -8,8 +8,8 @@ interface MarkdownContentProps {
 }
 
 /**
- * Reusable component for rendering markdown content with proper list styling.
- * Ensures bullets and numbers display correctly for ul/ol elements.
+ * Reusable component for rendering markdown content with proper formatting.
+ * Provides styling for headings, lists, links, code blocks, and blockquotes.
  */
 export default function MarkdownContent({
   children,
@@ -55,6 +55,39 @@ export default function MarkdownContent({
         "& li": {
           display: "list-item",
           ml: 1,
+        },
+        "& a": {
+          color: "primary.main",
+          textDecoration: "underline",
+          "&:hover": {
+            color: "primary.dark",
+            textDecoration: "underline",
+          },
+        },
+        "& code": {
+          backgroundColor: "action.hover",
+          padding: "2px 6px",
+          borderRadius: 1,
+          fontSize: "0.875em",
+          fontFamily: "monospace",
+        },
+        "& pre": {
+          backgroundColor: "action.hover",
+          padding: 2,
+          borderRadius: 1,
+          overflow: "auto",
+          "& code": {
+            backgroundColor: "transparent",
+            padding: 0,
+          },
+        },
+        "& blockquote": {
+          borderLeft: "4px solid",
+          borderColor: "divider",
+          pl: 2,
+          ml: 0,
+          fontStyle: "italic",
+          color: "text.secondary",
         },
         ...sx,
       }}
