@@ -34,6 +34,8 @@ import {
   Add,
   Delete,
   CheckCircle,
+  Archive,
+  Unarchive,
 } from '@mui/icons-material';
 
 interface Goal {
@@ -62,6 +64,7 @@ export default function FitnessGoalsPage() {
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   const [formData, setFormData] = useState({
     goal_type: 'distance',
@@ -69,6 +72,7 @@ export default function FitnessGoalsPage() {
     target_value: '',
     unit: 'mi',
     time_period: 'month',
+    start_date: '',
     description: '',
   });
 
@@ -121,7 +125,7 @@ export default function FitnessGoalsPage() {
         body: JSON.stringify({
           ...formData,
           target_value: parseFloat(formData.target_value),
-          start_date: new Date().toISOString(),
+          start_date: formData.start_date ? new Date(formData.start_date).toISOString() : new Date().toISOString(),
         }),
       });
 
@@ -137,6 +141,7 @@ export default function FitnessGoalsPage() {
         target_value: '',
         unit: 'mi',
         time_period: 'month',
+        start_date: '',
         description: '',
       });
       await fetchGoals();
@@ -194,6 +199,33 @@ export default function FitnessGoalsPage() {
     }
   };
 
+  const handleArchiveGoal = async (id: string, archive: boolean) => {
+    const token = localStorage.getItem('auth-token');
+
+    try {
+      const response = await fetch('/api/fitness-goals', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id,
+          updates: { status: archive ? 'archived' : 'active' },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update goal');
+      }
+
+      await fetchGoals();
+    } catch (err) {
+      setError('Failed to update goal');
+      console.error(err);
+    }
+  };
+
   const getUnitOptions = (goalType: string) => {
     switch (goalType) {
       case 'distance':
@@ -211,6 +243,7 @@ export default function FitnessGoalsPage() {
 
   const activeGoals = goals.filter(g => g.status === 'active');
   const completedGoals = goals.filter(g => g.status === 'completed');
+  const archivedGoals = goals.filter(g => g.status === 'archived');
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -229,6 +262,14 @@ export default function FitnessGoalsPage() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Fitness Goals
           </Typography>
+          <Button
+            color="inherit"
+            startIcon={showArchived ? <Unarchive /> : <Archive />}
+            onClick={() => setShowArchived(!showArchived)}
+            sx={{ mr: 2 }}
+          >
+            {showArchived ? 'Hide Archived' : 'Show Archived'}
+          </Button>
           <Button
             color="inherit"
             startIcon={<Add />}
@@ -287,6 +328,14 @@ export default function FitnessGoalsPage() {
                             title="Mark Complete"
                           >
                             <CheckCircle />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleArchiveGoal(goal._id, true)}
+                            title="Archive Goal"
+                          >
+                            <Archive />
                           </IconButton>
                           <IconButton
                             size="small"
@@ -372,12 +421,73 @@ export default function FitnessGoalsPage() {
                             {goal.description || `${goal.time_period} goal`}
                           </Typography>
                         </Box>
-                        <Chip
-                          icon={<CheckCircle />}
-                          label="Completed"
-                          size="small"
-                          color="success"
-                        />
+                        <Box display="flex" gap={1}>
+                          <Chip
+                            icon={<CheckCircle />}
+                            label="Completed"
+                            size="small"
+                            color="success"
+                          />
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleArchiveGoal(goal._id, true)}
+                            title="Archive Goal"
+                          >
+                            <Archive />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                      <Typography variant="body2">
+                        {goal.current_value.toFixed(1)} / {goal.target_value} {goal.unit}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </>
+        )}
+
+        {/* Archived Goals */}
+        {!loading && showArchived && archivedGoals.length > 0 && (
+          <>
+            <Typography variant="h5" gutterBottom sx={{ mb: 2, mt: 4 }}>
+              Archived Goals
+            </Typography>
+            <Grid container spacing={2}>
+              {archivedGoals.map((goal) => (
+                <Grid item xs={12} md={6} key={goal._id}>
+                  <Card sx={{ opacity: 0.6 }}>
+                    <CardContent>
+                      <Box display="flex" justifyContent="space-between" alignItems="start" mb={1}>
+                        <Box>
+                          <Typography variant="h6">
+                            {goal.goal_type.replace(/_/g, ' ').toUpperCase()}
+                            {goal.activity_type && ` - ${goal.activity_type}`}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {goal.description || `${goal.time_period} goal`}
+                          </Typography>
+                        </Box>
+                        <Box display="flex" gap={1}>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleArchiveGoal(goal._id, false)}
+                            title="Unarchive Goal"
+                          >
+                            <Unarchive />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteGoal(goal._id)}
+                            title="Delete Goal"
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Box>
                       </Box>
                       <Typography variant="body2">
                         {goal.current_value.toFixed(1)} / {goal.target_value} {goal.unit}
@@ -458,6 +568,20 @@ export default function FitnessGoalsPage() {
                     <MenuItem value="year">Year</MenuItem>
                   </Select>
                 </FormControl>
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  label="Start Date (Optional)"
+                  value={formData.start_date}
+                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  helperText="Leave empty to start from today, or select a past date to include earlier activities"
+                />
               </Grid>
 
               <Grid item xs={12}>

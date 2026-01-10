@@ -25,6 +25,7 @@ import {
 import { ArrowBack, Save, Clear } from "@mui/icons-material";
 import { formatForDateTimeLocal } from "@/lib/dateUtils";
 import { generateIncidentId } from "@/lib/incidentUtils";
+import MarkdownEditor from "@/components/MarkdownEditor";
 import {
   PAIN_QUALITY_OPTIONS,
   OTHER_SYMPTOMS_OPTIONS,
@@ -351,17 +352,17 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    multiline
-                    rows={4}
-                    label="Description"
+                  <Typography variant="subtitle2" gutterBottom>
+                    Description *
+                  </Typography>
+                  <MarkdownEditor
                     value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
+                    onChange={(value) =>
+                      setFormData({ ...formData, description: value })
                     }
-                    placeholder="Describe the incident and symptoms in detail..."
+                    placeholder="Describe the incident and symptoms in detail... (Markdown supported)"
+                    minHeight={200}
+                    required
                   />
                 </Grid>
 

@@ -200,6 +200,25 @@ export const handler: Handler = async (
       }
 
       const now = new Date();
+      const startDate = new Date(data.start_date);
+      
+      // Calculate end_date based on time_period if not provided
+      let endDate = data.end_date ? new Date(data.end_date) : undefined;
+      if (!endDate && data.time_period) {
+        endDate = new Date(startDate);
+        switch (data.time_period) {
+          case 'week':
+            endDate.setDate(endDate.getDate() + 7);
+            break;
+          case 'month':
+            endDate.setMonth(endDate.getMonth() + 1);
+            break;
+          case 'year':
+            endDate.setFullYear(endDate.getFullYear() + 1);
+            break;
+        }
+      }
+      
       const goal: FitnessGoal = {
         goal_type: data.goal_type,
         activity_type: data.activity_type,
@@ -208,8 +227,8 @@ export const handler: Handler = async (
         current_value: 0,
         unit: data.unit,
         time_period: data.time_period,
-        start_date: new Date(data.start_date),
-        end_date: data.end_date ? new Date(data.end_date) : undefined,
+        start_date: startDate,
+        end_date: endDate,
         status: 'active',
         description: data.description,
         created_at: now,
