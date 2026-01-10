@@ -14,9 +14,11 @@ import {
   TextField,
   Alert,
   Collapse,
+  Typography,
 } from '@mui/material';
 import { Add, Save, Cancel } from '@mui/icons-material';
 import { formatForDateTimeLocal } from '@/lib/dateUtils';
+import MarkdownEditor from '@/components/MarkdownEditor';
 
 interface HealthLogFormProps {
   incidentId: string;
@@ -139,16 +141,15 @@ export default function HealthLogForm({ incidentId, onSuccess }: HealthLogFormPr
                 </Grid>
 
                 <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    multiline
-                    rows={3}
-                    size="small"
-                    label="Description"
+                  <Typography variant="subtitle2" gutterBottom>
+                    Description *
+                  </Typography>
+                  <MarkdownEditor
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Update or doctor notes..."
+                    onChange={(value) => setFormData({ ...formData, description: value })}
+                    placeholder="Update or doctor notes... (Markdown supported)"
+                    minHeight={150}
+                    required
                   />
                 </Grid>
 

@@ -13,6 +13,8 @@ import {
 import { Edit, Save, Cancel } from '@mui/icons-material';
 import { formatForDateTimeLocal, formatLocalDateTime } from '@/lib/dateUtils';
 import { HealthLog } from '@/types/health';
+import MarkdownEditor from '@/components/MarkdownEditor';
+import MarkdownContent from '@/components/MarkdownContent';
 
 interface HealthLogEditProps {
   log: HealthLog;
@@ -87,18 +89,18 @@ export default function HealthLogEdit({ log, incidentId, onSuccess }: HealthLogE
           </Alert>
         )}
         
-        <TextField
-          required
-          fullWidth
-          multiline
-          rows={3}
-          size="small"
+        <Typography variant="subtitle2" gutterBottom>
+          Description *
+        </Typography>
+        <MarkdownEditor
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          sx={{ mb: 1 }}
+          onChange={(value) => setFormData({ ...formData, description: value })}
+          placeholder="Update or doctor notes... (Markdown supported)"
+          minHeight={150}
+          required
         />
         
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
           <TextField
             required
             size="small"
@@ -139,9 +141,9 @@ export default function HealthLogEdit({ log, incidentId, onSuccess }: HealthLogE
 
   return (
     <Box>
-      <Typography variant="body1" paragraph>
+      <MarkdownContent variant="body1">
         {log.description}
-      </Typography>
+      </MarkdownContent>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
           <Typography variant="caption" display="block">
