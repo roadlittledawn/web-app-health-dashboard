@@ -88,15 +88,14 @@ function WorkoutsPageContent() {
       const activeFilter = filterType !== undefined ? filterType : filter;
       if (activeFilter) params.append('type', activeFilter);
       
-      // Format dates properly - treat input as local date and convert to ISO
+      // Format dates as UTC dates (treating local date input as if it were UTC)
+      // This matches how start_date_local is stored in the database
       if (startDate) {
-        const start = new Date(startDate + 'T00:00:00');
-        params.append('start_date', start.toISOString());
+        params.append('start_date', startDate + 'T00:00:00.000Z');
       }
       if (endDate) {
         // Set to end of day to include all activities on the end date
-        const end = new Date(endDate + 'T23:59:59');
-        params.append('end_date', end.toISOString());
+        params.append('end_date', endDate + 'T23:59:59.999Z');
       }
 
       const response = await fetch(`/api/strava-workouts?${params}`, {
