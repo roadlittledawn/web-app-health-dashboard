@@ -6,7 +6,6 @@ import { Box, Button, ButtonGroup, Paper } from '@mui/material';
 import { Visibility, Edit as EditIcon } from '@mui/icons-material';
 import MarkdownContent from './MarkdownContent';
 import '@uiw/react-md-editor/markdown-editor.css';
-import '@uiw/react-markdown-preview/markdown.css';
 
 // Dynamically import MDEditor to avoid SSR issues
 const MDEditor = dynamic(
