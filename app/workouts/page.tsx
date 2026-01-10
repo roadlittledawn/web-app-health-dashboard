@@ -16,13 +16,11 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  TextField,
   Toolbar,
   Typography,
   CircularProgress,
   Alert,
-  Divider,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -89,8 +87,17 @@ function WorkoutsPageContent() {
       const params = new URLSearchParams({ limit: '50' });
       const activeFilter = filterType !== undefined ? filterType : filter;
       if (activeFilter) params.append('type', activeFilter);
-      if (startDate) params.append('start_date', new Date(startDate).toISOString());
-      if (endDate) params.append('end_date', new Date(endDate).toISOString());
+      
+      // Format dates properly - treat input as local date and convert to ISO
+      if (startDate) {
+        const start = new Date(startDate + 'T00:00:00');
+        params.append('start_date', start.toISOString());
+      }
+      if (endDate) {
+        // Set to end of day to include all activities on the end date
+        const end = new Date(endDate + 'T23:59:59');
+        params.append('end_date', end.toISOString());
+      }
 
       const response = await fetch(`/api/strava-workouts?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
