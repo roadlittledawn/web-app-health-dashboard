@@ -80,7 +80,7 @@ export interface FitnessGoal {
   time_period: 'week' | 'month' | 'year' | 'custom';
   start_date: Date;
   end_date?: Date; // Required for custom time periods
-  status: 'active' | 'completed' | 'abandoned';
+  status: 'active' | 'completed' | 'abandoned' | 'archived';
   description?: string;
   created_at: Date;
   updated_at: Date;

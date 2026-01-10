@@ -59,6 +59,8 @@ function WorkoutsPageContent() {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [connected, setConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -87,6 +89,8 @@ function WorkoutsPageContent() {
       const params = new URLSearchParams({ limit: '50' });
       const activeFilter = filterType !== undefined ? filterType : filter;
       if (activeFilter) params.append('type', activeFilter);
+      if (startDate) params.append('start_date', new Date(startDate).toISOString());
+      if (endDate) params.append('end_date', new Date(endDate).toISOString());
 
       const response = await fetch(`/api/strava-workouts?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -304,7 +308,7 @@ function WorkoutsPageContent() {
 
         {/* Controls */}
         {connected && (
-          <Box display="flex" gap={2} mb={3} alignItems="center">
+          <Box display="flex" gap={2} mb={3} alignItems="center" flexWrap="wrap">
             <FormControl sx={{ minWidth: 200 }}>
               <InputLabel>Activity Type</InputLabel>
               <Select
@@ -324,6 +328,41 @@ function WorkoutsPageContent() {
                 <MenuItem value="Walk">Walk</MenuItem>
               </Select>
             </FormControl>
+            <TextField
+              type="date"
+              label="Start Date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 160 }}
+            />
+            <TextField
+              type="date"
+              label="End Date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 160 }}
+            />
+            <Button
+              variant="outlined"
+              onClick={() => fetchWorkouts()}
+              disabled={loading}
+            >
+              Apply Filters
+            </Button>
+            {(startDate || endDate) && (
+              <Button
+                variant="text"
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                  setTimeout(() => fetchWorkouts(), 0);
+                }}
+              >
+                Clear Dates
+              </Button>
+            )}
             <Button
               variant="outlined"
               startIcon={syncing ? <CircularProgress size={20} /> : <Sync />}
