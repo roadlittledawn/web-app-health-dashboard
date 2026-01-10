@@ -96,9 +96,9 @@ export const handler: Handler = async (
     if (sport_type) filter.sport_type = sport_type;
 
     if (start_date || end_date) {
-      filter.start_date = {};
-      if (start_date) filter.start_date.$gte = new Date(start_date);
-      if (end_date) filter.start_date.$lte = new Date(end_date);
+      filter.start_date_local = {};
+      if (start_date) filter.start_date_local.$gte = new Date(start_date);
+      if (end_date) filter.start_date_local.$lte = new Date(end_date);
     }
 
     // Build sort

@@ -16,13 +16,11 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  TextField,
   Toolbar,
   Typography,
   CircularProgress,
   Alert,
-  Divider,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -59,6 +57,8 @@ function WorkoutsPageContent() {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [connected, setConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -87,6 +87,16 @@ function WorkoutsPageContent() {
       const params = new URLSearchParams({ limit: '50' });
       const activeFilter = filterType !== undefined ? filterType : filter;
       if (activeFilter) params.append('type', activeFilter);
+      
+      // Format dates as UTC dates (treating local date input as if it were UTC)
+      // This matches how start_date_local is stored in the database
+      if (startDate) {
+        params.append('start_date', startDate + 'T00:00:00.000Z');
+      }
+      if (endDate) {
+        // Set to end of day to include all activities on the end date
+        params.append('end_date', endDate + 'T23:59:59.999Z');
+      }
 
       const response = await fetch(`/api/strava-workouts?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -304,7 +314,7 @@ function WorkoutsPageContent() {
 
         {/* Controls */}
         {connected && (
-          <Box display="flex" gap={2} mb={3} alignItems="center">
+          <Box display="flex" gap={2} mb={3} alignItems="center" flexWrap="wrap">
             <FormControl sx={{ minWidth: 200 }}>
               <InputLabel>Activity Type</InputLabel>
               <Select
@@ -324,6 +334,51 @@ function WorkoutsPageContent() {
                 <MenuItem value="Walk">Walk</MenuItem>
               </Select>
             </FormControl>
+            <TextField
+              type="date"
+              label="Start Date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              slotProps={{
+                htmlInput: {
+                  max: "9999-12-31"
+                }
+              }}
+              sx={{ minWidth: 160 }}
+            />
+            <TextField
+              type="date"
+              label="End Date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              slotProps={{
+                htmlInput: {
+                  max: "9999-12-31"
+                }
+              }}
+              sx={{ minWidth: 160 }}
+            />
+            <Button
+              variant="outlined"
+              onClick={() => fetchWorkouts()}
+              disabled={loading}
+            >
+              Apply Filters
+            </Button>
+            {(startDate || endDate) && (
+              <Button
+                variant="text"
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                  setTimeout(() => fetchWorkouts(), 0);
+                }}
+              >
+                Clear Dates
+              </Button>
+            )}
             <Button
               variant="outlined"
               startIcon={syncing ? <CircularProgress size={20} /> : <Sync />}
