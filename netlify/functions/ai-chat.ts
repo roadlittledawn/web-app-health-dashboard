@@ -119,7 +119,7 @@ export const handler: Handler = async (
 
     // Initialize Anthropic client
     const anthropic = new Anthropic({
-      apiKey: apiKey,
+      apiKey,
     });
 
     // Build system prompt with health data context

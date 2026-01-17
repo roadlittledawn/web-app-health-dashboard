@@ -229,19 +229,20 @@ export const handler: Handler = async (
       const sportStats: Record<string, SportStats> = {};
       Object.keys(workoutsBySport).forEach(sport => {
         const workouts = workoutsBySport[sport];
-        const thisYearSportWorkouts = workouts.filter(w => 
-          new Date(w.start_date_local) >= yearStart && new Date(w.start_date_local) <= yearEnd
-        );
         
-        // Find longest workout
-        const longestAllTime = workouts.reduce((max, w) => 
-          w.distance > max.distance ? w : max
-        , workouts[0]);
+        // Filter workouts for this year (avoid duplicate date parsing)
+        const thisYearSportWorkouts = workouts.filter(w => {
+          const workoutDate = new Date(w.start_date_local);
+          return workoutDate >= yearStart && workoutDate <= yearEnd;
+        });
+        
+        // Find longest workout - handle empty array case
+        const longestAllTime = workouts.length > 0 
+          ? workouts.reduce((max, w) => w.distance > max.distance ? w : max)
+          : null;
         
         const longestThisYear = thisYearSportWorkouts.length > 0 
-          ? thisYearSportWorkouts.reduce((max, w) => 
-              w.distance > max.distance ? w : max
-            , thisYearSportWorkouts[0])
+          ? thisYearSportWorkouts.reduce((max, w) => w.distance > max.distance ? w : max)
           : null;
 
         // Calculate distances and elevation for all-time
