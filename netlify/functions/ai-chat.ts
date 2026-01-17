@@ -6,6 +6,7 @@ import {
 } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
 import { verifyToken, extractToken } from "../../lib/auth";
+import { AIChatStats } from "../../types/ai-chat";
 
 interface ErrorResponse {
   error: {
@@ -16,7 +17,7 @@ interface ErrorResponse {
 
 interface ChatRequest {
   message: string;
-  stats?: any; // Statistics from ai-chat-stats endpoint
+  stats?: AIChatStats;
 }
 
 /**
@@ -193,7 +194,7 @@ export const handler: Handler = async (
 /**
  * Build system prompt with health data context
  */
-function buildSystemPrompt(stats: any): string {
+function buildSystemPrompt(stats: AIChatStats | undefined): string {
   const currentYear = new Date().getFullYear();
   
   let prompt = `You are a helpful health and fitness assistant for a personal health tracking dashboard. Your role is to help the user understand their health data, including health incidents, workout statistics, and lab results.

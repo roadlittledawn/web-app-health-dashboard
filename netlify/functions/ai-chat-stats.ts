@@ -9,6 +9,19 @@ import { verifyToken, extractToken } from "../../lib/auth";
 import { HealthIncident } from "../../types/health";
 import { StravaWorkout } from "../../types/strava";
 import { LabResult } from "../../types/labs";
+import {
+  IncidentLocationStats,
+  IncidentStats,
+  SportStats,
+  WorkoutStats,
+  LabStats,
+} from "../../types/ai-chat";
+import {
+  calculateWorkoutDistances,
+  calculateTotalMovingTime,
+  calculateElevationGain,
+  formatWorkoutDistance,
+} from "../../lib/workoutUtils";
 
 interface ErrorResponse {
   error: {
@@ -93,7 +106,7 @@ export const handler: Handler = async (
     const allIncidents = await incidentsCollection.find({}).toArray();
     
     // Group incidents by pain location
-    const incidentsByLocation: Record<string, any[]> = {};
+    const incidentsByLocation: Record<string, HealthIncident[]> = {};
     allIncidents.forEach(incident => {
       incident.painLocations.forEach(location => {
         if (!incidentsByLocation[location]) {
@@ -104,7 +117,7 @@ export const handler: Handler = async (
     });
 
     // Calculate stats for each location
-    const incidentStats: Record<string, any> = {};
+    const incidentStats: Record<string, IncidentLocationStats> = {};
     Object.keys(incidentsByLocation).forEach(location => {
       const incidents = incidentsByLocation[location];
       const resolvedIncidents = incidents.filter(i => i.status.includes('resolved'));
@@ -192,7 +205,7 @@ export const handler: Handler = async (
     const tokensCollection = db.collection('strava-tokens');
     const stravaTokens = await tokensCollection.findOne({});
     
-    let workoutStats = null;
+    let workoutStats: WorkoutStats | null = null;
     if (stravaTokens) {
       // Get all workouts
       const allWorkouts = await workoutsCollection.find({}).toArray();
@@ -213,7 +226,7 @@ export const handler: Handler = async (
       });
 
       // Calculate stats for each sport
-      const sportStats: Record<string, any> = {};
+      const sportStats: Record<string, SportStats> = {};
       Object.keys(workoutsBySport).forEach(sport => {
         const workouts = workoutsBySport[sport];
         const thisYearSportWorkouts = workouts.filter(w => 
@@ -231,37 +244,43 @@ export const handler: Handler = async (
             , thisYearSportWorkouts[0])
           : null;
 
+        // Calculate distances and elevation for all-time
+        const allTimeDistances = calculateWorkoutDistances(workouts);
+        const allTimeElevation = calculateElevationGain(workouts);
+        const allTimeMovingTime = calculateTotalMovingTime(workouts);
+
+        // Calculate distances and elevation for this year
+        const thisYearDistances = calculateWorkoutDistances(thisYearSportWorkouts);
+        const thisYearElevation = calculateElevationGain(thisYearSportWorkouts);
+        const thisYearMovingTime = calculateTotalMovingTime(thisYearSportWorkouts);
+
         sportStats[sport] = {
           allTime: {
             count: workouts.length,
-            totalDistanceMeters: workouts.reduce((sum, w) => sum + w.distance, 0),
-            totalDistanceMiles: Math.round(workouts.reduce((sum, w) => sum + w.distance, 0) * 0.000621371 * 10) / 10,
-            totalDistanceKm: Math.round(workouts.reduce((sum, w) => sum + w.distance, 0) * 0.001 * 10) / 10,
-            totalMovingTimeHours: Math.round(workouts.reduce((sum, w) => sum + w.moving_time, 0) / 3600 * 10) / 10,
-            totalElevationGainMeters: Math.round(workouts.reduce((sum, w) => sum + (w.total_elevation_gain || 0), 0)),
-            totalElevationGainFeet: Math.round(workouts.reduce((sum, w) => sum + (w.total_elevation_gain || 0), 0) * 3.28084),
+            totalDistanceMeters: allTimeDistances.meters,
+            totalDistanceMiles: allTimeDistances.miles,
+            totalDistanceKm: allTimeDistances.km,
+            totalMovingTimeHours: allTimeMovingTime,
+            totalElevationGainMeters: allTimeElevation.meters,
+            totalElevationGainFeet: allTimeElevation.feet,
             longestWorkout: longestAllTime ? {
               name: longestAllTime.name,
               date: longestAllTime.start_date_local,
-              distanceMeters: longestAllTime.distance,
-              distanceMiles: Math.round(longestAllTime.distance * 0.000621371 * 10) / 10,
-              distanceKm: Math.round(longestAllTime.distance * 0.001 * 10) / 10,
+              ...formatWorkoutDistance(longestAllTime.distance),
             } : null,
           },
           thisYear: {
             count: thisYearSportWorkouts.length,
-            totalDistanceMeters: thisYearSportWorkouts.reduce((sum, w) => sum + w.distance, 0),
-            totalDistanceMiles: Math.round(thisYearSportWorkouts.reduce((sum, w) => sum + w.distance, 0) * 0.000621371 * 10) / 10,
-            totalDistanceKm: Math.round(thisYearSportWorkouts.reduce((sum, w) => sum + w.distance, 0) * 0.001 * 10) / 10,
-            totalMovingTimeHours: Math.round(thisYearSportWorkouts.reduce((sum, w) => sum + w.moving_time, 0) / 3600 * 10) / 10,
-            totalElevationGainMeters: Math.round(thisYearSportWorkouts.reduce((sum, w) => sum + (w.total_elevation_gain || 0), 0)),
-            totalElevationGainFeet: Math.round(thisYearSportWorkouts.reduce((sum, w) => sum + (w.total_elevation_gain || 0), 0) * 3.28084),
+            totalDistanceMeters: thisYearDistances.meters,
+            totalDistanceMiles: thisYearDistances.miles,
+            totalDistanceKm: thisYearDistances.km,
+            totalMovingTimeHours: thisYearMovingTime,
+            totalElevationGainMeters: thisYearElevation.meters,
+            totalElevationGainFeet: thisYearElevation.feet,
             longestWorkout: longestThisYear ? {
               name: longestThisYear.name,
               date: longestThisYear.start_date_local,
-              distanceMeters: longestThisYear.distance,
-              distanceMiles: Math.round(longestThisYear.distance * 0.000621371 * 10) / 10,
-              distanceKm: Math.round(longestThisYear.distance * 0.001 * 10) / 10,
+              ...formatWorkoutDistance(longestThisYear.distance),
             } : null,
           },
         };

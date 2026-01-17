@@ -23,6 +23,7 @@ import {
   Person,
 } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
+import { AIChatStats } from '@/types/ai-chat';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -35,7 +36,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<AIChatStats | null>(null);
   const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
