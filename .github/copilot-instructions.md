@@ -42,9 +42,11 @@ This is a personal health tracking dashboard with AI-powered insights and analyt
 ```bash
 npm run dev         # Start development server on localhost:3000
 npm run build       # Production build
-npm run lint        # Run ESLint
+npm run lint        # Run ESLint (uses next/core-web-vitals and next/typescript configs)
 npm run generate-secrets  # Generate JWT secret and password hash
 ```
+
+**Note**: This project currently does not have automated tests. When adding tests in the future, follow Next.js testing conventions with Jest and React Testing Library.
 
 ## Code Style and Conventions
 
@@ -101,6 +103,23 @@ Serverless functions should return consistent response structures:
 - **Connection pooling**: In development, connections are cached globally; in production, new connections per function
 - **Database name**: `health-fitness`
 - **Error handling**: Always wrap database operations in try-catch blocks
+- **Example**:
+  ```typescript
+  try {
+    const db = await getDatabase();
+    const collection = db.collection('health-logs');
+    const result = await collection.find({}).toArray();
+    return { statusCode: 200, body: JSON.stringify({ data: result }) };
+  } catch (error) {
+    console.error('Database error:', error);
+    return { 
+      statusCode: 500, 
+      body: JSON.stringify({ 
+        error: { code: 'DATABASE_ERROR', message: 'Failed to query database' } 
+      }) 
+    };
+  }
+  ```
 
 ### React/Next.js Patterns
 
@@ -124,6 +143,20 @@ Required environment variables (see `.env.example`):
 - **JSDoc comments**: Use JSDoc for exported functions, especially in `lib/` utilities
 - **Inline comments**: Minimal; code should be self-documenting
 - **Comment style**: When needed, explain "why" not "what"
+- **Example**:
+  ```typescript
+  /**
+   * Validates and extracts JWT token from request headers.
+   * @param headers - HTTP headers from the request
+   * @returns Extracted token string or null if not found/invalid format
+   */
+  export function extractToken(headers: Record<string, string | undefined>): string | null {
+    const authHeader = headers.authorization || headers.Authorization;
+    // Bearer token format is required by our authentication system
+    if (!authHeader?.startsWith('Bearer ')) return null;
+    return authHeader.substring(7);
+  }
+  ```
 
 ### Security
 
@@ -142,6 +175,52 @@ Required environment variables (see `.env.example`):
 4. Use `getDatabase()` to access MongoDB
 5. Return consistent response format
 6. The endpoint will be available at `/api/my-endpoint`
+
+**Example**:
+```typescript
+import { Handler } from '@netlify/functions';
+import { extractToken, verifyToken } from '@/lib/auth';
+import { getDatabase } from '@/lib/mongodb';
+
+export const handler: Handler = async (event) => {
+  // Validate HTTP method
+  if (event.httpMethod !== 'GET') {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: { code: 'METHOD_NOT_ALLOWED', message: 'Only GET allowed' } }),
+      headers: { 'Content-Type': 'application/json' }
+    };
+  }
+
+  // Authenticate
+  const token = extractToken(event.headers);
+  if (!token || !verifyToken(token)) {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ error: { code: 'UNAUTHORIZED', message: 'Invalid token' } }),
+      headers: { 'Content-Type': 'application/json' }
+    };
+  }
+
+  // Database operation
+  try {
+    const db = await getDatabase();
+    const data = await db.collection('my-collection').find({}).toArray();
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ data }),
+      headers: { 'Content-Type': 'application/json' }
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: { code: 'SERVER_ERROR', message: 'Internal error' } }),
+      headers: { 'Content-Type': 'application/json' }
+    };
+  }
+};
+```
 
 ### Adding a New Page
 
@@ -179,3 +258,6 @@ Required environment variables (see `.env.example`):
 - Authentication token extraction follows Bearer token standard
 - API responses always include `Content-Type: application/json` header
 - Error responses use consistent error object structure with `code` and `message`
+- Use environment variables for all configuration (never hardcode secrets or config)
+- Prefer functional components over class components for React
+- Use TypeScript interfaces over types for object shapes
