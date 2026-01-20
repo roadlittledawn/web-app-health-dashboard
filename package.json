@@ -16,6 +16,7 @@
     "@anthropic-ai/sdk": "^0.32.1",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "@mui/icons-material": "^6.1.9",
     "@mui/material": "^6.1.9",
     "@netlify/functions": "^2.8.2",
