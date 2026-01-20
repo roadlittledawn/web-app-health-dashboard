@@ -11,7 +11,7 @@ This is a personal health tracking dashboard with AI-powered insights and analyt
 - **Database**: MongoDB (database name: `health-fitness`)
 - **Authentication**: JWT + bcrypt
 - **UI**: TailwindCSS, Material-UI (MUI)
-- **AI**: Anthropic Claude API
+- **AI**: Anthropic Claude API, MCP (Model Context Protocol) server integration
 - **Charts**: Recharts
 - **Third-party APIs**: Strava (optional)
 
@@ -20,6 +20,7 @@ This is a personal health tracking dashboard with AI-powered insights and analyt
 ```
 /
 ├── app/                      # Next.js app directory (App Router)
+│   ├── chat/                # AI chat interface
 │   ├── dashboard/           # Main dashboard
 │   ├── login/               # Login page
 │   ├── incidents/           # Health issue tracking
@@ -31,19 +32,29 @@ This is a personal health tracking dashboard with AI-powered insights and analyt
 ├── lib/                     # Shared utilities
 │   ├── auth.ts             # Authentication helpers (JWT, bcrypt)
 │   ├── mongodb.ts          # Database connection
+│   ├── searchRanking.ts    # Search result ranking algorithms
+│   ├── workoutUtils.ts     # Workout calculations (distance, elevation, pace)
 │   └── ...
 ├── netlify/functions/       # Serverless API endpoints
+│   ├── ai-chat.ts          # AI chat endpoint (Claude integration)
+│   ├── ai-chat-stats.ts    # Aggregated health statistics for AI
+│   ├── *-search.ts         # Search endpoints (health logs, incidents, workouts)
+│   └── ...
 ├── types/                   # TypeScript type definitions
+│   ├── ai-chat.ts          # AI chat types and interfaces
+│   └── ...
+├── scripts/                 # Utility scripts
+│   └── generate-mcp-token.mjs  # Generate MCP authentication tokens
 └── middleware.ts            # Route protection
 ```
 
 ## Build, Lint, and Test Commands
 
 ```bash
-npm run dev         # Start development server on localhost:3000
-npm run build       # Production build
-npm run lint        # Run ESLint (uses next/core-web-vitals and next/typescript configs)
-npm run generate-secrets  # Generate JWT secret and password hash
+npm run dev              # Start development server on localhost:3000
+npm run build            # Production build
+npm run lint             # Run ESLint (uses next/core-web-vitals and next/typescript configs)
+npm run generate-secrets # Generate JWT secret and password hash
 ```
 
 **Note**: This project currently does not have automated tests. When adding tests in the future, follow Next.js testing conventions with Jest and React Testing Library.
@@ -135,7 +146,8 @@ Required environment variables (see `.env.example`):
 - `MONGODB_CONNECTION_STRING`: MongoDB connection URI
 - `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`: Authentication credentials
 - `JWT_SECRET`: Secret for JWT signing
-- `ANTHROPIC_API_KEY`: For AI features
+- `ANTHROPIC_API_KEY`: For AI chat features
+- `MCP_SERVER_URL` (optional): MCP server URL for AI chat (defaults to remote server)
 - `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET` (optional): For Strava integration
 
 ### Documentation
@@ -236,6 +248,41 @@ export const handler: Handler = async (event) => {
 - Handle loading and error states
 - Show user feedback with appropriate UI components
 
+### AI Chat Integration
+
+The AI chat feature uses Claude AI with MCP (Model Context Protocol) server integration:
+
+- **AI Chat API** (`/api/ai-chat`): Processes user messages using Claude AI with MCP tool integration
+- **Statistics API** (`/api/ai-chat-stats`): Aggregates health data (incidents, workouts, labs) for AI context
+- **MCP Tools**: Remote MCP server provides tools for querying health data
+- **System Prompt**: Comprehensive prompt includes user's aggregated health statistics
+- **Response Format**: Markdown-formatted responses with proper error handling
+
+**Key Patterns**:
+- Always aggregate data server-side before sending to AI (don't send raw records)
+- Use helper functions from `lib/workoutUtils.ts` for workout calculations
+- Use `lib/searchRanking.ts` for search result relevance scoring
+- Include proper TypeScript types from `types/ai-chat.ts`
+
+### Search Endpoints
+
+Search endpoints provide fuzzy text search with relevance ranking:
+
+- **Pattern**: Files named `*-search.ts` in `netlify/functions/`
+- **Query Parameter**: `q` (required) - search query string
+- **Response**: Array of results with relevance scores, sorted by score descending
+- **Ranking Algorithm**: Uses `calculateRelevanceScore()` from `lib/searchRanking.ts`
+- **Examples**: 
+  - `/api/health-logs-search?q=back pain`
+  - `/api/incidents-search?q=knee`
+  - `/api/strava-workouts-search?q=long ride`
+
+**Relevance Scoring Factors**:
+- Exact matches score higher than partial matches
+- Case-insensitive matching
+- Multiple field matching (title, description, notes, etc.)
+- Position of match within text affects score
+
 ## Development Workflow
 
 1. **Setup**: Copy `.env.example` to `.env` and configure
@@ -261,3 +308,7 @@ export const handler: Handler = async (event) => {
 - Use environment variables for all configuration (never hardcode secrets or config)
 - Prefer functional components over class components for React
 - Use TypeScript interfaces over types for object shapes
+- AI chat features aggregate data before sending to Claude (never send raw database dumps)
+- Search endpoints use relevance scoring from `lib/searchRanking.ts`
+- Workout calculations use helper functions from `lib/workoutUtils.ts` (distance, elevation, pace)
+- MCP (Model Context Protocol) integration for AI tool use with remote server
