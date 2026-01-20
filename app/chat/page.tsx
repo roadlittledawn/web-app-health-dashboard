@@ -23,7 +23,6 @@ import {
   Person,
 } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
-import { AIChatStats } from '@/types/ai-chat';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -31,18 +30,36 @@ interface Message {
   timestamp: Date;
 }
 
+const WELCOME_MESSAGE = `Hello! I'm your health and fitness assistant. I can help you understand your health data, including:
+
+- **Health Incidents**: Ask about past injuries, pain patterns, or recovery times
+- **Workouts**: Get insights on your exercise activity, distances, and achievements
+- **Lab Results**: Check your latest lab values like cholesterol levels
+- **Fitness Goals**: Track your progress toward your fitness goals
+
+Try asking me questions like:
+- "When did I last have an issue with my lower back?"
+- "How many miles have I biked this year?"
+- "What was my most recent LDL level?"
+- "How am I progressing on my running goals?"
+
+What would you like to know?`;
+
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([{
+    role: 'assistant',
+    content: WELCOME_MESSAGE,
+    timestamp: new Date(),
+  }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [stats, setStats] = useState<AIChatStats | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
   const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const verifyAuthAndLoadStats = async () => {
+    const verifyAuth = async () => {
       const token = localStorage.getItem('auth-token');
 
       if (!token) {
@@ -63,58 +80,15 @@ export default function ChatPage() {
           return;
         }
 
-        // Load statistics
-        await loadStats();
+        setAuthChecking(false);
       } catch (error) {
         console.error('Auth verification failed:', error);
         router.push('/login');
       }
     };
 
-    verifyAuthAndLoadStats();
+    verifyAuth();
   }, [router]);
-
-  const loadStats = async () => {
-    setStatsLoading(true);
-    const token = localStorage.getItem('auth-token');
-    
-    try {
-      const response = await fetch('/api/ai-chat-stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load statistics');
-      }
-
-      const data = await response.json();
-      setStats(data.data);
-      
-      // Add welcome message
-      setMessages([{
-        role: 'assistant',
-        content: `Hello! I'm your health and fitness assistant. I can help you understand your health data, including:
-
-- **Health Incidents**: Ask about past injuries, pain patterns, or recovery times
-- **Workouts**: Get insights on your exercise activity, distances, and achievements
-- **Lab Results**: Check your latest lab values like cholesterol levels
-
-Try asking me questions like:
-- "When did I last have an issue with my lower back?"
-- "How many miles have I biked this year?"
-- "What was my most recent LDL level?"
-
-What would you like to know?`,
-        timestamp: new Date(),
-      }]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
-    } finally {
-      setStatsLoading(false);
-    }
-  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -155,7 +129,6 @@ What would you like to know?`,
         },
         body: JSON.stringify({
           message: userMessage,
-          stats: stats,
         }),
       });
 
@@ -186,7 +159,7 @@ What would you like to know?`,
     }
   };
 
-  if (statsLoading) {
+  if (authChecking) {
     return (
       <Box
         display="flex"

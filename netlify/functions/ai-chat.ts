@@ -5,8 +5,12 @@ import {
   HandlerResponse,
 } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { verifyToken, extractToken } from "../../lib/auth";
-import { AIChatStats } from "../../types/ai-chat";
+
+// MCP Server configuration
+const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "https://clang-map-remote.onrender.com/mcp";
 
 interface ErrorResponse {
   error: {
@@ -17,7 +21,35 @@ interface ErrorResponse {
 
 interface ChatRequest {
   message: string;
-  stats?: AIChatStats;
+}
+
+// Convert MCP tool schema to Anthropic tool format
+interface McpTool {
+  name: string;
+  description?: string;
+  inputSchema?: {
+    type: string;
+    properties?: Record<string, unknown>;
+    required?: string[];
+  };
+}
+
+function mcpToolToAnthropicTool(mcpTool: McpTool): Anthropic.Tool {
+  return {
+    name: mcpTool.name,
+    description: mcpTool.description || "",
+    input_schema: {
+      type: "object" as const,
+      properties: mcpTool.inputSchema?.properties || {},
+      required: mcpTool.inputSchema?.required || [],
+    },
+  };
+}
+
+// MCP CallTool result type
+interface McpToolResult {
+  content: Array<{ type: string; text?: string }>;
+  isError?: boolean;
 }
 
 /**
@@ -27,7 +59,7 @@ interface ChatRequest {
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext,
 ): Promise<HandlerResponse> => {
   // Only allow POST requests
   if (event.httpMethod !== "POST") {
@@ -41,7 +73,7 @@ export const handler: Handler = async (
       } as ErrorResponse),
       headers: {
         "Content-Type": "application/json",
-        "Allow": "POST",
+        Allow: "POST",
       },
     };
   }
@@ -100,9 +132,13 @@ export const handler: Handler = async (
 
     // Parse request body
     const requestBody: ChatRequest = JSON.parse(event.body || "{}");
-    const { message, stats } = requestBody;
+    const { message } = requestBody;
 
-    if (!message || typeof message !== "string" || message.trim().length === 0) {
+    if (
+      !message ||
+      typeof message !== "string" ||
+      message.trim().length === 0
+    ) {
       return {
         statusCode: 400,
         body: JSON.stringify({
@@ -122,41 +158,160 @@ export const handler: Handler = async (
       apiKey,
     });
 
-    // Build system prompt with health data context
-    const systemPrompt = buildSystemPrompt(stats);
+    // Connect to MCP server and get tools
+    const mcpClient = new Client({
+      name: "health-dashboard-ai-chat",
+      version: "1.0.0",
+    });
 
-    // Call Claude API
-    const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 2048,
-      system: systemPrompt,
-      messages: [
+    const transport = new StreamableHTTPClientTransport(new URL(MCP_SERVER_URL));
+
+    try {
+      await mcpClient.connect(transport);
+    } catch (error) {
+      console.error("Failed to connect to MCP server:", error);
+      return {
+        statusCode: 503,
+        body: JSON.stringify({
+          error: {
+            code: "MCP_CONNECTION_ERROR",
+            message: "Failed to connect to health data service",
+          },
+        } as ErrorResponse),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+    }
+
+    try {
+      // List available tools from MCP server
+      const toolsResult = await mcpClient.listTools();
+      const anthropicTools = toolsResult.tools.map((tool) =>
+        mcpToolToAnthropicTool(tool as McpTool)
+      );
+
+      // Build system prompt
+      const systemPrompt = buildSystemPrompt();
+
+      // Start conversation with Claude
+      const messages: Anthropic.MessageParam[] = [
         {
           role: "user",
           content: message,
         },
-      ],
-    });
+      ];
 
-    // Extract text response
-    const assistantMessage = response.content[0].type === "text" 
-      ? response.content[0].text 
-      : "I apologize, but I couldn't generate a response.";
+      let totalInputTokens = 0;
+      let totalOutputTokens = 0;
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        success: true,
-        message: assistantMessage,
-        usage: {
-          inputTokens: response.usage.input_tokens,
-          outputTokens: response.usage.output_tokens,
+      // Tool use loop - keep calling Claude until we get a final response
+      let response = await anthropic.messages.create({
+        model: "claude-sonnet-4-5",
+        max_tokens: 2048,
+        system: systemPrompt,
+        tools: anthropicTools,
+        messages,
+      });
+
+      totalInputTokens += response.usage.input_tokens;
+      totalOutputTokens += response.usage.output_tokens;
+
+      // Process tool calls until Claude gives a final response
+      while (response.stop_reason === "tool_use") {
+        // Find all tool use blocks
+        const toolUseBlocks = response.content.filter(
+          (block): block is Anthropic.ToolUseBlock => block.type === "tool_use"
+        );
+
+        // Add assistant message with tool use
+        messages.push({
+          role: "assistant",
+          content: response.content,
+        });
+
+        // Execute each tool and collect results
+        const toolResults: Anthropic.ToolResultBlockParam[] = [];
+
+        for (const toolUse of toolUseBlocks) {
+          try {
+            const result = (await mcpClient.callTool({
+              name: toolUse.name,
+              arguments: toolUse.input as Record<string, unknown>,
+            })) as McpToolResult;
+
+            // Extract text content from MCP result
+            const resultContent = result.content
+              .map((c: { type: string; text?: string }) => {
+                if (c.type === "text" && c.text) {
+                  return c.text;
+                }
+                return JSON.stringify(c);
+              })
+              .join("\n");
+
+            toolResults.push({
+              type: "tool_result",
+              tool_use_id: toolUse.id,
+              content: resultContent,
+              is_error: result.isError === true,
+            });
+          } catch (error) {
+            toolResults.push({
+              type: "tool_result",
+              tool_use_id: toolUse.id,
+              content: `Error calling tool: ${error instanceof Error ? error.message : String(error)}`,
+              is_error: true,
+            });
+          }
+        }
+
+        // Add tool results
+        messages.push({
+          role: "user",
+          content: toolResults,
+        });
+
+        // Call Claude again with tool results
+        response = await anthropic.messages.create({
+          model: "claude-sonnet-4-5",
+          max_tokens: 2048,
+          system: systemPrompt,
+          tools: anthropicTools,
+          messages,
+        });
+
+        totalInputTokens += response.usage.input_tokens;
+        totalOutputTokens += response.usage.output_tokens;
+      }
+
+      // Extract final text response
+      const textBlocks = response.content.filter(
+        (block): block is Anthropic.TextBlock => block.type === "text"
+      );
+      const assistantMessage =
+        textBlocks.length > 0
+          ? textBlocks.map((b) => b.text).join("\n")
+          : "I apologize, but I couldn't generate a response.";
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          success: true,
+          message: assistantMessage,
+          usage: {
+            inputTokens: totalInputTokens,
+            outputTokens: totalOutputTokens,
+          },
+        }),
+        headers: {
+          "Content-Type": "application/json",
         },
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
+      };
+    } finally {
+      // Always close the MCP connection
+      await mcpClient.close();
+    }
   } catch (error) {
     console.error("AI chat error:", error);
 
@@ -192,132 +347,32 @@ export const handler: Handler = async (
 };
 
 /**
- * Build system prompt with health data context
+ * Build system prompt for the AI assistant
  */
-function buildSystemPrompt(stats: AIChatStats | undefined): string {
-  const currentYear = new Date().getFullYear();
-  
-  let prompt = `You are a helpful health and fitness assistant for a personal health tracking dashboard. Your role is to help the user understand their health data, including health incidents, workout statistics, and lab results.
+function buildSystemPrompt(): string {
+  return `You are a helpful health and fitness assistant for a personal health tracking dashboard. Your role is to help the user understand their health data, including workouts from Strava, health incidents, lab results, and fitness goals.
 
-You have access to the following aggregated statistics about the user's health data:
+You have access to tools that can query the user's health data dynamically. Use these tools to answer questions about:
 
-`;
+1. **Workouts** - Query workout data from Strava including runs, rides, swims, and other activities. You can filter by activity type, sport type, date range, and get detailed statistics.
 
-  // Add incidents data if available
-  if (stats?.incidents) {
-    prompt += `## Health Incidents
-Total Incidents: ${stats.incidents.totalIncidents}
-Active Incidents: ${stats.incidents.activeIncidents}
-Resolved Incidents: ${stats.incidents.resolvedIncidents}
+2. **Health Incidents** - Query health incident records to find patterns, track recovery from injuries or issues, and analyze symptom history over time.
 
-### Incidents by Location:
-`;
-    
-    Object.entries(stats.incidents.byLocation || {}).forEach(([location, data]: [string, any]) => {
-      prompt += `
-**${location}**:
-- Total occurrences: ${data.totalCount}
-- Active: ${data.activeCount}, Resolved: ${data.resolvedCount}
-- Average incidents per year: ${data.averageIncidentsPerYear}
-`;
-      
-      if (data.lastOccurrence) {
-        prompt += `- Last occurrence: ${new Date(data.lastOccurrence.date).toLocaleDateString()} (Status: ${data.lastOccurrence.status.join(', ')})\n`;
-        if (data.lastOccurrence.painIntensity !== null) {
-          prompt += `  Pain intensity: ${data.lastOccurrence.painIntensity}/10\n`;
-        }
-      }
-      
-      if (data.averageDurationDays !== null) {
-        prompt += `- Average duration until resolved: ${data.averageDurationDays} days\n`;
-      }
-      
-      if (data.averageDaysToLowPain !== null) {
-        prompt += `- Average time until pain drops below 3/10: ${data.averageDaysToLowPain} days\n`;
-      }
-      
-      if (data.incidentsByYear && Object.keys(data.incidentsByYear).length > 0) {
-        prompt += `- Incidents by year: ${JSON.stringify(data.incidentsByYear)}\n`;
-      }
-    });
-  }
+3. **Lab Results** - Query lab test results including lipid panels, metabolic panels, and other tests. You can track health markers over time.
 
-  // Add workout data if available
-  if (stats?.workouts) {
-    prompt += `\n## Workout Statistics
-Total Workouts (All Time): ${stats.workouts.totalWorkouts}
-Workouts in ${currentYear}: ${stats.workouts.workoutsThisYear}
+4. **Fitness Goals** - Get information about fitness goals and current progress calculated from workout data.
 
-### By Sport Type:
-`;
-    
-    Object.entries(stats.workouts.bySport || {}).forEach(([sport, data]: [string, any]) => {
-      prompt += `
-**${sport}**:
-- All-time: ${data.allTime.count} workouts, ${data.allTime.totalDistanceMiles} miles (${data.allTime.totalDistanceKm} km), ${data.allTime.totalMovingTimeHours} hours
-`;
-      if (data.allTime.totalElevationGainMeters > 0) {
-        prompt += `  Elevation gain: ${data.allTime.totalElevationGainFeet} feet (${data.allTime.totalElevationGainMeters} meters)\n`;
-      }
-      if (data.allTime.longestWorkout) {
-        prompt += `  Longest (all-time): ${data.allTime.longestWorkout.distanceMiles} miles on ${new Date(data.allTime.longestWorkout.date).toLocaleDateString()}\n`;
-      }
-      
-      prompt += `- ${currentYear}: ${data.thisYear.count} workouts, ${data.thisYear.totalDistanceMiles} miles (${data.thisYear.totalDistanceKm} km), ${data.thisYear.totalMovingTimeHours} hours\n`;
-      if (data.thisYear.totalElevationGainMeters > 0) {
-        prompt += `  Elevation gain: ${data.thisYear.totalElevationGainFeet} feet (${data.thisYear.totalElevationGainMeters} meters)\n`;
-      }
-      if (data.thisYear.longestWorkout) {
-        prompt += `  Longest (${currentYear}): ${data.thisYear.longestWorkout.distanceMiles} miles on ${new Date(data.thisYear.longestWorkout.date).toLocaleDateString()}\n`;
-      }
-    });
-  } else {
-    prompt += `\n## Workout Statistics
-No Strava account connected. Workout data is not available.
-`;
-  }
+## Guidelines
 
-  // Add lab results data if available
-  if (stats?.labs) {
-    prompt += `\n## Lab Results
-Total Lab Results: ${stats.labs.totalResults}
-`;
-    
-    if (stats.labs.mostRecent) {
-      prompt += `Most Recent Test: ${stats.labs.mostRecent.testType} on ${new Date(stats.labs.mostRecent.date).toLocaleDateString()}\n`;
-    }
-    
-    if (stats.labs.latestLipidPanel) {
-      const lipid = stats.labs.latestLipidPanel;
-      prompt += `\nLatest Lipid Panel (${new Date(lipid.date).toLocaleDateString()}):
-`;
-      if (lipid.totalCholesterol) {
-        prompt += `- Total Cholesterol: ${lipid.totalCholesterol.value} ${lipid.totalCholesterol.unit} (Reference: ${lipid.totalCholesterol.reference_range.min}-${lipid.totalCholesterol.reference_range.max}, Flag: ${lipid.totalCholesterol.flag || 'normal'})\n`;
-      }
-      if (lipid.ldlCholesterol) {
-        prompt += `- LDL Cholesterol: ${lipid.ldlCholesterol.value} ${lipid.ldlCholesterol.unit} (Reference: ${lipid.ldlCholesterol.reference_range.min}-${lipid.ldlCholesterol.reference_range.max}, Flag: ${lipid.ldlCholesterol.flag || 'normal'})\n`;
-      }
-      if (lipid.hdlCholesterol) {
-        prompt += `- HDL Cholesterol: ${lipid.hdlCholesterol.value} ${lipid.hdlCholesterol.unit} (Reference: ${lipid.hdlCholesterol.reference_range.min}-${lipid.hdlCholesterol.reference_range.max}, Flag: ${lipid.hdlCholesterol.flag || 'normal'})\n`;
-      }
-      if (lipid.triglycerides) {
-        prompt += `- Triglycerides: ${lipid.triglycerides.value} ${lipid.triglycerides.unit} (Reference: ${lipid.triglycerides.reference_range.min}-${lipid.triglycerides.reference_range.max}, Flag: ${lipid.triglycerides.flag || 'normal'})\n`;
-      }
-    }
-  }
-
-  prompt += `\n## Your Role
 When answering questions:
-1. Use the statistics provided above to answer questions accurately
+1. Use the available tools to query specific data - don't guess or make up statistics
 2. Be conversational and friendly, but precise with numbers
-3. If asked about specific body parts or sports, refer to the relevant section above
-4. When discussing dates, use natural language (e.g., "3 months ago" or "in January 2024")
-5. If you don't have enough information to answer a question, say so clearly
-6. Provide context and insights, not just raw numbers
-7. When appropriate, mention trends or patterns you notice in the data
+3. When discussing dates, use natural language (e.g., "3 months ago" or "in January 2024")
+4. If a query returns no results, let the user know and suggest alternative queries
+5. Provide context and insights, not just raw numbers
+6. When appropriate, mention trends or patterns you notice in the data
+7. For workout questions, consider filtering by sport_type for more specific results (e.g., "Run", "Ride", "Swim", "TrailRun")
 
-Remember: All statistics are pre-computed and aggregated. You should NOT request raw data or individual records.
+Always query the data first before providing answers - this ensures accuracy and up-to-date information.
 `;
-
-  return prompt;
 }

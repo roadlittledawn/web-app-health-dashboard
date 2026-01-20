@@ -129,7 +129,6 @@ npm run build
 - `GET /api/health-logs-query` - Query health logs with filtering
 - `POST /api/health-logs-create` - Create new health log
 - `PATCH /api/health-logs-update` - Update health log
-- `GET /api/health-incidents` - Get incident analytics
 
 ### Lab Results
 
