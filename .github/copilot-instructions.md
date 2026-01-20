@@ -36,8 +36,7 @@ This is a personal health tracking dashboard with AI-powered insights and analyt
 │   ├── workoutUtils.ts     # Workout calculations (distance, elevation, pace)
 │   └── ...
 ├── netlify/functions/       # Serverless API endpoints
-│   ├── ai-chat.ts          # AI chat endpoint (Claude integration)
-│   ├── ai-chat-stats.ts    # Aggregated health statistics for AI
+│   ├── ai-chat.ts          # AI chat endpoint (Claude integration with MCP)
 │   ├── *-search.ts         # Search endpoints (health logs, incidents, workouts)
 │   └── ...
 ├── types/                   # TypeScript type definitions
@@ -253,13 +252,12 @@ export const handler: Handler = async (event) => {
 The AI chat feature uses Claude AI with MCP (Model Context Protocol) server integration:
 
 - **AI Chat API** (`/api/ai-chat`): Processes user messages using Claude AI with MCP tool integration
-- **Statistics API** (`/api/ai-chat-stats`): Aggregates health data (incidents, workouts, labs) for AI context
-- **MCP Tools**: Remote MCP server provides tools for querying health data
-- **System Prompt**: Comprehensive prompt includes user's aggregated health statistics
+- **MCP Server**: Remote server provides tools for dynamically querying health data (incidents, workouts, labs)
+- **MCP Tools**: AI can call tools on the MCP server to fetch specific health data as needed
 - **Response Format**: Markdown-formatted responses with proper error handling
 
 **Key Patterns**:
-- Always aggregate data server-side before sending to AI (don't send raw records)
+- MCP server handles data retrieval through tool calls (replaces pre-computed statistics approach)
 - Use helper functions from `lib/workoutUtils.ts` for workout calculations
 - Use `lib/searchRanking.ts` for search result relevance scoring
 - Include proper TypeScript types from `types/ai-chat.ts`
