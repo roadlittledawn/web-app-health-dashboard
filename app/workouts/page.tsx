@@ -60,6 +60,7 @@ function WorkoutsPageContent() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [connected, setConnected] = useState<boolean | null>(null);
+  const [activityTypes, setActivityTypes] = useState<string[]>([]);
 
   useEffect(() => {
     // Check for OAuth callback messages
@@ -72,6 +73,24 @@ function WorkoutsPageContent() {
 
     fetchWorkouts();
   }, []);
+
+  const fetchActivityTypes = async () => {
+    const token = localStorage.getItem('auth-token');
+    if (!token) return;
+
+    try {
+      const response = await fetch('/api/strava-workout-types', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setActivityTypes(data.data.types || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch activity types:', err);
+    }
+  };
 
   const fetchWorkouts = async (filterType?: string) => {
     setLoading(true);
@@ -106,6 +125,7 @@ function WorkoutsPageContent() {
         const data = await response.json();
         setWorkouts(data.data);
         setConnected(true);
+        fetchActivityTypes();
       } else if (response.status === 404) {
         // Strava not connected
         setConnected(false);
@@ -327,11 +347,9 @@ function WorkoutsPageContent() {
                 }}
               >
                 <MenuItem value="">All Activities</MenuItem>
-                <MenuItem value="Run">Run</MenuItem>
-                <MenuItem value="Ride">Ride</MenuItem>
-                <MenuItem value="Swim">Swim</MenuItem>
-                <MenuItem value="Hike">Hike</MenuItem>
-                <MenuItem value="Walk">Walk</MenuItem>
+                {activityTypes.map((type) => (
+                  <MenuItem key={type} value={type}>{type}</MenuItem>
+                ))}
               </Select>
             </FormControl>
             <TextField
