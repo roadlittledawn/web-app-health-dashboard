@@ -65,6 +65,7 @@ export default function FitnessGoalsPage() {
   const [openDialog, setOpenDialog] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [activityTypes, setActivityTypes] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     goal_type: 'distance',
@@ -78,7 +79,26 @@ export default function FitnessGoalsPage() {
 
   useEffect(() => {
     fetchGoals();
+    fetchActivityTypes();
   }, []);
+
+  const fetchActivityTypes = async () => {
+    const token = localStorage.getItem('auth-token');
+    if (!token) return;
+
+    try {
+      const response = await fetch('/api/strava-workout-types', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setActivityTypes(data.data.types || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch activity types:', err);
+    }
+  };
 
   const fetchGoals = async () => {
     setLoading(true);
@@ -593,11 +613,9 @@ export default function FitnessGoalsPage() {
                     onChange={(e) => setFormData({ ...formData, activity_type: e.target.value })}
                   >
                     <MenuItem value="">All Activities</MenuItem>
-                    <MenuItem value="Run">Run</MenuItem>
-                    <MenuItem value="Ride">Ride</MenuItem>
-                    <MenuItem value="Swim">Swim</MenuItem>
-                    <MenuItem value="Hike">Hike</MenuItem>
-                    <MenuItem value="Walk">Walk</MenuItem>
+                    {activityTypes.map((type) => (
+                      <MenuItem key={type} value={type}>{type}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>
