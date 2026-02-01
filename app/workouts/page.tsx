@@ -61,6 +61,8 @@ function WorkoutsPageContent() {
   const [endDate, setEndDate] = useState('');
   const [connected, setConnected] = useState<boolean | null>(null);
   const [activityTypes, setActivityTypes] = useState<string[]>([]);
+  const [limit, setLimit] = useState('50');
+  const [totalCount, setTotalCount] = useState<number | null>(null);
 
   useEffect(() => {
     // Check for OAuth callback messages
@@ -92,7 +94,7 @@ function WorkoutsPageContent() {
     }
   };
 
-  const fetchWorkouts = async (filterType?: string) => {
+  const fetchWorkouts = async (filterType?: string, overrideLimit?: string) => {
     setLoading(true);
     setError('');
 
@@ -103,7 +105,8 @@ function WorkoutsPageContent() {
     }
 
     try {
-      const params = new URLSearchParams({ limit: '50' });
+      const activeLimit = overrideLimit !== undefined ? overrideLimit : limit;
+      const params = new URLSearchParams({ limit: activeLimit });
       const activeFilter = filterType !== undefined ? filterType : filter;
       if (activeFilter) params.append('type', activeFilter);
       
@@ -124,6 +127,7 @@ function WorkoutsPageContent() {
       if (response.ok) {
         const data = await response.json();
         setWorkouts(data.data);
+        setTotalCount(data.pagination?.total ?? null);
         setConnected(true);
         fetchActivityTypes();
       } else if (response.status === 404) {
@@ -378,6 +382,24 @@ function WorkoutsPageContent() {
               }}
               sx={{ minWidth: 160 }}
             />
+            <FormControl sx={{ minWidth: 120 }}>
+              <InputLabel>Limit</InputLabel>
+              <Select
+                value={limit}
+                label="Limit"
+                onChange={(e) => {
+                  const newLimit = e.target.value;
+                  setLimit(newLimit);
+                  fetchWorkouts(undefined, newLimit);
+                }}
+              >
+                <MenuItem value="25">25</MenuItem>
+                <MenuItem value="50">50</MenuItem>
+                <MenuItem value="100">100</MenuItem>
+                <MenuItem value="200">200</MenuItem>
+                <MenuItem value="500">500</MenuItem>
+              </Select>
+            </FormControl>
             <Button
               variant="outlined"
               onClick={() => fetchWorkouts()}
@@ -421,7 +443,18 @@ function WorkoutsPageContent() {
           </Alert>
         )}
 
-        {!loading && connected && (
+        {!loading && connected && workouts.length > 0 && (
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="body2" color="text.secondary">
+              Showing {workouts.length} of {totalCount ?? '?'} results
+              {workouts.length < (totalCount ?? 0) && (
+                <span> — increase limit to see more</span>
+              )}
+            </Typography>
+          </Box>
+        )}
+
+        {!loading && connected && workouts.length > 0 && (
           <Grid container spacing={2}>
             {workouts.map((workout) => (
               <Grid item xs={12} key={workout._id}>
