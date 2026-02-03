@@ -268,6 +268,40 @@ function WorkoutsPageContent() {
           </Alert>
         )}
 
+        {/* Quick Navigation */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6}>
+            <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => router.push('/workouts/exercises')}>
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <FitnessCenter color="primary" sx={{ fontSize: 40 }} />
+                  <Box>
+                    <Typography variant="h6">Exercise Library</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Manage your exercise collection
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => router.push('/workouts/programs')}>
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <EmojiEvents color="primary" sx={{ fontSize: 40 }} />
+                  <Box>
+                    <Typography variant="h6">Workout Programs</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Create and follow workout plans
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
         {/* Connection Status */}
         {!loading && connected === false && (
           <Card sx={{ mb: 3 }}>
