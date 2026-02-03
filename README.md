@@ -73,11 +73,15 @@ The application uses the following MongoDB collections in the `health-fitness` d
 
 ### 5. Run Development Server
 
+**Important:** This app uses Netlify Functions for API endpoints. You must use Netlify Dev, not `npm run dev`.
+
 ```bash
-npm run dev
+netlify dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:8888](http://localhost:8888) in your browser.
+
+**Note:** The app runs on port 8888 (not 3000) when using Netlify Dev. This is required for the API endpoints to work correctly.
 
 ### 6. Build for Production
 
