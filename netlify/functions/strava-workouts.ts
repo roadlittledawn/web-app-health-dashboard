@@ -97,8 +97,12 @@ export const handler: Handler = async (
 
     if (start_date || end_date) {
       filter.start_date_local = {};
-      if (start_date) filter.start_date_local.$gte = new Date(start_date);
-      if (end_date) filter.start_date_local.$lte = new Date(end_date);
+      if (start_date) {
+        filter.start_date_local.$gte = new Date(start_date + 'T00:00:00Z');
+      }
+      if (end_date) {
+        filter.start_date_local.$lte = new Date(end_date + 'T23:59:59.999Z');
+      }
     }
 
     // Build sort
