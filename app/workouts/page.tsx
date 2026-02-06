@@ -22,6 +22,10 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import {
   ArrowBack,
   FitnessCenter,
@@ -57,8 +61,8 @@ function WorkoutsPageContent() {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [connected, setConnected] = useState<boolean | null>(null);
   const [activityTypes, setActivityTypes] = useState<string[]>([]);
   const [limit, setLimit] = useState('50');
@@ -110,14 +114,11 @@ function WorkoutsPageContent() {
       const activeFilter = filterType !== undefined ? filterType : filter;
       if (activeFilter) params.append('type', activeFilter);
       
-      // Format dates as UTC dates (treating local date input as if it were UTC)
-      // This matches how start_date_local is stored in the database
       if (startDate) {
-        params.append('start_date', startDate + 'T00:00:00.000Z');
+        params.append('start_date', startDate.format('YYYY-MM-DD'));
       }
       if (endDate) {
-        // Set to end of day to include all activities on the end date
-        params.append('end_date', endDate + 'T23:59:59.999Z');
+        params.append('end_date', endDate.format('YYYY-MM-DD'));
       }
 
       const response = await fetch(`/api/strava-workouts?${params}`, {
@@ -390,32 +391,24 @@ function WorkoutsPageContent() {
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              type="date"
-              label="Start Date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              slotProps={{
-                htmlInput: {
-                  max: "9999-12-31"
-                }
-              }}
-              sx={{ minWidth: 160 }}
-            />
-            <TextField
-              type="date"
-              label="End Date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              slotProps={{
-                htmlInput: {
-                  max: "9999-12-31"
-                }
-              }}
-              sx={{ minWidth: 160 }}
-            />
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                label="Start Date"
+                value={startDate}
+                onChange={(newValue) => setStartDate(newValue)}
+                slotProps={{
+                  textField: { sx: { minWidth: 160 } }
+                }}
+              />
+              <DatePicker
+                label="End Date"
+                value={endDate}
+                onChange={(newValue) => setEndDate(newValue)}
+                slotProps={{
+                  textField: { sx: { minWidth: 160 } }
+                }}
+              />
+            </LocalizationProvider>
             <FormControl sx={{ minWidth: 120 }}>
               <InputLabel>Limit</InputLabel>
               <Select
@@ -445,8 +438,8 @@ function WorkoutsPageContent() {
               <Button
                 variant="text"
                 onClick={() => {
-                  setStartDate('');
-                  setEndDate('');
+                  setStartDate(null);
+                  setEndDate(null);
                   setTimeout(() => fetchWorkouts(), 0);
                 }}
               >
