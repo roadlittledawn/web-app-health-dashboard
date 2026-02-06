@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
   AppBar,
   Box,
@@ -17,15 +17,15 @@ import {
   Alert,
   Chip,
   Collapse,
-} from '@mui/material';
+} from "@mui/material";
 import {
   ArrowBack,
   CheckCircle,
   ExpandMore,
   ExpandLess,
   FitnessCenter,
-} from '@mui/icons-material';
-import { PopulatedWorkoutProgram } from '@/types/workout-programs';
+} from "@mui/icons-material";
+import { PopulatedWorkoutProgram } from "@/types/workout-programs";
 
 export default function WorkoutSessionPage() {
   const router = useRouter();
@@ -34,9 +34,13 @@ export default function WorkoutSessionPage() {
 
   const [program, setProgram] = useState<PopulatedWorkoutProgram | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set());
-  const [expandedExercises, setExpandedExercises] = useState<Set<number>>(new Set());
+  const [error, setError] = useState("");
+  const [completedExercises, setCompletedExercises] = useState<Set<number>>(
+    new Set(),
+  );
+  const [expandedExercises, setExpandedExercises] = useState<Set<number>>(
+    new Set(),
+  );
 
   useEffect(() => {
     fetchProgram();
@@ -44,12 +48,12 @@ export default function WorkoutSessionPage() {
 
   const fetchProgram = async () => {
     try {
-      const token = localStorage.getItem('auth-token');
+      const token = localStorage.getItem("auth-token");
       const response = await fetch(`/api/workout-programs?id=${programId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch program');
+      if (!response.ok) throw new Error("Failed to fetch program");
 
       const data = await response.json();
       setProgram(data.data);
@@ -81,17 +85,24 @@ export default function WorkoutSessionPage() {
   };
 
   const getYouTubeEmbedUrl = (url: string) => {
-    const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[1];
+    const videoId = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/,
+    )?.[1];
     return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
   };
 
   const handleFinishWorkout = () => {
-    router.push('/workouts/programs');
+    router.push("/workouts/programs");
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -105,15 +116,20 @@ export default function WorkoutSessionPage() {
     );
   }
 
-  const completionPercentage = program.exercises.length > 0
-    ? Math.round((completedExercises.size / program.exercises.length) * 100)
-    : 0;
+  const completionPercentage =
+    program.exercises.length > 0
+      ? Math.round((completedExercises.size / program.exercises.length) * 100)
+      : 0;
 
   return (
     <>
       <AppBar position="static">
         <Toolbar>
-          <IconButton edge="start" color="inherit" onClick={() => router.push('/workouts/programs')}>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={() => router.push("/workouts/programs")}
+          >
             <ArrowBack />
           </IconButton>
           <FitnessCenter sx={{ mr: 2 }} />
@@ -127,24 +143,42 @@ export default function WorkoutSessionPage() {
       </AppBar>
 
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Typography variant="h6">Progress</Typography>
               <Typography variant="h4" color="primary">
                 {completionPercentage}%
               </Typography>
             </Box>
-            <Box sx={{ width: '100%', height: 8, bgcolor: 'grey.300', borderRadius: 1, mt: 2 }}>
+            <Box
+              sx={{
+                width: "100%",
+                height: 8,
+                bgcolor: "grey.300",
+                borderRadius: 1,
+                mt: 2,
+              }}
+            >
               <Box
                 sx={{
                   width: `${completionPercentage}%`,
-                  height: '100%',
-                  bgcolor: 'primary.main',
+                  height: "100%",
+                  bgcolor: "primary.main",
                   borderRadius: 1,
-                  transition: 'width 0.3s',
+                  transition: "width 0.3s",
                 }}
               />
             </Box>
@@ -158,7 +192,7 @@ export default function WorkoutSessionPage() {
           return (
             <Card key={index} sx={{ mb: 2, opacity: isCompleted ? 0.7 : 1 }}>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
                   <Checkbox
                     checked={isCompleted}
                     onChange={() => toggleExerciseComplete(index)}
@@ -166,7 +200,12 @@ export default function WorkoutSessionPage() {
                     checkedIcon={<CheckCircle />}
                   />
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" sx={{ textDecoration: isCompleted ? 'line-through' : 'none' }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        textDecoration: isCompleted ? "line-through" : "none",
+                      }}
+                    >
                       {pe.exercise.name}
                     </Typography>
                     <Box sx={{ mt: 1, mb: 1 }}>
@@ -180,14 +219,10 @@ export default function WorkoutSessionPage() {
                         size="small"
                         sx={{ mr: 1 }}
                       />
-                      <Chip label={pe.exercise.difficulty} size="small" />
                     </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Target: {pe.exercise.targetArea.join(', ')}
-                    </Typography>
                     {pe.exercise.requiredEquipment.length > 0 && (
                       <Typography variant="body2" color="text.secondary">
-                        Equipment: {pe.exercise.requiredEquipment.join(', ')}
+                        Equipment: {pe.exercise.requiredEquipment.join(", ")}
                       </Typography>
                     )}
 
@@ -197,7 +232,7 @@ export default function WorkoutSessionPage() {
                       endIcon={isExpanded ? <ExpandLess /> : <ExpandMore />}
                       sx={{ mt: 1 }}
                     >
-                      {isExpanded ? 'Hide' : 'Show'} Details
+                      {isExpanded ? "Hide" : "Show"} Details
                     </Button>
 
                     <Collapse in={isExpanded}>
@@ -207,21 +242,26 @@ export default function WorkoutSessionPage() {
                             {pe.exercise.description}
                           </Typography>
                         )}
-                        {pe.exercise.media.length > 0 && pe.exercise.media[0].type === 'youtube' && (
-                          <Box sx={{ mt: 2 }}>
-                            {getYouTubeEmbedUrl(pe.exercise.media[0].url) && (
-                              <iframe
-                                width="100%"
-                                height="315"
-                                src={getYouTubeEmbedUrl(pe.exercise.media[0].url)!}
-                                title={pe.exercise.name}
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                            )}
-                          </Box>
-                        )}
+                        {pe.exercise.media.length > 0 &&
+                          pe.exercise.media[0].type === "youtube" && (
+                            <Box sx={{ mt: 2 }}>
+                              {getYouTubeEmbedUrl(pe.exercise.media[0].url) && (
+                                <iframe
+                                  width="100%"
+                                  height="315"
+                                  src={
+                                    getYouTubeEmbedUrl(
+                                      pe.exercise.media[0].url,
+                                    )!
+                                  }
+                                  title={pe.exercise.name}
+                                  frameBorder="0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              )}
+                            </Box>
+                          )}
                       </Box>
                     </Collapse>
                   </Box>
@@ -239,7 +279,7 @@ export default function WorkoutSessionPage() {
           </Box>
         )}
 
-        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
           <Button
             variant="contained"
             size="large"
