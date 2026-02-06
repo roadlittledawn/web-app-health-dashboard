@@ -190,7 +190,41 @@ export default function WorkoutSessionPage() {
           const isExpanded = expandedExercises.has(index);
 
           return (
-            <Card key={index} sx={{ mb: 2, opacity: isCompleted ? 0.7 : 1 }}>
+            <Card 
+              key={index} 
+              sx={{ 
+                mb: 2, 
+                position: 'relative',
+                overflow: 'hidden',
+                bgcolor: isCompleted ? 'success.light' : 'background.paper',
+                transition: 'background-color 0.5s ease-in-out',
+                '&::before': isCompleted ? {
+                  content: '""',
+                  position: 'absolute',
+                  top: '24px',
+                  left: '24px',
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  bgcolor: 'success.main',
+                  opacity: 0,
+                  transform: 'translate(-50%, -50%)',
+                  animation: 'ripple 0.8s ease-out',
+                } : {},
+                '@keyframes ripple': {
+                  '0%': {
+                    width: '48px',
+                    height: '48px',
+                    opacity: 0.6,
+                  },
+                  '100%': {
+                    width: '1600px',
+                    height: '1600px',
+                    opacity: 0,
+                  },
+                },
+              }}
+            >
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
                   <Checkbox
@@ -198,6 +232,12 @@ export default function WorkoutSessionPage() {
                     onChange={() => toggleExerciseComplete(index)}
                     icon={<CheckCircle />}
                     checkedIcon={<CheckCircle />}
+                    sx={{
+                      color: 'action.active',
+                      '&.Mui-checked': {
+                        color: 'success.dark',
+                      },
+                    }}
                   />
                   <Box sx={{ flex: 1 }}>
                     <Typography
