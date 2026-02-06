@@ -110,14 +110,11 @@ function WorkoutsPageContent() {
       const activeFilter = filterType !== undefined ? filterType : filter;
       if (activeFilter) params.append('type', activeFilter);
       
-      // Format dates as UTC dates (treating local date input as if it were UTC)
-      // This matches how start_date_local is stored in the database
       if (startDate) {
-        params.append('start_date', startDate + 'T00:00:00.000Z');
+        params.append('start_date', startDate);
       }
       if (endDate) {
-        // Set to end of day to include all activities on the end date
-        params.append('end_date', endDate + 'T23:59:59.999Z');
+        params.append('end_date', endDate);
       }
 
       const response = await fetch(`/api/strava-workouts?${params}`, {
@@ -395,11 +392,11 @@ function WorkoutsPageContent() {
               label="Start Date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
+              placeholder=""
               InputLabelProps={{ shrink: true }}
-              slotProps={{
-                htmlInput: {
-                  max: "9999-12-31"
-                }
+              inputProps={{
+                max: "9999-12-31",
+                placeholder: ""
               }}
               sx={{ minWidth: 160 }}
             />
@@ -408,11 +405,11 @@ function WorkoutsPageContent() {
               label="End Date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              placeholder=""
               InputLabelProps={{ shrink: true }}
-              slotProps={{
-                htmlInput: {
-                  max: "9999-12-31"
-                }
+              inputProps={{
+                max: "9999-12-31",
+                placeholder: ""
               }}
               sx={{ minWidth: 160 }}
             />
