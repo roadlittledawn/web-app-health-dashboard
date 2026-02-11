@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AppBar,
   Box,
@@ -15,7 +15,7 @@ import {
   Grid,
   Toolbar,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 import {
   LocalHospital,
   Biotech,
@@ -24,43 +24,36 @@ import {
   Assignment,
   ArrowForward,
   Logout,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 const dashboardCards = [
   {
-    title: 'Health Incidents',
-    description: 'Track and manage health incidents and logs',
+    title: "Health Incidents",
+    description: "Track and manage health incidents and logs",
     icon: LocalHospital,
-    href: '/incidents',
-    color: '#EF4444',
+    href: "/incidents",
+    color: "#EF4444",
   },
   {
-    title: 'Lab Results',
-    description: 'Track lab results over time',
+    title: "Lab Results",
+    description: "Track lab results over time",
     icon: Biotech,
-    href: '/lab-results',
-    color: '#3B82F6',
+    href: "/lab-results",
+    color: "#3B82F6",
   },
   {
-    title: 'Workouts',
-    description: 'View Strava workouts and goals',
+    title: "Workouts",
+    description: "View Strava workouts and goals",
     icon: FitnessCenter,
-    href: '/workouts',
-    color: '#10B981',
+    href: "/workouts",
+    color: "#10B981",
   },
   {
-    title: 'AI Chat',
-    description: 'Ask questions about your health data',
+    title: "AI Chat",
+    description: "Ask questions about your health data",
     icon: Chat,
-    href: '/chat',
-    color: '#8B5CF6',
-  },
-  {
-    title: 'Doctor Visit Prep',
-    description: 'Generate summaries for appointments',
-    icon: Assignment,
-    href: '/doctor-prep',
-    color: '#F59E0B',
+    href: "/chat",
+    color: "#8B5CF6",
   },
 ];
 
@@ -71,31 +64,31 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const verifyAuth = async () => {
-      const token = localStorage.getItem('auth-token');
+      const token = localStorage.getItem("auth-token");
 
       if (!token) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
       try {
-        const response = await fetch('/api/auth-verify', {
+        const response = await fetch("/api/auth-verify", {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          localStorage.removeItem('auth-token');
-          router.push('/login');
+          localStorage.removeItem("auth-token");
+          router.push("/login");
           return;
         }
 
         const data = await response.json();
         setUser(data.user);
       } catch (error) {
-        console.error('Auth verification failed:', error);
-        router.push('/login');
+        console.error("Auth verification failed:", error);
+        router.push("/login");
       } finally {
         setLoading(false);
       }
@@ -105,9 +98,9 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem('auth-token');
-    document.cookie = 'auth-token=; path=/; max-age=0';
-    router.push('/login');
+    localStorage.removeItem("auth-token");
+    document.cookie = "auth-token=; path=/; max-age=0";
+    router.push("/login");
   };
 
   if (loading) {
@@ -134,11 +127,7 @@ export default function DashboardPage() {
           <Typography variant="body2" sx={{ mr: 2 }}>
             {user?.username}
           </Typography>
-          <Button
-            color="inherit"
-            onClick={handleLogout}
-            startIcon={<Logout />}
-          >
+          <Button color="inherit" onClick={handleLogout} startIcon={<Logout />}>
             Logout
           </Button>
         </Toolbar>
@@ -157,7 +146,13 @@ export default function DashboardPage() {
             const IconComponent = card.icon;
             return (
               <Grid item xs={12} sm={6} md={4} key={card.title}>
-                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Card
+                  sx={{
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Box display="flex" alignItems="center" mb={2}>
                       <IconComponent
