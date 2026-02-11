@@ -10,7 +10,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { verifyToken, extractToken } from "../../lib/auth";
 
 // MCP Server configuration
-const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "https://clang-map-remote.onrender.com/mcp";
+const MCP_SERVER_URL = process.env.MCP_SERVER_URL;
 
 interface ErrorResponse {
   error: {
@@ -164,7 +164,9 @@ export const handler: Handler = async (
       version: "1.0.0",
     });
 
-    const transport = new StreamableHTTPClientTransport(new URL(MCP_SERVER_URL));
+    const transport = new StreamableHTTPClientTransport(
+      new URL(MCP_SERVER_URL),
+    );
 
     try {
       await mcpClient.connect(transport);
@@ -188,7 +190,7 @@ export const handler: Handler = async (
       // List available tools from MCP server
       const toolsResult = await mcpClient.listTools();
       const anthropicTools = toolsResult.tools.map((tool) =>
-        mcpToolToAnthropicTool(tool as McpTool)
+        mcpToolToAnthropicTool(tool as McpTool),
       );
 
       // Build system prompt
@@ -221,7 +223,7 @@ export const handler: Handler = async (
       while (response.stop_reason === "tool_use") {
         // Find all tool use blocks
         const toolUseBlocks = response.content.filter(
-          (block): block is Anthropic.ToolUseBlock => block.type === "tool_use"
+          (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
         );
 
         // Add assistant message with tool use
@@ -287,7 +289,7 @@ export const handler: Handler = async (
 
       // Extract final text response
       const textBlocks = response.content.filter(
-        (block): block is Anthropic.TextBlock => block.type === "text"
+        (block): block is Anthropic.TextBlock => block.type === "text",
       );
       const assistantMessage =
         textBlocks.length > 0
