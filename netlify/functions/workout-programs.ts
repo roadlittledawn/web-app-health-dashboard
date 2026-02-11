@@ -134,10 +134,14 @@ export const handler: Handler = async (
       }
 
       const now = new Date();
+      const exercises = (data.exercises || []).map((e: any) => ({
+        ...e,
+        exercise_id: new ObjectId(e.exercise_id),
+      }));
       const program: WorkoutProgram = {
         name: data.name,
         description: data.description || '',
-        exercises: data.exercises || [],
+        exercises,
         status: 'active',
         created_at: now,
         updated_at: now,
@@ -181,7 +185,7 @@ export const handler: Handler = async (
       if (updates.exercises && updates.exercises.length > 0) {
         const exerciseIds = updates.exercises.map((e: any) => new ObjectId(e.exercise_id));
         const existingExercises = await exercisesCollection.find({ _id: { $in: exerciseIds } }).toArray();
-        
+
         if (existingExercises.length !== exerciseIds.length) {
           return {
             statusCode: 400,
@@ -191,6 +195,11 @@ export const handler: Handler = async (
             headers: { "Content-Type": "application/json" },
           };
         }
+
+        updates.exercises = updates.exercises.map((e: any) => ({
+          ...e,
+          exercise_id: new ObjectId(e.exercise_id),
+        }));
       }
 
       const updateData = { ...updates, updated_at: new Date() };
