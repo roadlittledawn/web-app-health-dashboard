@@ -36,6 +36,7 @@ export interface ProgramExercise {
   sets?: number;
   reps?: number;
   duration_seconds?: number;
+  notes?: string;
 }
 
 /**

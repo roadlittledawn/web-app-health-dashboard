@@ -260,6 +260,11 @@ export default function WorkoutSessionPage() {
                         sx={{ mr: 1 }}
                       />
                     </Box>
+                    {pe.notes && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {pe.notes}
+                      </Typography>
+                    )}
                     {pe.exercise.requiredEquipment.length > 0 && (
                       <Typography variant="body2" color="text.secondary">
                         Equipment: {pe.exercise.requiredEquipment.join(", ")}

@@ -15,7 +15,6 @@ import {
   DialogActions,
   IconButton,
   List,
-  ListItem,
   TextField,
   Toolbar,
   Typography,
@@ -28,6 +27,7 @@ import {
   ArrowBack,
   Add,
   Delete,
+  Edit as EditIcon,
   PlayArrow,
   DragIndicator,
   FitnessCenter,
@@ -45,8 +45,9 @@ export default function ProgramDetailPage() {
   const [addExerciseDialogOpen, setAddExerciseDialogOpen] = useState(false);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
-  const [exerciseConfig, setExerciseConfig] = useState({ sets: 3, reps: 10, duration_seconds: 60 });
+  const [exerciseConfig, setExerciseConfig] = useState({ sets: 3, reps: 10, duration_seconds: 60, notes: '' });
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -108,6 +109,7 @@ export default function ProgramDetailPage() {
         sets: e.sets,
         reps: e.reps,
         duration_seconds: e.duration_seconds,
+        notes: e.notes,
       })), newExercise];
 
       const response = await fetch('/api/workout-programs', {
@@ -142,6 +144,7 @@ export default function ProgramDetailPage() {
           sets: e.sets,
           reps: e.reps,
           duration_seconds: e.duration_seconds,
+          notes: e.notes,
         }));
 
       const response = await fetch('/api/workout-programs', {
@@ -161,17 +164,31 @@ export default function ProgramDetailPage() {
     }
   };
 
-  const handleUpdateExerciseConfig = async (index: number, updates: any) => {
+  const openEditDialog = (index: number) => {
     if (!program) return;
+    const pe = program.exercises[index];
+    setEditingExerciseIndex(index);
+    setExerciseConfig({
+      sets: pe.sets || 3,
+      reps: pe.reps || 10,
+      duration_seconds: pe.duration_seconds || 60,
+      notes: pe.notes || '',
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateExerciseConfig = async () => {
+    if (!program || editingExerciseIndex === null) return;
 
     try {
       const token = localStorage.getItem('auth-token');
       const updatedExercises = program.exercises.map((e, i) => ({
         exercise_id: e.exercise_id,
         order: e.order,
-        sets: i === index ? updates.sets : e.sets,
-        reps: i === index ? updates.reps : e.reps,
-        duration_seconds: i === index ? updates.duration_seconds : e.duration_seconds,
+        sets: i === editingExerciseIndex ? exerciseConfig.sets : e.sets,
+        reps: i === editingExerciseIndex ? exerciseConfig.reps : e.reps,
+        duration_seconds: i === editingExerciseIndex ? exerciseConfig.duration_seconds : e.duration_seconds,
+        notes: i === editingExerciseIndex ? exerciseConfig.notes || undefined : e.notes,
       }));
 
       const response = await fetch('/api/workout-programs', {
@@ -185,6 +202,7 @@ export default function ProgramDetailPage() {
 
       if (!response.ok) throw new Error('Failed to update exercise');
 
+      setEditDialogOpen(false);
       setEditingExerciseIndex(null);
       fetchProgram();
     } catch (err: any) {
@@ -222,6 +240,7 @@ export default function ProgramDetailPage() {
         sets: e.sets,
         reps: e.reps,
         duration_seconds: e.duration_seconds,
+        notes: e.notes,
       }));
 
       const response = await fetch('/api/workout-programs', {
@@ -332,60 +351,25 @@ export default function ProgramDetailPage() {
                     <Typography variant="body2" color="text.secondary">
                       {pe.exercise.targetArea.join(', ')}
                     </Typography>
-                    {editingExerciseIndex === index ? (
-                      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                        {!pe.exercise.isTimeBased ? (
-                          <>
-                            <TextField
-                              label="Sets"
-                              type="number"
-                              defaultValue={pe.sets}
-                              onChange={(e) => setExerciseConfig({ ...exerciseConfig, sets: parseInt(e.target.value) })}
-                              size="small"
-                            />
-                            <TextField
-                              label="Reps"
-                              type="number"
-                              defaultValue={pe.reps}
-                              onChange={(e) => setExerciseConfig({ ...exerciseConfig, reps: parseInt(e.target.value) })}
-                              size="small"
-                            />
-                          </>
-                        ) : (
-                          <TextField
-                            label="Duration (seconds)"
-                            type="number"
-                            defaultValue={pe.duration_seconds}
-                            onChange={(e) => setExerciseConfig({ ...exerciseConfig, duration_seconds: parseInt(e.target.value) })}
-                            size="small"
-                          />
-                        )}
-                        <Button onClick={() => handleUpdateExerciseConfig(index, exerciseConfig)}>
-                          Save
-                        </Button>
-                        <Button onClick={() => setEditingExerciseIndex(null)}>Cancel</Button>
-                      </Box>
-                    ) : (
-                      <Box sx={{ mt: 1 }}>
-                        <Chip
-                          label={
-                            pe.exercise.isTimeBased
-                              ? `${pe.duration_seconds}s`
-                              : `${pe.sets} sets × ${pe.reps} reps`
-                          }
-                          size="small"
-                          onClick={() => {
-                            setEditingExerciseIndex(index);
-                            setExerciseConfig({
-                              sets: pe.sets || 3,
-                              reps: pe.reps || 10,
-                              duration_seconds: pe.duration_seconds || 60,
-                            });
-                          }}
-                        />
-                      </Box>
+                    <Box sx={{ mt: 1 }}>
+                      <Chip
+                        label={
+                          pe.exercise.isTimeBased
+                            ? `${pe.duration_seconds}s`
+                            : `${pe.sets} sets × ${pe.reps} reps`
+                        }
+                        size="small"
+                      />
+                    </Box>
+                    {pe.notes && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {pe.notes}
+                      </Typography>
                     )}
                   </Box>
+                  <IconButton onClick={() => openEditDialog(index)}>
+                    <EditIcon />
+                  </IconButton>
                   <IconButton onClick={() => handleRemoveExercise(index)}>
                     <Delete />
                   </IconButton>
@@ -403,6 +387,56 @@ export default function ProgramDetailPage() {
           </Box>
         )}
       </Container>
+
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Edit Exercise
+        </DialogTitle>
+        <DialogContent>
+          {editingExerciseIndex !== null && program.exercises[editingExerciseIndex] && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+              {!program.exercises[editingExerciseIndex].exercise.isTimeBased ? (
+                <>
+                  <TextField
+                    label="Sets"
+                    type="number"
+                    value={exerciseConfig.sets}
+                    onChange={(e) => setExerciseConfig({ ...exerciseConfig, sets: parseInt(e.target.value) || 0 })}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Reps"
+                    type="number"
+                    value={exerciseConfig.reps}
+                    onChange={(e) => setExerciseConfig({ ...exerciseConfig, reps: parseInt(e.target.value) || 0 })}
+                    fullWidth
+                  />
+                </>
+              ) : (
+                <TextField
+                  label="Duration (seconds)"
+                  type="number"
+                  value={exerciseConfig.duration_seconds}
+                  onChange={(e) => setExerciseConfig({ ...exerciseConfig, duration_seconds: parseInt(e.target.value) || 0 })}
+                  fullWidth
+                />
+              )}
+              <TextField
+                label="Notes"
+                value={exerciseConfig.notes}
+                onChange={(e) => setExerciseConfig({ ...exerciseConfig, notes: e.target.value })}
+                multiline
+                rows={3}
+                fullWidth
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleUpdateExerciseConfig}>Save</Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={addExerciseDialogOpen} onClose={() => setAddExerciseDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Add Exercise</DialogTitle>
