@@ -208,11 +208,11 @@ export default function IncidentsPage() {
                       <Box>
                         <Typography variant="h3" component="h2" gutterBottom>
                           {incident.incidentId ||
-                            incident.painLocations.join(", ") ||
+                            incident.painLocations?.join(", ") ||
                             "No location specified"}
                         </Typography>
                         <Box display="flex" gap={0.5} flexWrap="wrap">
-                          {incident.painLocations.map((location, idx) => (
+                          {(incident.painLocations || []).map((location, idx) => (
                             <Chip
                               key={idx}
                               label={location}
