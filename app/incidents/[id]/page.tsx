@@ -120,7 +120,7 @@ export default function IncidentDetailPage() {
           </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {incident.incidentId ||
-              incident.painLocations.join(", ") ||
+              incident.painLocations?.join(", ") ||
               "Incident Details"}
           </Typography>
           <Button
@@ -154,11 +154,11 @@ export default function IncidentDetailPage() {
                   <Box>
                     <Typography variant="h2" gutterBottom>
                       {incident.incidentId ||
-                        incident.painLocations.join(", ") ||
+                        incident.painLocations?.join(", ") ||
                         "No location specified"}
                     </Typography>
                     <Box display="flex" gap={0.5} flexWrap="wrap">
-                      {incident.painLocations.map((location, idx) => (
+                      {(incident.painLocations || []).map((location, idx) => (
                         <Chip
                           key={idx}
                           label={location}
