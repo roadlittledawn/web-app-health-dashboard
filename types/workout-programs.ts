@@ -22,6 +22,7 @@ export interface Exercise {
   description: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   isTimeBased: boolean;
+  exerciseType?: 'strength' | 'flexibility';
   created_at: Date;
   updated_at: Date;
 }

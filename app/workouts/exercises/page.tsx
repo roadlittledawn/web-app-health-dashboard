@@ -6,9 +6,6 @@ import {
   AppBar,
   Box,
   Button,
-  Card,
-  CardContent,
-  CardActions,
   Chip,
   Container,
   Dialog,
@@ -16,7 +13,6 @@ import {
   DialogContent,
   DialogActions,
   FormControl,
-  Grid,
   InputLabel,
   MenuItem,
   Select,
@@ -26,6 +22,13 @@ import {
   CircularProgress,
   Alert,
   IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -33,6 +36,9 @@ import {
   Edit,
   Delete,
   FitnessCenter,
+  ArrowUpward,
+  ArrowDownward,
+  UnfoldMore,
 } from '@mui/icons-material';
 import { Exercise } from '@/types/workout-programs';
 
@@ -45,6 +51,9 @@ export default function ExercisesPage() {
   const [searchName, setSearchName] = useState('');
   const [filterTargetArea, setFilterTargetArea] = useState('');
   const [filterEquipment, setFilterEquipment] = useState('');
+  const [filterExerciseType, setFilterExerciseType] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'exerciseType' | 'difficulty' | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -57,6 +66,7 @@ export default function ExercisesPage() {
     description: '',
     difficulty: 'beginner' as 'beginner' | 'intermediate' | 'advanced',
     isTimeBased: false,
+    exerciseType: '' as '' | 'strength' | 'flexibility',
     mediaUrl: '',
   });
 
@@ -66,7 +76,7 @@ export default function ExercisesPage() {
 
   useEffect(() => {
     applyFilters();
-  }, [exercises, searchName, filterTargetArea, filterEquipment]);
+  }, [exercises, searchName, filterTargetArea, filterEquipment, filterExerciseType, sortBy, sortOrder]);
 
   const fetchExercises = async () => {
     try {
@@ -103,6 +113,29 @@ export default function ExercisesPage() {
       filtered = filtered.filter(e => e.requiredEquipment.includes(filterEquipment));
     }
 
+    if (filterExerciseType) {
+      filtered = filtered.filter(e => e.exerciseType === filterExerciseType);
+    }
+
+    if (sortBy) {
+      filtered = [...filtered].sort((a, b) => {
+        let aVal: any = a[sortBy];
+        let bVal: any = b[sortBy];
+
+        // Handle undefined values (put them at the end)
+        if (aVal === undefined) return 1;
+        if (bVal === undefined) return -1;
+
+        // String comparison
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          const comparison = aVal.localeCompare(bVal);
+          return sortOrder === 'asc' ? comparison : -comparison;
+        }
+
+        return 0;
+      });
+    }
+
     setFilteredExercises(filtered);
   };
 
@@ -117,6 +150,7 @@ export default function ExercisesPage() {
         description: formData.description,
         difficulty: formData.difficulty,
         isTimeBased: formData.isTimeBased,
+        exerciseType: formData.exerciseType || undefined,
         media: formData.mediaUrl ? [{ type: 'youtube', url: formData.mediaUrl }] : [],
       };
 
@@ -149,6 +183,7 @@ export default function ExercisesPage() {
       description: exercise.description,
       difficulty: exercise.difficulty,
       isTimeBased: exercise.isTimeBased,
+      exerciseType: exercise.exerciseType || '',
       mediaUrl: exercise.media[0]?.url || '',
     });
     setEditDialogOpen(true);
@@ -167,6 +202,7 @@ export default function ExercisesPage() {
         description: formData.description,
         difficulty: formData.difficulty,
         isTimeBased: formData.isTimeBased,
+        exerciseType: formData.exerciseType || undefined,
         media: formData.mediaUrl ? [{ type: 'youtube', url: formData.mediaUrl }] : [],
       };
 
@@ -224,8 +260,18 @@ export default function ExercisesPage() {
       description: '',
       difficulty: 'beginner',
       isTimeBased: false,
+      exerciseType: '',
       mediaUrl: '',
     });
+  };
+
+  const handleSort = (column: 'name' | 'exerciseType' | 'difficulty') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
   };
 
   const allTargetAreas = Array.from(new Set(exercises.flatMap(e => e.targetArea)));
@@ -259,14 +305,32 @@ export default function ExercisesPage() {
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-        <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            Showing {filteredExercises.length} of {exercises.length} exercises
+          </Typography>
+        </Box>
+
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
           <TextField
             label="Search by name"
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
             sx={{ flex: 1 }}
           />
-          <FormControl sx={{ minWidth: 200 }}>
+          <FormControl sx={{ minWidth: { sm: 150 } }}>
+            <InputLabel>Type</InputLabel>
+            <Select
+              value={filterExerciseType}
+              label="Type"
+              onChange={(e) => setFilterExerciseType(e.target.value)}
+            >
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="strength">Strength</MenuItem>
+              <MenuItem value="flexibility">Flexibility</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: { sm: 150 } }}>
             <InputLabel>Target Area</InputLabel>
             <Select
               value={filterTargetArea}
@@ -279,7 +343,7 @@ export default function ExercisesPage() {
               ))}
             </Select>
           </FormControl>
-          <FormControl sx={{ minWidth: 200 }}>
+          <FormControl sx={{ minWidth: { sm: 150 } }}>
             <InputLabel>Equipment</InputLabel>
             <Select
               value={filterEquipment}
@@ -294,44 +358,99 @@ export default function ExercisesPage() {
           </FormControl>
         </Box>
 
-        <Grid container spacing={3}>
-          {filteredExercises.map((exercise) => (
-            <Grid item xs={12} sm={6} md={4} key={exercise._id?.toString()}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    {exercise.name}
-                  </Typography>
-                  <Box sx={{ mb: 1 }}>
-                    <Chip label={exercise.difficulty} size="small" sx={{ mr: 1 }} />
-                    <Chip label={exercise.isTimeBased ? 'Time-based' : 'Rep-based'} size="small" />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {exercise.description || 'No description'}
-                  </Typography>
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="caption" display="block">
-                      <strong>Target:</strong> {exercise.targetArea.join(', ')}
-                    </Typography>
-                    {exercise.requiredEquipment.length > 0 && (
-                      <Typography variant="caption" display="block">
-                        <strong>Equipment:</strong> {exercise.requiredEquipment.join(', ')}
-                      </Typography>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell 
+                  onClick={() => handleSort('name')}
+                  sx={{ cursor: 'pointer', userSelect: 'none' }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    Name
+                    {sortBy === 'name' ? (
+                      sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
+                    ) : (
+                      <UnfoldMore fontSize="small" sx={{ opacity: 0.3 }} />
                     )}
                   </Box>
-                </CardContent>
-                <CardActions>
-                  <IconButton size="small" onClick={() => handleEditClick(exercise)}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleDeleteClick(exercise)}>
-                    <Delete />
-                  </IconButton>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                </TableCell>
+                <TableCell 
+                  onClick={() => handleSort('exerciseType')}
+                  sx={{ cursor: 'pointer', userSelect: 'none' }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    Category
+                    {sortBy === 'exerciseType' ? (
+                      sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
+                    ) : (
+                      <UnfoldMore fontSize="small" sx={{ opacity: 0.3 }} />
+                    )}
+                  </Box>
+                </TableCell>
+                <TableCell>Target Areas</TableCell>
+                <TableCell>Equipment</TableCell>
+                <TableCell 
+                  onClick={() => handleSort('difficulty')}
+                  sx={{ cursor: 'pointer', userSelect: 'none' }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    Difficulty
+                    {sortBy === 'difficulty' ? (
+                      sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
+                    ) : (
+                      <UnfoldMore fontSize="small" sx={{ opacity: 0.3 }} />
+                    )}
+                  </Box>
+                </TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredExercises.map((exercise) => (
+                <TableRow key={exercise._id?.toString()} hover>
+                  <TableCell>{exercise.name}</TableCell>
+                  <TableCell>
+                    {exercise.exerciseType ? (
+                      <Chip 
+                        label={exercise.exerciseType} 
+                        size="small" 
+                        color={exercise.exerciseType === 'strength' ? 'primary' : 'secondary'}
+                      />
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">-</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>{exercise.targetArea.join(', ')}</TableCell>
+                  <TableCell>
+                    {exercise.requiredEquipment.length > 0 
+                      ? exercise.requiredEquipment.join(', ') 
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={exercise.difficulty} size="small" />
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={exercise.isTimeBased ? 'Time' : 'Reps'} 
+                      size="small" 
+                      variant="outlined"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton size="small" onClick={() => handleEditClick(exercise)}>
+                      <Edit />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => handleDeleteClick(exercise)}>
+                      <Delete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
         {filteredExercises.length === 0 && (
           <Box textAlign="center" py={4}>
@@ -387,6 +506,18 @@ export default function ExercisesPage() {
                 <MenuItem value="beginner">Beginner</MenuItem>
                 <MenuItem value="intermediate">Intermediate</MenuItem>
                 <MenuItem value="advanced">Advanced</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={formData.exerciseType}
+                label="Category"
+                onChange={(e) => setFormData({ ...formData, exerciseType: e.target.value as any })}
+              >
+                <MenuItem value="">Not specified</MenuItem>
+                <MenuItem value="strength">Strength</MenuItem>
+                <MenuItem value="flexibility">Flexibility</MenuItem>
               </Select>
             </FormControl>
             <FormControl>
@@ -460,6 +591,18 @@ export default function ExercisesPage() {
                 <MenuItem value="beginner">Beginner</MenuItem>
                 <MenuItem value="intermediate">Intermediate</MenuItem>
                 <MenuItem value="advanced">Advanced</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={formData.exerciseType}
+                label="Category"
+                onChange={(e) => setFormData({ ...formData, exerciseType: e.target.value as any })}
+              >
+                <MenuItem value="">Not specified</MenuItem>
+                <MenuItem value="strength">Strength</MenuItem>
+                <MenuItem value="flexibility">Flexibility</MenuItem>
               </Select>
             </FormControl>
             <FormControl>
