@@ -142,7 +142,7 @@ export default function IncidentsPage() {
             </Box>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6} md={4}>
-                <FormControl fullWidth size="small">
+                <FormControl fullWidth size="small" sx={{ minWidth: 200 }}>
                   <InputLabel>Status</InputLabel>
                   <Select
                     value={filters.status}
@@ -165,6 +165,7 @@ export default function IncidentsPage() {
                   fullWidth
                   variant="outlined"
                   onClick={() => setFilters({ status: "" })}
+                  sx={{ minWidth: 120 }}
                 >
                   Clear Filters
                 </Button>

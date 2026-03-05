@@ -271,7 +271,7 @@ function WorkoutsPageContent() {
 
         {/* Quick Navigation */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => router.push('/workouts/exercises')}>
               <CardContent>
                 <Box display="flex" alignItems="center" gap={2}>
@@ -286,7 +286,7 @@ function WorkoutsPageContent() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => router.push('/workouts/programs')}>
               <CardContent>
                 <Box display="flex" alignItems="center" gap={2}>
@@ -332,7 +332,7 @@ function WorkoutsPageContent() {
         {/* Stats Summary */}
         {connected && workouts.length > 0 && (
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={4}>
+            <Grid size={12} sm={4}>
               <Card>
                 <CardContent>
                   <Typography variant="caption" color="text.secondary">
@@ -344,7 +344,7 @@ function WorkoutsPageContent() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid size={12} sm={4}>
               <Card>
                 <CardContent>
                   <Typography variant="caption" color="text.secondary">
@@ -356,7 +356,7 @@ function WorkoutsPageContent() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid size={12} sm={4}>
               <Card>
                 <CardContent>
                   <Typography variant="caption" color="text.secondary">
@@ -484,7 +484,7 @@ function WorkoutsPageContent() {
         {!loading && connected && workouts.length > 0 && (
           <Grid container spacing={2}>
             {workouts.map((workout) => (
-              <Grid item xs={12} key={workout._id}>
+              <Grid size={12} key={workout._id}>
                 <Card>
                   <CardContent>
                     <Box display="flex" justifyContent="space-between" alignItems="start">
