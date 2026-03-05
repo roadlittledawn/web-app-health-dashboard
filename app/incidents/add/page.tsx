@@ -203,14 +203,14 @@ export default function AddIncidentPage() {
             <Box component="form" onSubmit={handleSubmit} noValidate>
               <Grid container spacing={3}>
                 {/* Basic Information */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="h6" gutterBottom>
                     Basic Information
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <TextField
                     fullWidth
                     label="Incident ID"
@@ -223,7 +223,7 @@ export default function AddIncidentPage() {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Autocomplete
                     multiple
                     freeSolo
@@ -246,7 +246,7 @@ export default function AddIncidentPage() {
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     required
                     fullWidth
@@ -262,7 +262,7 @@ export default function AddIncidentPage() {
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     type={formData.endDate ? "datetime-local" : "text"}
@@ -302,7 +302,7 @@ export default function AddIncidentPage() {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography gutterBottom>
                     Pain Intensity: {formData.painIntensity}/10
                   </Typography>
@@ -328,7 +328,7 @@ export default function AddIncidentPage() {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Autocomplete
                     freeSolo
                     options={autocompleteData.injury_sources}
@@ -351,7 +351,7 @@ export default function AddIncidentPage() {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="subtitle2" gutterBottom>
                     Description *
                   </Typography>
@@ -367,7 +367,7 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 {/* Pain Quality */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                     Pain Quality
                   </Typography>
@@ -398,7 +398,7 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 {/* Other Symptoms */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                     Other Symptoms
                   </Typography>
@@ -429,7 +429,7 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 {/* Sensations */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                     Physical Sensations
                   </Typography>
@@ -460,14 +460,14 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 {/* Timing */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                     Timing
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Autocomplete
                     multiple
                     options={WHEN_MOST_SEVERE_OPTIONS}
@@ -496,7 +496,7 @@ export default function AddIncidentPage() {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Autocomplete
                     multiple
                     options={WHAT_MAKES_WORSE_OPTIONS}
@@ -525,7 +525,7 @@ export default function AddIncidentPage() {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Autocomplete
                     multiple
                     options={WHAT_MAKES_BETTER_OPTIONS}
@@ -555,14 +555,14 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 {/* Treatments */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                     Treatments
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Autocomplete
                     multiple
                     options={TREATMENTS_TRIED_OPTIONS}
@@ -588,7 +588,7 @@ export default function AddIncidentPage() {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Autocomplete
                     multiple
                     options={STUDIES_COMPLETED_OPTIONS}
@@ -615,7 +615,7 @@ export default function AddIncidentPage() {
                 </Grid>
 
                 {/* Current Status */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                     Current Status
                   </Typography>
@@ -641,7 +641,7 @@ export default function AddIncidentPage() {
                   </TextField>
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Box display="flex" justifyContent="flex-end" gap={2}>
                     <Button
                       variant="outlined"

@@ -148,7 +148,7 @@ export default function LabResultsPage() {
             ) : (
               <Grid container spacing={3}>
                 {/* Total Cholesterol Chart */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Card>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
@@ -175,7 +175,7 @@ export default function LabResultsPage() {
                 </Grid>
 
                 {/* LDL Cholesterol Chart */}
-                <Grid item xs={12} md={6}>
+                <Grid size={12}>
                   <Card>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
@@ -199,7 +199,7 @@ export default function LabResultsPage() {
                 </Grid>
 
                 {/* HDL Cholesterol Chart */}
-                <Grid item xs={12} md={6}>
+                <Grid size={12}>
                   <Card>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
@@ -223,7 +223,7 @@ export default function LabResultsPage() {
                 </Grid>
 
                 {/* Triglycerides Chart */}
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Card>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
@@ -260,7 +260,7 @@ export default function LabResultsPage() {
             ) : (
               <Grid container spacing={2}>
                 {results.map((result) => (
-                  <Grid item xs={12} key={result._id?.toString()}>
+                  <Grid size={12} key={result._id?.toString()}>
                     <Card>
                       <CardContent>
                         <Box display="flex" justifyContent="space-between" alignItems="start" mb={2}>
@@ -278,7 +278,7 @@ export default function LabResultsPage() {
                         {result.test_type === 'lipid_panel' && (
                           <Grid container spacing={2}>
                             {result.total_cholesterol && (
-                              <Grid item xs={6} sm={3}>
+                              <Grid size={{ xs: 6, sm: 3 }}>
                                 <Box>
                                   <Typography variant="caption" color="text.secondary">
                                     Total Cholesterol
@@ -300,7 +300,7 @@ export default function LabResultsPage() {
                               </Grid>
                             )}
                             {result.ldl_cholesterol && (
-                              <Grid item xs={6} sm={3}>
+                              <Grid size={{ xs: 6, sm: 3 }}>
                                 <Box>
                                   <Typography variant="caption" color="text.secondary">
                                     LDL
@@ -322,7 +322,7 @@ export default function LabResultsPage() {
                               </Grid>
                             )}
                             {result.hdl_cholesterol && (
-                              <Grid item xs={6} sm={3}>
+                              <Grid size={{ xs: 6, sm: 3 }}>
                                 <Box>
                                   <Typography variant="caption" color="text.secondary">
                                     HDL
@@ -344,7 +344,7 @@ export default function LabResultsPage() {
                               </Grid>
                             )}
                             {result.triglycerides && (
-                              <Grid item xs={6} sm={3}>
+                              <Grid size={{ xs: 6, sm: 3 }}>
                                 <Box>
                                   <Typography variant="caption" color="text.secondary">
                                     Triglycerides
