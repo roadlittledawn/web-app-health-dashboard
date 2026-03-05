@@ -151,6 +151,7 @@ export default function DashboardPage() {
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
+                    width: 350,
                   }}
                 >
                   <CardContent sx={{ flexGrow: 1 }}>
