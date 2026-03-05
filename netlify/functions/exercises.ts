@@ -45,12 +45,13 @@ export const handler: Handler = async (
     // GET - Query exercises
     if (event.httpMethod === "GET") {
       const params = event.queryStringParameters || {};
-      const { name, targetArea, requiredEquipment } = params;
+      const { name, targetArea, requiredEquipment, exerciseType } = params;
 
       const filter: any = {};
       if (name) filter.name = { $regex: name, $options: 'i' };
       if (targetArea) filter.targetArea = targetArea;
       if (requiredEquipment) filter.requiredEquipment = requiredEquipment;
+      if (exerciseType) filter.exerciseType = exerciseType;
 
       const exercises = await exercisesCollection.find(filter).sort({ name: 1 }).toArray();
 
@@ -95,6 +96,7 @@ export const handler: Handler = async (
         description: data.description || '',
         difficulty: data.difficulty || 'beginner',
         isTimeBased: data.isTimeBased,
+        exerciseType: data.exerciseType,
         created_at: now,
         updated_at: now,
       };
