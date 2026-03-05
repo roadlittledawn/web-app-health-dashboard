@@ -259,14 +259,14 @@ export default function ExercisesPage() {
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-        <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
           <TextField
             label="Search by name"
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
             sx={{ flex: 1 }}
           />
-          <FormControl sx={{ minWidth: 200 }}>
+          <FormControl sx={{ minWidth: { sm: 200 } }}>
             <InputLabel>Target Area</InputLabel>
             <Select
               value={filterTargetArea}
@@ -279,7 +279,7 @@ export default function ExercisesPage() {
               ))}
             </Select>
           </FormControl>
-          <FormControl sx={{ minWidth: 200 }}>
+          <FormControl sx={{ minWidth: { sm: 200 } }}>
             <InputLabel>Equipment</InputLabel>
             <Select
               value={filterEquipment}
