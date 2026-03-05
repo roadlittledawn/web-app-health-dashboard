@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Container,
   Grid,
   IconButton,
   List,
@@ -134,7 +135,7 @@ export default function IncidentDetailPage() {
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ p: 3 }}>
+      <Container maxWidth="lg" sx={{ mt: 3, mb: 3 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
@@ -493,7 +494,7 @@ export default function IncidentDetailPage() {
             </Card>
           </Grid>
         </Grid>
-      </Box>
+      </Container>
     </Box>
   );
 }
