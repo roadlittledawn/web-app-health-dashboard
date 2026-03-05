@@ -305,6 +305,12 @@ export default function ExercisesPage() {
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            Showing {filteredExercises.length} of {exercises.length} exercises
+          </Typography>
+        </Box>
+
         <Box sx={{ mb: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
           <TextField
             label="Search by name"
