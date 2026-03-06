@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useTheme, useMediaQuery } from '@mui/material';
 import {
   AppBar,
   Box,
@@ -13,15 +14,25 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  FormControl,
   IconButton,
+  InputLabel,
   List,
+  MenuItem,
+  Paper,
+  Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Toolbar,
   Typography,
   CircularProgress,
   Alert,
   Chip,
-  Grid,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -31,6 +42,9 @@ import {
   PlayArrow,
   DragIndicator,
   FitnessCenter,
+  ArrowUpward,
+  ArrowDownward,
+  UnfoldMore,
 } from '@mui/icons-material';
 import { PopulatedWorkoutProgram, Exercise } from '@/types/workout-programs';
 
@@ -38,6 +52,8 @@ export default function ProgramDetailPage() {
   const router = useRouter();
   const params = useParams();
   const programId = params.id as string;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [program, setProgram] = useState<PopulatedWorkoutProgram | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +66,11 @@ export default function ProgramDetailPage() {
   const [exerciseConfig, setExerciseConfig] = useState({ sets: 3, reps: 10, duration_seconds: 60, notes: '' });
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [filterExerciseType, setFilterExerciseType] = useState('');
+  const [filterTargetArea, setFilterTargetArea] = useState('');
+  const [filterEquipment, setFilterEquipment] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'exerciseType' | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     fetchProgram();
@@ -125,6 +146,10 @@ export default function ProgramDetailPage() {
 
       setAddExerciseDialogOpen(false);
       setSearchTerm('');
+      setFilterExerciseType('');
+      setFilterTargetArea('');
+      setFilterEquipment('');
+      setSortBy(null);
       fetchProgram();
     } catch (err: any) {
       setError(err.message);
@@ -261,9 +286,38 @@ export default function ProgramDetailPage() {
     }
   };
 
-  const filteredExercises = exercises.filter(e =>
-    e.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSort = (column: 'name' | 'exerciseType') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const allTargetAreas = Array.from(new Set(exercises.flatMap(e => e.targetArea)));
+  const allEquipment = Array.from(new Set(exercises.flatMap(e => e.requiredEquipment)));
+
+  const filteredExercises = (() => {
+    let filtered = exercises.filter(e =>
+      e.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    if (filterExerciseType) filtered = filtered.filter(e => e.exerciseType === filterExerciseType);
+    if (filterTargetArea) filtered = filtered.filter(e => e.targetArea.includes(filterTargetArea));
+    if (filterEquipment) filtered = filtered.filter(e => e.requiredEquipment.includes(filterEquipment));
+    if (sortBy) {
+      filtered = [...filtered].sort((a, b) => {
+        const aVal = a[sortBy] ?? '';
+        const bVal = b[sortBy] ?? '';
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          const cmp = aVal.localeCompare(bVal);
+          return sortOrder === 'asc' ? cmp : -cmp;
+        }
+        return 0;
+      });
+    }
+    return filtered;
+  })();
 
   if (loading) {
     return (
@@ -438,36 +492,97 @@ export default function ProgramDetailPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={addExerciseDialogOpen} onClose={() => setAddExerciseDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={addExerciseDialogOpen} onClose={() => setAddExerciseDialogOpen(false)} maxWidth="lg" fullWidth fullScreen={isMobile}>
         <DialogTitle>Add Exercise</DialogTitle>
         <DialogContent>
-          <TextField
-            label="Search exercises"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            fullWidth
-            sx={{ mb: 2, mt: 1 }}
-          />
-          <Grid container spacing={2}>
-            {filteredExercises.map((exercise) => (
-              <Grid item xs={12} sm={6} key={exercise._id?.toString()}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6">{exercise.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {exercise.targetArea.join(', ')}
-                    </Typography>
-                    <Chip label={exercise.difficulty} size="small" sx={{ mt: 1 }} />
-                  </CardContent>
-                  <Box sx={{ p: 2, pt: 0 }}>
-                    <Button size="small" onClick={() => handleAddExercise(exercise)}>
-                      Add
-                    </Button>
-                  </Box>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+          <Box sx={{ mb: 2, mt: 1, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+            <TextField
+              label="Search by name"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{ flex: 1 }}
+              size={isMobile ? 'small' : 'medium'}
+            />
+            <FormControl sx={{ minWidth: { sm: 150 } }} size={isMobile ? 'small' : 'medium'}>
+              <InputLabel>Type</InputLabel>
+              <Select value={filterExerciseType} label="Type" onChange={(e) => setFilterExerciseType(e.target.value)}>
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value="strength">Strength</MenuItem>
+                <MenuItem value="flexibility">Flexibility</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl sx={{ minWidth: { sm: 150 } }} size={isMobile ? 'small' : 'medium'}>
+              <InputLabel>Target Area</InputLabel>
+              <Select value={filterTargetArea} label="Target Area" onChange={(e) => setFilterTargetArea(e.target.value)}>
+                <MenuItem value="">All</MenuItem>
+                {allTargetAreas.map(area => (
+                  <MenuItem key={area} value={area}>{area}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl sx={{ minWidth: { sm: 150 }, display: { xs: 'none', sm: 'flex' } }} size={isMobile ? 'small' : 'medium'}>
+              <InputLabel>Equipment</InputLabel>
+              <Select value={filterEquipment} label="Equipment" onChange={(e) => setFilterEquipment(e.target.value)}>
+                <MenuItem value="">All</MenuItem>
+                {allEquipment.map(eq => (
+                  <MenuItem key={eq} value={eq}>{eq}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Showing {filteredExercises.length} of {exercises.length} exercises
+          </Typography>
+          <TableContainer component={Paper} sx={{ maxHeight: isMobile ? 'calc(100vh - 280px)' : 400 }}>
+            <Table stickyHeader size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell onClick={() => handleSort('name')} sx={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      Name
+                      {sortBy === 'name' ? (sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />) : <UnfoldMore fontSize="small" sx={{ opacity: 0.3 }} />}
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }} onClick={() => handleSort('exerciseType')} >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', userSelect: 'none' }}>
+                      Category
+                      {sortBy === 'exerciseType' ? (sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />) : <UnfoldMore fontSize="small" sx={{ opacity: 0.3 }} />}
+                    </Box>
+                  </TableCell>
+                  <TableCell>Target Areas</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Equipment</TableCell>
+                  <TableCell align="right">Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredExercises.map((exercise) => (
+                  <TableRow key={exercise._id?.toString()} hover>
+                    <TableCell>
+                      {exercise.name}
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      {exercise.exerciseType ? (
+                        <Chip label={exercise.exerciseType} size="small" color={exercise.exerciseType === 'strength' ? 'primary' : 'secondary'} />
+                      ) : '-'}
+                    </TableCell>
+                    <TableCell>{exercise.targetArea.join(', ')}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{exercise.requiredEquipment.length > 0 ? exercise.requiredEquipment.join(', ') : '-'}</TableCell>
+                    <TableCell align="right">
+                      {isMobile ? (
+                        <IconButton size="small" color="primary" onClick={() => handleAddExercise(exercise)}>
+                          <Add />
+                        </IconButton>
+                      ) : (
+                        <Button size="small" variant="outlined" startIcon={<Add />} onClick={() => handleAddExercise(exercise)}>
+                          Add
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setAddExerciseDialogOpen(false)}>Close</Button>
