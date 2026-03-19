@@ -145,13 +145,12 @@ export default function DashboardPage() {
           {dashboardCards.map((card) => {
             const IconComponent = card.icon;
             return (
-              <Grid item xs={12} sm={6} md={4} key={card.title}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={card.title}>
                 <Card
                   sx={{
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
-                    width: 350,
                   }}
                 >
                   <CardContent sx={{ flexGrow: 1 }}>
