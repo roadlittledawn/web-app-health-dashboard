@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent } from "react";
 import {
   Box,
   Button,
@@ -15,41 +15,44 @@ import {
   Alert,
   Collapse,
   Typography,
-} from '@mui/material';
-import { Add, Save, Cancel } from '@mui/icons-material';
-import { formatForDateTimeLocal } from '@/lib/dateUtils';
-import MarkdownEditor from '@/components/MarkdownEditor';
+} from "@mui/material";
+import { Add, Save, Cancel } from "@mui/icons-material";
+import { formatForDateTimeLocal } from "@/lib/dateUtils";
+import MarkdownEditor from "@/components/MarkdownEditor";
 
 interface HealthLogFormProps {
   incidentId: string;
   onSuccess: () => void;
 }
 
-export default function HealthLogForm({ incidentId, onSuccess }: HealthLogFormProps) {
+export default function HealthLogForm({
+  incidentId,
+  onSuccess,
+}: HealthLogFormProps) {
   const [showForm, setShowForm] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
-    issue_type: 'update' as 'update' | 'doctor_visit_notes',
-    description: '',
+    issue_type: "update" as "update" | "doctor_visit_notes",
+    description: "",
     timestamp: formatForDateTimeLocal(new Date()),
   });
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setSaving(true);
 
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem("auth-token");
     if (!token) return;
 
     try {
-      const response = await fetch('/api/health-logs-create', {
-        method: 'POST',
+      const response = await fetch("/api/health-logs-create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,
@@ -60,13 +63,13 @@ export default function HealthLogForm({ incidentId, onSuccess }: HealthLogFormPr
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error?.message || 'Failed to create health log');
+        throw new Error(data.error?.message || "Failed to create health log");
       }
 
       // Reset form
       setFormData({
-        issue_type: 'update',
-        description: '',
+        issue_type: "update",
+        description: "",
         timestamp: formatForDateTimeLocal(new Date()),
       });
       setShowForm(false);
@@ -80,10 +83,10 @@ export default function HealthLogForm({ incidentId, onSuccess }: HealthLogFormPr
 
   const handleCancel = () => {
     setShowForm(false);
-    setError('');
+    setError("");
     setFormData({
-      issue_type: 'update',
-      description: '',
+      issue_type: "update",
+      description: "",
       timestamp: formatForDateTimeLocal(new Date()),
     });
   };
@@ -111,21 +114,30 @@ export default function HealthLogForm({ incidentId, onSuccess }: HealthLogFormPr
 
             <Box component="form" onSubmit={handleSubmit}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <FormControl fullWidth size="small">
                     <InputLabel>Log Type</InputLabel>
                     <Select
                       value={formData.issue_type}
                       label="Log Type"
-                      onChange={(e) => setFormData({ ...formData, issue_type: e.target.value as 'update' | 'doctor_visit_notes' })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          issue_type: e.target.value as
+                            | "update"
+                            | "doctor_visit_notes",
+                        })
+                      }
                     >
                       <MenuItem value="update">Update</MenuItem>
-                      <MenuItem value="doctor_visit_notes">Doctor Visit Notes</MenuItem>
+                      <MenuItem value="doctor_visit_notes">
+                        Doctor Visit Notes
+                      </MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     required
                     fullWidth
@@ -133,27 +145,31 @@ export default function HealthLogForm({ incidentId, onSuccess }: HealthLogFormPr
                     type="datetime-local"
                     label="Date & Time"
                     value={formData.timestamp}
-                    onChange={(e) => setFormData({ ...formData, timestamp: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, timestamp: e.target.value })
+                    }
                     slotProps={{
-                      inputLabel: { shrink: true }
+                      inputLabel: { shrink: true },
                     }}
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="subtitle2" gutterBottom>
                     Description *
                   </Typography>
                   <MarkdownEditor
                     value={formData.description}
-                    onChange={(value) => setFormData({ ...formData, description: value })}
+                    onChange={(value) =>
+                      setFormData({ ...formData, description: value })
+                    }
                     placeholder="Update or doctor notes... (Markdown supported)"
                     minHeight={150}
                     required
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Box display="flex" gap={1} justifyContent="flex-end">
                     <Button
                       variant="outlined"
@@ -171,7 +187,7 @@ export default function HealthLogForm({ incidentId, onSuccess }: HealthLogFormPr
                       startIcon={<Save />}
                       disabled={saving}
                     >
-                      {saving ? 'Saving...' : 'Save'}
+                      {saving ? "Saving..." : "Save"}
                     </Button>
                   </Box>
                 </Grid>
