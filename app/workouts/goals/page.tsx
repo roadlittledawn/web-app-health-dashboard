@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AppBar,
   Box,
@@ -27,7 +27,7 @@ import {
   Alert,
   Chip,
   IconButton,
-} from '@mui/material';
+} from "@mui/material";
 import {
   ArrowBack,
   EmojiEvents,
@@ -36,7 +36,7 @@ import {
   CheckCircle,
   Archive,
   Unarchive,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 interface Goal {
   _id: string;
@@ -61,20 +61,20 @@ export default function FitnessGoalsPage() {
   const router = useRouter();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [activityTypes, setActivityTypes] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
-    goal_type: 'distance',
-    activity_type: '',
-    target_value: '',
-    unit: 'mi',
-    time_period: 'month',
-    start_date: '',
-    description: '',
+    goal_type: "distance",
+    activity_type: "",
+    target_value: "",
+    unit: "mi",
+    time_period: "month",
+    start_date: "",
+    description: "",
   });
 
   useEffect(() => {
@@ -83,12 +83,12 @@ export default function FitnessGoalsPage() {
   }, []);
 
   const fetchActivityTypes = async () => {
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem("auth-token");
     if (!token) return;
 
     try {
-      const response = await fetch('/api/strava-workout-types', {
-        headers: { 'Authorization': `Bearer ${token}` },
+      const response = await fetch("/api/strava-workout-types", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -96,33 +96,33 @@ export default function FitnessGoalsPage() {
         setActivityTypes(data.data.types || []);
       }
     } catch (err) {
-      console.error('Failed to fetch activity types:', err);
+      console.error("Failed to fetch activity types:", err);
     }
   };
 
   const fetchGoals = async () => {
     setLoading(true);
-    setError('');
+    setError("");
 
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem("auth-token");
     if (!token) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     try {
-      const response = await fetch('/api/fitness-goals', {
-        headers: { 'Authorization': `Bearer ${token}` },
+      const response = await fetch("/api/fitness-goals", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch goals');
+        throw new Error("Failed to fetch goals");
       }
 
       const data = await response.json();
       setGoals(data.data);
     } catch (err) {
-      setError('Failed to load goals');
+      setError("Failed to load goals");
       console.error(err);
     } finally {
       setLoading(false);
@@ -131,38 +131,40 @@ export default function FitnessGoalsPage() {
 
   const handleCreateGoal = async () => {
     setSaving(true);
-    setError('');
+    setError("");
 
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem("auth-token");
 
     try {
-      const response = await fetch('/api/fitness-goals', {
-        method: 'POST',
+      const response = await fetch("/api/fitness-goals", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,
           target_value: parseFloat(formData.target_value),
-          start_date: formData.start_date ? new Date(formData.start_date).toISOString() : new Date().toISOString(),
+          start_date: formData.start_date
+            ? new Date(formData.start_date).toISOString()
+            : new Date().toISOString(),
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error?.message || 'Failed to create goal');
+        throw new Error(data.error?.message || "Failed to create goal");
       }
 
       setOpenDialog(false);
       setFormData({
-        goal_type: 'distance',
-        activity_type: '',
-        target_value: '',
-        unit: 'mi',
-        time_period: 'month',
-        start_date: '',
-        description: '',
+        goal_type: "distance",
+        activity_type: "",
+        target_value: "",
+        unit: "mi",
+        time_period: "month",
+        start_date: "",
+        description: "",
       });
       await fetchGoals();
     } catch (err: any) {
@@ -173,97 +175,97 @@ export default function FitnessGoalsPage() {
   };
 
   const handleDeleteGoal = async (id: string) => {
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem("auth-token");
 
     try {
       const response = await fetch(`/api/fitness-goals?id=${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete goal');
+        throw new Error("Failed to delete goal");
       }
 
       await fetchGoals();
     } catch (err) {
-      setError('Failed to delete goal');
+      setError("Failed to delete goal");
       console.error(err);
     }
   };
 
   const handleCompleteGoal = async (id: string) => {
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem("auth-token");
 
     try {
-      const response = await fetch('/api/fitness-goals', {
-        method: 'PATCH',
+      const response = await fetch("/api/fitness-goals", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id,
-          updates: { status: 'completed' },
+          updates: { status: "completed" },
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update goal');
+        throw new Error("Failed to update goal");
       }
 
       await fetchGoals();
     } catch (err) {
-      setError('Failed to update goal');
+      setError("Failed to update goal");
       console.error(err);
     }
   };
 
   const handleArchiveGoal = async (id: string, archive: boolean) => {
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem("auth-token");
 
     try {
-      const response = await fetch('/api/fitness-goals', {
-        method: 'PATCH',
+      const response = await fetch("/api/fitness-goals", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id,
-          updates: { status: archive ? 'archived' : 'active' },
+          updates: { status: archive ? "archived" : "active" },
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update goal');
+        throw new Error("Failed to update goal");
       }
 
       await fetchGoals();
     } catch (err) {
-      setError('Failed to update goal');
+      setError("Failed to update goal");
       console.error(err);
     }
   };
 
   const getUnitOptions = (goalType: string) => {
     switch (goalType) {
-      case 'distance':
-        return ['mi', 'km', 'meters'];
-      case 'duration':
-        return ['hours', 'minutes'];
-      case 'elevation':
-        return ['ft', 'meters'];
-      case 'frequency':
-        return ['activities'];
+      case "distance":
+        return ["mi", "km", "meters"];
+      case "duration":
+        return ["hours", "minutes"];
+      case "elevation":
+        return ["ft", "meters"];
+      case "frequency":
+        return ["activities"];
       default:
-        return [''];
+        return [""];
     }
   };
 
-  const activeGoals = goals.filter(g => g.status === 'active');
-  const completedGoals = goals.filter(g => g.status === 'completed');
-  const archivedGoals = goals.filter(g => g.status === 'archived');
+  const activeGoals = goals.filter((g) => g.status === "active");
+  const completedGoals = goals.filter((g) => g.status === "completed");
+  const archivedGoals = goals.filter((g) => g.status === "archived");
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -288,7 +290,7 @@ export default function FitnessGoalsPage() {
             onClick={() => setShowArchived(!showArchived)}
             sx={{ mr: 2 }}
           >
-            {showArchived ? 'Hide Archived' : 'Show Archived'}
+            {showArchived ? "Hide Archived" : "Show Archived"}
           </Button>
           <Button
             color="inherit"
@@ -302,7 +304,7 @@ export default function FitnessGoalsPage() {
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
             {error}
           </Alert>
         )}
@@ -327,13 +329,18 @@ export default function FitnessGoalsPage() {
             </Typography>
             <Grid container spacing={2} sx={{ mb: 4 }}>
               {activeGoals.map((goal) => (
-                <Grid item xs={12} md={6} key={goal._id}>
+                <Grid size={{ xs: 12, md: 6 }} key={goal._id}>
                   <Card>
                     <CardContent>
-                      <Box display="flex" justifyContent="space-between" alignItems="start" mb={2}>
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="start"
+                        mb={2}
+                      >
                         <Box>
                           <Typography variant="h6">
-                            {goal.goal_type.replace(/_/g, ' ').toUpperCase()}
+                            {goal.goal_type.replace(/_/g, " ").toUpperCase()}
                             {goal.activity_type && ` - ${goal.activity_type}`}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
@@ -369,9 +376,14 @@ export default function FitnessGoalsPage() {
                       </Box>
 
                       <Box mb={2}>
-                        <Box display="flex" justifyContent="space-between" mb={1}>
+                        <Box
+                          display="flex"
+                          justifyContent="space-between"
+                          mb={1}
+                        >
                           <Typography variant="body2">
-                            {goal.current_value.toFixed(1)} / {goal.target_value} {goal.unit}
+                            {goal.current_value.toFixed(1)} /{" "}
+                            {goal.target_value} {goal.unit}
                           </Typography>
                           <Typography variant="body2" fontWeight="bold">
                             {goal.progress.percentage.toFixed(1)}%
@@ -383,9 +395,12 @@ export default function FitnessGoalsPage() {
                           sx={{
                             height: 8,
                             borderRadius: 4,
-                            bgcolor: 'grey.200',
-                            '& .MuiLinearProgress-bar': {
-                              bgcolor: goal.progress.percentage >= 100 ? 'success.main' : 'primary.main',
+                            bgcolor: "grey.200",
+                            "& .MuiLinearProgress-bar": {
+                              bgcolor:
+                                goal.progress.percentage >= 100
+                                  ? "success.main"
+                                  : "primary.main",
                             },
                           }}
                         />
@@ -428,13 +443,18 @@ export default function FitnessGoalsPage() {
             </Typography>
             <Grid container spacing={2}>
               {completedGoals.map((goal) => (
-                <Grid item xs={12} md={6} key={goal._id}>
+                <Grid size={{ xs: 12, md: 6 }} key={goal._id}>
                   <Card sx={{ opacity: 0.8 }}>
                     <CardContent>
-                      <Box display="flex" justifyContent="space-between" alignItems="start" mb={1}>
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="start"
+                        mb={1}
+                      >
                         <Box>
                           <Typography variant="h6">
-                            {goal.goal_type.replace(/_/g, ' ').toUpperCase()}
+                            {goal.goal_type.replace(/_/g, " ").toUpperCase()}
                             {goal.activity_type && ` - ${goal.activity_type}`}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
@@ -459,7 +479,8 @@ export default function FitnessGoalsPage() {
                         </Box>
                       </Box>
                       <Typography variant="body2">
-                        {goal.current_value.toFixed(1)} / {goal.target_value} {goal.unit}
+                        {goal.current_value.toFixed(1)} / {goal.target_value}{" "}
+                        {goal.unit}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -477,13 +498,18 @@ export default function FitnessGoalsPage() {
             </Typography>
             <Grid container spacing={2}>
               {archivedGoals.map((goal) => (
-                <Grid item xs={12} md={6} key={goal._id}>
+                <Grid size={{ xs: 12, md: 6 }} key={goal._id}>
                   <Card sx={{ opacity: 0.6 }}>
                     <CardContent>
-                      <Box display="flex" justifyContent="space-between" alignItems="start" mb={1}>
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="start"
+                        mb={1}
+                      >
                         <Box>
                           <Typography variant="h6">
-                            {goal.goal_type.replace(/_/g, ' ').toUpperCase()}
+                            {goal.goal_type.replace(/_/g, " ").toUpperCase()}
                             {goal.activity_type && ` - ${goal.activity_type}`}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
@@ -510,7 +536,8 @@ export default function FitnessGoalsPage() {
                         </Box>
                       </Box>
                       <Typography variant="body2">
-                        {goal.current_value.toFixed(1)} / {goal.target_value} {goal.unit}
+                        {goal.current_value.toFixed(1)} / {goal.target_value}{" "}
+                        {goal.unit}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -521,11 +548,16 @@ export default function FitnessGoalsPage() {
         )}
 
         {/* Create Goal Dialog */}
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+        <Dialog
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >
           <DialogTitle>Create New Fitness Goal</DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <FormControl fullWidth>
                   <InputLabel>Goal Type</InputLabel>
                   <Select
@@ -549,39 +581,47 @@ export default function FitnessGoalsPage() {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   type="number"
                   label="Target Value"
                   value={formData.target_value}
-                  onChange={(e) => setFormData({ ...formData, target_value: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, target_value: e.target.value })
+                  }
                   required
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Unit</InputLabel>
                   <Select
                     value={formData.unit}
                     label="Unit"
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, unit: e.target.value })
+                    }
                   >
-                    {getUnitOptions(formData.goal_type).map(unit => (
-                      <MenuItem key={unit} value={unit}>{unit}</MenuItem>
+                    {getUnitOptions(formData.goal_type).map((unit) => (
+                      <MenuItem key={unit} value={unit}>
+                        {unit}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <FormControl fullWidth>
                   <InputLabel>Time Period</InputLabel>
                   <Select
                     value={formData.time_period}
                     label="Time Period"
-                    onChange={(e) => setFormData({ ...formData, time_period: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, time_period: e.target.value })
+                    }
                   >
                     <MenuItem value="week">Week</MenuItem>
                     <MenuItem value="month">Month</MenuItem>
@@ -590,13 +630,15 @@ export default function FitnessGoalsPage() {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <TextField
                   fullWidth
                   type="date"
                   label="Start Date (Optional)"
                   value={formData.start_date}
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, start_date: e.target.value })
+                  }
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -604,28 +646,37 @@ export default function FitnessGoalsPage() {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <FormControl fullWidth>
                   <InputLabel>Activity Type (Optional)</InputLabel>
                   <Select
                     value={formData.activity_type}
                     label="Activity Type (Optional)"
-                    onChange={(e) => setFormData({ ...formData, activity_type: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        activity_type: e.target.value,
+                      })
+                    }
                   >
                     <MenuItem value="">All Activities</MenuItem>
                     {activityTypes.map((type) => (
-                      <MenuItem key={type} value={type}>{type}</MenuItem>
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <TextField
                   fullWidth
                   label="Description (Optional)"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   multiline
                   rows={2}
                 />
@@ -636,8 +687,12 @@ export default function FitnessGoalsPage() {
             <Button onClick={() => setOpenDialog(false)} disabled={saving}>
               Cancel
             </Button>
-            <Button onClick={handleCreateGoal} variant="contained" disabled={saving || !formData.target_value}>
-              {saving ? 'Creating...' : 'Create Goal'}
+            <Button
+              onClick={handleCreateGoal}
+              variant="contained"
+              disabled={saving || !formData.target_value}
+            >
+              {saving ? "Creating..." : "Create Goal"}
             </Button>
           </DialogActions>
         </Dialog>
