@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -13,11 +14,13 @@ import {
   Container,
   FormControl,
   Grid,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
   TextField,
   Toolbar,
+  Tooltip,
   Typography,
   CircularProgress,
   Alert,
@@ -36,9 +39,11 @@ import {
   DirectionsBike,
   Pool,
   Hiking,
+  Route as RouteIcon,
 } from '@mui/icons-material';
 import { formatLocalDateTime } from '@/lib/dateUtils';
 
+const WorkoutMapModal = dynamic(() => import('@/components/WorkoutMapModal'), { ssr: false });
 interface Workout {
   _id: string;
   strava_id: number;
@@ -51,6 +56,9 @@ interface Workout {
   total_elevation_gain: number;
   average_heartrate?: number;
   calories?: number;
+  start_latlng?: [number, number];
+  end_latlng?: [number, number];
+  map?: { id: string; summary_polyline: string };
 }
 
 function WorkoutsPageContent() {
@@ -67,6 +75,8 @@ function WorkoutsPageContent() {
   const [activityTypes, setActivityTypes] = useState<string[]>([]);
   const [limit, setLimit] = useState('50');
   const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [mapModalOpen, setMapModalOpen] = useState(false);
+  const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
 
   useEffect(() => {
     // Check for OAuth callback messages
@@ -520,7 +530,20 @@ function WorkoutsPageContent() {
                           </Box>
                         </Box>
                       </Box>
-                      <Chip label={workout.sport_type} size="small" />
+                      <Box display="flex" alignItems="center" gap={0.5}>
+                        {workout.map?.summary_polyline && (
+                          <Tooltip title="View route map">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => { setSelectedWorkout(workout); setMapModalOpen(true); }}
+                            >
+                              <RouteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Chip label={workout.sport_type} size="small" />
+                      </Box>
                     </Box>
                   </CardContent>
                 </Card>
@@ -529,6 +552,12 @@ function WorkoutsPageContent() {
           </Grid>
         )}
       </Container>
+
+      <WorkoutMapModal
+        open={mapModalOpen}
+        onClose={() => setMapModalOpen(false)}
+        workout={selectedWorkout}
+      />
     </Box>
   );
 }
