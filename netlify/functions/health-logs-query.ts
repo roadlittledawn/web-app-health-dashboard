@@ -23,7 +23,7 @@ interface ErrorResponse {
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   // Only allow GET requests
   if (event.httpMethod !== "GET") {
@@ -62,7 +62,7 @@ export const handler: Handler = async (
 
     try {
       verifyToken(token);
-    } catch (error) {
+    } catch {
       return {
         statusCode: 401,
         body: JSON.stringify({
@@ -92,7 +92,7 @@ export const handler: Handler = async (
     } = params;
 
     // Build filter
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
 
     // Support filtering by MongoDB ObjectId
     if (_id) {

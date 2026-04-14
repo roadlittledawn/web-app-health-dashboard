@@ -3,7 +3,7 @@ import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
 import { HealthIncident } from "../../types/health";
 
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext): Promise<HandlerResponse> => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext): Promise<HandlerResponse> => {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,

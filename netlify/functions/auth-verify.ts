@@ -27,7 +27,7 @@ interface VerifyResponse {
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   // Only allow GET requests
   if (event.httpMethod !== "GET") {

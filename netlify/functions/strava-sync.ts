@@ -57,7 +57,7 @@ function convertActivityToWorkout(activity: StravaActivity): Omit<StravaWorkout,
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   // Only allow POST requests
   if (event.httpMethod !== "POST") {
@@ -96,7 +96,7 @@ export const handler: Handler = async (
 
     try {
       verifyToken(token);
-    } catch (error) {
+    } catch {
       return {
         statusCode: 401,
         body: JSON.stringify({
@@ -115,7 +115,7 @@ export const handler: Handler = async (
     const db = await getDatabase();
     const tokensCollection = db.collection<StravaOAuthTokens>('strava-tokens');
 
-    let stravaTokens = await tokensCollection.findOne({});
+    const stravaTokens = await tokensCollection.findOne({});
 
     if (!stravaTokens) {
       return {
@@ -178,7 +178,7 @@ export const handler: Handler = async (
       const workout = convertActivityToWorkout(activity);
 
       // Separate created_at and updated_at from workout data
-      const { created_at, updated_at, ...workoutData } = workout;
+      const { created_at: _created_at, updated_at: _updated_at, ...workoutData } = workout;
 
       const result = await workoutsCollection.updateOne(
         { strava_id: activity.id },

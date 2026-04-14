@@ -21,10 +21,10 @@ interface ErrorResponse {
  */
 async function calculateGoalProgress(
   goal: FitnessGoal,
-  workoutsCollection: any
+  workoutsCollection: { find: (filter: Record<string, unknown>) => { toArray: () => Promise<StravaWorkout[]> } }
 ): Promise<number> {
   // Build filter for workouts within goal time period
-  const filter: any = {
+  const filter: Record<string, unknown> = {
     start_date: {
       $gte: goal.start_date,
       $lte: goal.end_date || new Date(),
@@ -81,7 +81,7 @@ async function calculateGoalProgress(
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   try {
     // Verify authentication
@@ -103,7 +103,7 @@ export const handler: Handler = async (
 
     try {
       verifyToken(token);
-    } catch (error) {
+    } catch {
       return {
         statusCode: 401,
         body: JSON.stringify({
@@ -127,7 +127,7 @@ export const handler: Handler = async (
       const params = event.queryStringParameters || {};
       const { status, goal_type, activity_type } = params;
 
-      const filter: any = {};
+      const filter: Record<string, unknown> = {};
       if (status) filter.status = status;
       if (goal_type) filter.goal_type = goal_type;
       if (activity_type) filter.activity_type = activity_type;

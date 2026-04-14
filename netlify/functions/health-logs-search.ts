@@ -43,7 +43,7 @@ const searchRules = buildRules(healthLogSearchFields);
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   if (event.httpMethod !== "GET") {
     return {
@@ -96,7 +96,7 @@ export const handler: Handler = async (
     } = params;
 
     // Build MongoDB filter
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
 
     // Issue type filter
     if (issue_type) {

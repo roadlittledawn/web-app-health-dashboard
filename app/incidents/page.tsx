@@ -11,10 +11,10 @@ import {
   Card,
   CardContent,
   Chip,
+  ChipProps,
   Container,
   FormControl,
   Grid,
-  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -190,7 +190,7 @@ export default function IncidentsPage() {
         {/* Incidents List */}
         {!loading && incidents.length === 0 && (
           <Alert severity="info">
-            No incidents found. Click "New Incident" to create one.
+            No incidents found. Click &quot;New Incident&quot; to create one.
           </Alert>
         )}
 
@@ -228,7 +228,7 @@ export default function IncidentsPage() {
                           <Chip
                             key={idx}
                             label={formatOptionLabel(status)}
-                            color={getStatusColor(incident.status) as any}
+                            color={getStatusColor(incident.status) as ChipProps['color']}
                             size="small"
                           />
                         ))}

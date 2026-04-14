@@ -4,6 +4,7 @@ import {
   HandlerContext,
   HandlerResponse,
 } from "@netlify/functions";
+import { Filter, Document } from "mongodb";
 import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
 import { LabResult } from "../../types/labs";
@@ -22,7 +23,7 @@ interface ErrorResponse {
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   // Only allow GET requests
   if (event.httpMethod !== "GET") {
@@ -61,7 +62,7 @@ export const handler: Handler = async (
 
     try {
       verifyToken(token);
-    } catch (error) {
+    } catch {
       return {
         statusCode: 401,
         body: JSON.stringify({
@@ -86,7 +87,7 @@ export const handler: Handler = async (
     } = params;
 
     // Build filter
-    const filter: any = { test_type };
+    const filter: Filter<Document> = { test_type };
 
     if (start_date || end_date) {
       filter.test_date = {};

@@ -18,7 +18,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField,
   Toolbar,
   Tooltip,
   Typography,
@@ -28,7 +27,7 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 import {
   ArrowBack,
   FitnessCenter,
@@ -178,8 +177,8 @@ function WorkoutsPageContent() {
 
       // Refresh workouts list
       await fetchWorkouts();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSyncing(false);
     }
@@ -342,7 +341,7 @@ function WorkoutsPageContent() {
         {/* Stats Summary */}
         {connected && workouts.length > 0 && (
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Card>
                 <CardContent>
                   <Typography variant="caption" color="text.secondary">
@@ -354,7 +353,7 @@ function WorkoutsPageContent() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Card>
                 <CardContent>
                   <Typography variant="caption" color="text.secondary">
@@ -366,7 +365,7 @@ function WorkoutsPageContent() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Card>
                 <CardContent>
                   <Typography variant="caption" color="text.secondary">
@@ -476,7 +475,7 @@ function WorkoutsPageContent() {
 
         {!loading && connected && workouts.length === 0 && (
           <Alert severity="info">
-            No workouts found. Click "Sync Activities" to import from Strava.
+            No workouts found. Click &quot;Sync Activities&quot; to import from Strava.
           </Alert>
         )}
 

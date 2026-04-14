@@ -4,6 +4,7 @@ import {
   HandlerContext,
   HandlerResponse,
 } from "@netlify/functions";
+import { Filter, Document, Sort } from "mongodb";
 import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
 import { StravaWorkout } from "../../types/strava";
@@ -22,7 +23,7 @@ interface ErrorResponse {
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   // Only allow GET requests
   if (event.httpMethod !== "GET") {
@@ -61,7 +62,7 @@ export const handler: Handler = async (
 
     try {
       verifyToken(token);
-    } catch (error) {
+    } catch {
       return {
         statusCode: 401,
         body: JSON.stringify({
@@ -91,7 +92,7 @@ export const handler: Handler = async (
     } = params;
 
     // Build filter
-    const filter: any = {};
+    const filter: Filter<Document> = {};
 
     if (type) filter.type = type;
     if (sport_type) filter.sport_type = sport_type;
@@ -110,7 +111,7 @@ export const handler: Handler = async (
 
     // Build sort
     const sortDirection = sort_order === "asc" ? 1 : -1;
-    const sort: any = { [sort_by]: sortDirection };
+    const sort: Sort = { [sort_by]: sortDirection };
 
     // Get database and collection
     const db = await getDatabase();

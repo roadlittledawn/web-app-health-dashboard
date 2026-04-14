@@ -51,6 +51,6 @@ export interface HealthAnalytics {
     | "trigger_analysis"
     | "pain_trends"
     | "duration_analysis";
-  data: any[];
-  filters_applied: any;
+  data: unknown[];
+  filters_applied: Record<string, unknown>;
 }
