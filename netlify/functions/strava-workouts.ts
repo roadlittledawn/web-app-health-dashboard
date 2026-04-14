@@ -83,6 +83,7 @@ export const handler: Handler = async (
       sport_type,
       start_date,
       end_date,
+      has_geo,
       limit = "20",
       skip = "0",
       sort_by = "start_date",
@@ -94,6 +95,8 @@ export const handler: Handler = async (
 
     if (type) filter.type = type;
     if (sport_type) filter.sport_type = sport_type;
+    if (has_geo === "true") filter["map.summary_polyline"] = { $exists: true };
+    if (has_geo === "false") filter["map.summary_polyline"] = { $exists: false };
 
     if (start_date || end_date) {
       filter.start_date_local = {};
