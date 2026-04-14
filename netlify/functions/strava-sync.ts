@@ -44,6 +44,9 @@ function convertActivityToWorkout(activity: StravaActivity): Omit<StravaWorkout,
     sync_date: new Date(),
     created_at: new Date(),
     updated_at: new Date(),
+    ...(activity.start_latlng?.length ? { start_latlng: activity.start_latlng } : {}),
+    ...(activity.end_latlng?.length ? { end_latlng: activity.end_latlng } : {}),
+    ...(activity.map?.summary_polyline ? { map: { id: activity.map.id, summary_polyline: activity.map.summary_polyline } } : {}),
   };
 }
 

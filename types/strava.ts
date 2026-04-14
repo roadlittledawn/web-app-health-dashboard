@@ -29,6 +29,13 @@ export interface StravaActivity {
   device_name?: string;
   gear_id?: string;
   description?: string;
+  start_latlng?: [number, number];
+  end_latlng?: [number, number];
+  map?: {
+    id: string;
+    summary_polyline: string;
+    resource_state: number;
+  };
   private: boolean;
   trainer: boolean;
   commute: boolean;
@@ -58,6 +65,12 @@ export interface StravaWorkout {
   calories?: number;
   device_name?: string;
   description?: string;
+  start_latlng?: [number, number];
+  end_latlng?: [number, number];
+  map?: {
+    id: string;
+    summary_polyline: string;
+  };
   trainer: boolean;
   commute: boolean;
   sync_date: Date; // When we last synced this activity
