@@ -22,7 +22,7 @@ interface ErrorResponse {
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   // Only allow GET requests
   if (event.httpMethod !== "GET") {
@@ -43,7 +43,7 @@ export const handler: Handler = async (
 
   try {
     const params = event.queryStringParameters || {};
-    const { code, error, error_description, scope } = params;
+    const { code, error, error_description, scope: _scope } = params;
 
     // Handle authorization errors
     if (error) {

@@ -4,6 +4,7 @@ import {
   HandlerContext,
   HandlerResponse,
 } from "@netlify/functions";
+import { Filter, Document } from "mongodb";
 import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
 import { HealthIncident } from "../../types/health";
@@ -98,7 +99,7 @@ function getPainSeverityRange(
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   if (event.httpMethod !== "GET") {
     return {
@@ -152,7 +153,7 @@ export const handler: Handler = async (
     } = params;
 
     // Build MongoDB filter
-    const filter: any = {};
+    const filter: Filter<Document> = {};
 
     // Pain locations filter (comma-separated)
     if (painLocations) {

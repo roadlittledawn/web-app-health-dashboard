@@ -49,7 +49,7 @@ const searchRules = buildRules(workoutSearchFields);
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   if (event.httpMethod !== "GET") {
     return {
@@ -122,7 +122,7 @@ export const handler: Handler = async (
     }
 
     // Build MongoDB filter
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
 
     // Type filter
     if (type) {

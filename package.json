@@ -6,7 +6,7 @@
     "dev": "rm -rf .netlify .next && netlify dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "generate-secrets": "node scripts/generate-secrets.js",
     "migrate": "npx ts-node scripts/migrate-health-data.ts",
     "migrate:arrays": "npx ts-node scripts/migrate-health-to-arrays.ts",

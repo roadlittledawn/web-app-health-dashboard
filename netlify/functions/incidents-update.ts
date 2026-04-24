@@ -59,7 +59,7 @@ const handler: Handler = async (event) => {
 
     // Convert painIntensityOverTime dates to proper Date objects if present
     if (updateData.painIntensityOverTime) {
-      updateData.painIntensityOverTime = updateData.painIntensityOverTime.map((entry: any) => ({
+      updateData.painIntensityOverTime = updateData.painIntensityOverTime.map((entry: Record<string, unknown>) => ({
         ...entry,
         date: new Date(entry.date)
       }));

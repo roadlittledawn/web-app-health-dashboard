@@ -167,8 +167,8 @@ export default function FitnessGoalsPage() {
         description: "",
       });
       await fetchGoals();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -317,7 +317,7 @@ export default function FitnessGoalsPage() {
 
         {!loading && goals.length === 0 && (
           <Alert severity="info">
-            No goals yet. Click "New Goal" to create your first fitness goal.
+            No goals yet. Click &quot;New Goal&quot; to create your first fitness goal.
           </Alert>
         )}
 

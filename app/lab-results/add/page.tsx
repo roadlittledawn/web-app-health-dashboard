@@ -53,7 +53,7 @@ export default function AddLabResultPage() {
 
     try {
       // Build lab result payload
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         test_date: formData.test_date,
         test_type: formData.test_type,
         ordered_by: formData.ordered_by,
@@ -124,8 +124,8 @@ export default function AddLabResultPage() {
       setTimeout(() => {
         router.push("/lab-results");
       }, 1500);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
       setSaving(false);
     }
   };

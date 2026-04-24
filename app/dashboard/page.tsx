@@ -21,7 +21,6 @@ import {
   Biotech,
   FitnessCenter,
   Chat,
-  Assignment,
   ArrowForward,
   Logout,
 } from "@mui/icons-material";
@@ -58,7 +57,7 @@ const dashboardCards = [
 ];
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 

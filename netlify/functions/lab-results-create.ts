@@ -6,7 +6,7 @@ import {
 } from "@netlify/functions";
 import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
-import { LabResult, LabMeasurement } from "../../types/labs";
+import { LabResult } from "../../types/labs";
 
 interface ErrorResponse {
   error: {
@@ -29,7 +29,7 @@ function calculateFlag(value: number, refRange: { min: number; max: number }): '
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   // Only allow POST requests
   if (event.httpMethod !== "POST") {
@@ -68,7 +68,7 @@ export const handler: Handler = async (
 
     try {
       verifyToken(token);
-    } catch (error) {
+    } catch {
       return {
         statusCode: 401,
         body: JSON.stringify({

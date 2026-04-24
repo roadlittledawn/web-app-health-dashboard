@@ -89,8 +89,8 @@ export default function ExercisesPage() {
 
       const data = await response.json();
       setExercises(data.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -119,8 +119,8 @@ export default function ExercisesPage() {
 
     if (sortBy) {
       filtered = [...filtered].sort((a, b) => {
-        let aVal: any = a[sortBy];
-        let bVal: any = b[sortBy];
+        const aVal: unknown = a[sortBy];
+        const bVal: unknown = b[sortBy];
 
         // Handle undefined values (put them at the end)
         if (aVal === undefined) return 1;
@@ -168,8 +168,8 @@ export default function ExercisesPage() {
       setCreateDialogOpen(false);
       resetForm();
       fetchExercises();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -221,8 +221,8 @@ export default function ExercisesPage() {
       setSelectedExercise(null);
       resetForm();
       fetchExercises();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -246,8 +246,8 @@ export default function ExercisesPage() {
       setDeleteDialogOpen(false);
       setSelectedExercise(null);
       fetchExercises();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -501,7 +501,7 @@ export default function ExercisesPage() {
               <Select
                 value={formData.difficulty}
                 label="Difficulty"
-                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'beginner' | 'intermediate' | 'advanced' })}
               >
                 <MenuItem value="beginner">Beginner</MenuItem>
                 <MenuItem value="intermediate">Intermediate</MenuItem>
@@ -513,7 +513,7 @@ export default function ExercisesPage() {
               <Select
                 value={formData.exerciseType}
                 label="Category"
-                onChange={(e) => setFormData({ ...formData, exerciseType: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, exerciseType: e.target.value as '' | 'strength' | 'flexibility' })}
               >
                 <MenuItem value="">Not specified</MenuItem>
                 <MenuItem value="strength">Strength</MenuItem>
@@ -586,7 +586,7 @@ export default function ExercisesPage() {
               <Select
                 value={formData.difficulty}
                 label="Difficulty"
-                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'beginner' | 'intermediate' | 'advanced' })}
               >
                 <MenuItem value="beginner">Beginner</MenuItem>
                 <MenuItem value="intermediate">Intermediate</MenuItem>
@@ -598,7 +598,7 @@ export default function ExercisesPage() {
               <Select
                 value={formData.exerciseType}
                 label="Category"
-                onChange={(e) => setFormData({ ...formData, exerciseType: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, exerciseType: e.target.value as '' | 'strength' | 'flexibility' })}
               >
                 <MenuItem value="">Not specified</MenuItem>
                 <MenuItem value="strength">Strength</MenuItem>
@@ -635,7 +635,7 @@ export default function ExercisesPage() {
         <DialogTitle>Delete Exercise</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete "{selectedExercise?.name}"? This action cannot be undone.
+            Are you sure you want to delete &quot;{selectedExercise?.name}&quot;? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>

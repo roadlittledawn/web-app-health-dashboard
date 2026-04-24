@@ -13,7 +13,7 @@ interface ErrorResponse {
 
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   try {
     const token = extractToken(event.headers.authorization);
@@ -29,7 +29,7 @@ export const handler: Handler = async (
 
     try {
       verifyToken(token);
-    } catch (error) {
+    } catch {
       return {
         statusCode: 401,
         body: JSON.stringify({
@@ -81,7 +81,7 @@ export const handler: Handler = async (
       }
 
       // Query all programs
-      const filter: any = {};
+      const filter: Record<string, unknown> = {};
       if (status) filter.status = status;
 
       const programs = await programsCollection.find(filter).sort({ created_at: -1 }).toArray();
@@ -119,7 +119,7 @@ export const handler: Handler = async (
 
       // Validate exercise references if provided
       if (data.exercises && data.exercises.length > 0) {
-        const exerciseIds = data.exercises.map((e: any) => new ObjectId(e.exercise_id));
+        const exerciseIds = data.exercises.map((e: Record<string, unknown>) => new ObjectId(e.exercise_id as string));
         const existingExercises = await exercisesCollection.find({ _id: { $in: exerciseIds } }).toArray();
         
         if (existingExercises.length !== exerciseIds.length) {
@@ -134,9 +134,9 @@ export const handler: Handler = async (
       }
 
       const now = new Date();
-      const exercises = (data.exercises || []).map((e: any) => ({
+      const exercises = (data.exercises || []).map((e: Record<string, unknown>) => ({
         ...e,
-        exercise_id: new ObjectId(e.exercise_id),
+        exercise_id: new ObjectId(e.exercise_id as string),
       }));
       const program: WorkoutProgram = {
         name: data.name,
@@ -183,7 +183,7 @@ export const handler: Handler = async (
 
       // Validate exercise references if exercises are being updated
       if (updates.exercises && updates.exercises.length > 0) {
-        const exerciseIds = updates.exercises.map((e: any) => new ObjectId(e.exercise_id));
+        const exerciseIds = updates.exercises.map((e: Record<string, unknown>) => new ObjectId(e.exercise_id as string));
         const existingExercises = await exercisesCollection.find({ _id: { $in: exerciseIds } }).toArray();
 
         if (existingExercises.length !== exerciseIds.length) {
@@ -196,9 +196,9 @@ export const handler: Handler = async (
           };
         }
 
-        updates.exercises = updates.exercises.map((e: any) => ({
+        updates.exercises = updates.exercises.map((e: Record<string, unknown>) => ({
           ...e,
-          exercise_id: new ObjectId(e.exercise_id),
+          exercise_id: new ObjectId(e.exercise_id as string),
         }));
       }
 

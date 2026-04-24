@@ -142,7 +142,7 @@ export default function PainLevelForm({ incidentId, painLevels, onUpdate }: Pain
 
       {sortedPainLevels.length > 0 && (
         <List dense>
-          {sortedPainLevels.map((entry, index) => {
+          {sortedPainLevels.map((entry, _index) => {
             const originalIndex = painLevels.findIndex(p => 
               p.date === entry.date && p.intensity === entry.intensity
             );
