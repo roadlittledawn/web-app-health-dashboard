@@ -4,7 +4,7 @@ import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
 import { HealthIncident } from "../../types/health";
 
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext): Promise<HandlerResponse> => {
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext): Promise<HandlerResponse> => {
   if (event.httpMethod !== "GET") {
     return {
       statusCode: 405,
@@ -28,7 +28,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     const params = event.queryStringParameters || {};
     const { _id, status, limit = "50", skip = "0", sort_by = "dateStarted", sort_order = "desc" } = params;
 
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
     if (_id) filter._id = new ObjectId(_id);
     // Status is now an array, so we check if it contains the specified value
     if (status) filter.status = { $in: [status] };

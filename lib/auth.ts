@@ -45,7 +45,7 @@ export function generateToken(payload: object): string {
  * @returns The decoded token payload
  * @throws Error if token is invalid or expired
  */
-export function verifyToken(token: string): any {
+export function verifyToken(token: string): unknown {
   return jwt.verify(token, JWT_SECRET);
 }
 

@@ -17,7 +17,7 @@ const MCP_SERVER_URL = process.env.MCP_SERVER_URL;
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  _context: HandlerContext,
+  __context: HandlerContext,
 ): Promise<HandlerResponse> => {
   if (event.httpMethod !== "GET") {
     return {

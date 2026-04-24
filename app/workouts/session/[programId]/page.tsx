@@ -57,8 +57,8 @@ export default function WorkoutSessionPage() {
 
       const data = await response.json();
       setProgram(data.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

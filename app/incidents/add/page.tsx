@@ -161,8 +161,8 @@ export default function AddIncidentPage() {
       setTimeout(() => {
         router.push("/incidents");
       }, 1500);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
       setSaving(false);
     }
   };

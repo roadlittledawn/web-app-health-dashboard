@@ -13,7 +13,7 @@ interface ErrorResponse {
 
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  _context: HandlerContext
 ): Promise<HandlerResponse> => {
   try {
     const token = extractToken(event.headers.authorization);
@@ -29,7 +29,7 @@ export const handler: Handler = async (
 
     try {
       verifyToken(token);
-    } catch (error) {
+    } catch {
       return {
         statusCode: 401,
         body: JSON.stringify({
@@ -47,7 +47,7 @@ export const handler: Handler = async (
       const params = event.queryStringParameters || {};
       const { name, targetArea, requiredEquipment, exerciseType } = params;
 
-      const filter: any = {};
+      const filter: Record<string, unknown> = {};
       if (name) filter.name = { $regex: name, $options: 'i' };
       if (targetArea) filter.targetArea = targetArea;
       if (requiredEquipment) filter.requiredEquipment = requiredEquipment;

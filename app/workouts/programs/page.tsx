@@ -61,8 +61,8 @@ export default function ProgramsPage() {
 
       const data = await response.json();
       setPrograms(data.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -85,8 +85,8 @@ export default function ProgramsPage() {
       setCreateDialogOpen(false);
       setFormData({ name: '', description: '' });
       fetchPrograms();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -110,8 +110,8 @@ export default function ProgramsPage() {
       setDeleteDialogOpen(false);
       setSelectedProgram(null);
       fetchPrograms();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -235,7 +235,7 @@ export default function ProgramsPage() {
         <DialogTitle>Delete Program</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete "{selectedProgram?.name}"? This action cannot be undone.
+            Are you sure you want to delete &quot;{selectedProgram?.name}&quot;? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>

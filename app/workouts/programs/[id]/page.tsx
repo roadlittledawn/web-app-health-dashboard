@@ -88,8 +88,8 @@ export default function ProgramDetailPage() {
 
       const data = await response.json();
       setProgram(data.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -106,8 +106,8 @@ export default function ProgramDetailPage() {
 
       const data = await response.json();
       setExercises(data.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -151,8 +151,8 @@ export default function ProgramDetailPage() {
       setFilterEquipment('');
       setSortBy(null);
       fetchProgram();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -184,8 +184,8 @@ export default function ProgramDetailPage() {
       if (!response.ok) throw new Error('Failed to remove exercise');
 
       fetchProgram();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -230,8 +230,8 @@ export default function ProgramDetailPage() {
       setEditDialogOpen(false);
       setEditingExerciseIndex(null);
       fetchProgram();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -281,8 +281,8 @@ export default function ProgramDetailPage() {
 
       setDraggedIndex(null);
       fetchProgram();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 

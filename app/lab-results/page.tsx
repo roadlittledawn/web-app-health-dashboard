@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   Chip,
+  ChipProps,
   Container,
   Grid,
   Toolbar,
@@ -27,11 +28,12 @@ import {
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { formatLocalDate } from '@/lib/dateUtils';
+import { LabResult } from '@/types/labs';
 
 export default function LabResultsPage() {
-  const [results, setResults] = useState<any[]>([]);
-  const [trends, setTrends] = useState<any[]>([]);
-  const [refRanges, setRefRanges] = useState<any>(null);
+  const [results, setResults] = useState<LabResult[]>([]);
+  const [trends, setTrends] = useState<Record<string, unknown>[]>([]);
+  const [refRanges, setRefRanges] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [view, setView] = useState(0); // 0 = chart, 1 = list
@@ -143,7 +145,7 @@ export default function LabResultsPage() {
           <>
             {trends.length === 0 ? (
               <Alert severity="info">
-                No lab results yet. Click "Add Result" to enter your first lab data.
+                No lab results yet. Click &quot;Add Result&quot; to enter your first lab data.
               </Alert>
             ) : (
               <Grid container spacing={3}>
@@ -255,7 +257,7 @@ export default function LabResultsPage() {
           <>
             {results.length === 0 ? (
               <Alert severity="info">
-                No lab results found. Click "Add Result" to create one.
+                No lab results found. Click &quot;Add Result&quot; to create one.
               </Alert>
             ) : (
               <Grid container spacing={2}>
@@ -289,7 +291,7 @@ export default function LabResultsPage() {
                                     </Typography>
                                     <Chip
                                       label={result.total_cholesterol.flag}
-                                      color={getFlagColor(result.total_cholesterol.flag) as any}
+                                      color={getFlagColor(result.total_cholesterol.flag) as ChipProps['color']}
                                       size="small"
                                     />
                                   </Box>
@@ -311,7 +313,7 @@ export default function LabResultsPage() {
                                     </Typography>
                                     <Chip
                                       label={result.ldl_cholesterol.flag}
-                                      color={getFlagColor(result.ldl_cholesterol.flag) as any}
+                                      color={getFlagColor(result.ldl_cholesterol.flag) as ChipProps['color']}
                                       size="small"
                                     />
                                   </Box>
@@ -333,7 +335,7 @@ export default function LabResultsPage() {
                                     </Typography>
                                     <Chip
                                       label={result.hdl_cholesterol.flag}
-                                      color={getFlagColor(result.hdl_cholesterol.flag) as any}
+                                      color={getFlagColor(result.hdl_cholesterol.flag) as ChipProps['color']}
                                       size="small"
                                     />
                                   </Box>
@@ -355,7 +357,7 @@ export default function LabResultsPage() {
                                     </Typography>
                                     <Chip
                                       label={result.triglycerides.flag}
-                                      color={getFlagColor(result.triglycerides.flag) as any}
+                                      color={getFlagColor(result.triglycerides.flag) as ChipProps['color']}
                                       size="small"
                                     />
                                   </Box>
