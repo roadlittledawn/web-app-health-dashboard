@@ -2,6 +2,9 @@
   "name": "health-dashboard",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "mcp-server"
+  ],
   "scripts": {
     "dev": "rm -rf .netlify .next && netlify dev",
     "build": "next build",
