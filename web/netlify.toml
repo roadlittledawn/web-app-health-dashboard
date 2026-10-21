@@ -1,3 +1,7 @@
+[build]
+  command = "npm run build"
+  publish = "/web/.next"
+
 [dev]
   command = "cd \"$(git rev-parse --show-toplevel)/web\" && next dev"
 
