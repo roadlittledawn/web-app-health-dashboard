@@ -17,43 +17,50 @@ This is a personal health tracking dashboard with AI-powered insights and analyt
 
 ## Project Structure
 
+This is an npm workspaces monorepo: the app lives in `web/`, and a local MCP
+server for Claude Code lives in `mcp-server/`.
+
 ```
 /
-├── app/                      # Next.js app directory (App Router)
-│   ├── chat/                # AI chat interface
-│   ├── dashboard/           # Main dashboard
-│   ├── login/               # Login page
-│   ├── incidents/           # Health issue tracking
-│   ├── lab-results/         # Lab results tracking
-│   ├── workouts/            # Strava workouts and goals
-│   ├── layout.tsx           # Root layout with ThemeRegistry
-│   └── globals.css          # Global styles
-├── components/              # React components
-├── lib/                     # Shared utilities
-│   ├── auth.ts             # Authentication helpers (JWT, bcrypt)
-│   ├── mongodb.ts          # Database connection
-│   ├── searchRanking.ts    # Search result ranking algorithms
-│   ├── workoutUtils.ts     # Workout calculations (distance, elevation, pace)
-│   └── ...
-├── netlify/functions/       # Serverless API endpoints
-│   ├── ai-chat.ts          # AI chat endpoint (Claude integration with MCP)
-│   ├── *-search.ts         # Search endpoints (health logs, incidents, workouts)
-│   └── ...
-├── types/                   # TypeScript type definitions
-│   ├── ai-chat.ts          # AI chat types and interfaces
-│   └── ...
-├── scripts/                 # Utility scripts
-│   └── generate-mcp-token.mjs  # Generate MCP authentication tokens
-└── middleware.ts            # Route protection
+├── web/                      # The Next.js app (this is the Netlify site)
+│   ├── app/                  # Next.js app directory (App Router)
+│   │   ├── chat/             # AI chat interface
+│   │   ├── dashboard/        # Main dashboard
+│   │   ├── login/            # Login page
+│   │   ├── incidents/        # Health issue tracking
+│   │   ├── lab-results/      # Lab results tracking
+│   │   ├── workouts/         # Strava workouts and goals
+│   │   ├── layout.tsx        # Root layout with ThemeRegistry
+│   │   └── globals.css       # Global styles
+│   ├── components/           # React components
+│   ├── lib/                  # Shared utilities
+│   │   ├── auth.ts          # Authentication helpers (JWT, bcrypt)
+│   │   ├── mongodb.ts       # Database connection
+│   │   ├── searchRanking.ts # Search result ranking algorithms
+│   │   ├── workoutUtils.ts  # Workout calculations (distance, elevation, pace)
+│   │   └── ...
+│   ├── netlify/functions/    # Serverless API endpoints
+│   │   ├── ai-chat.ts       # AI chat endpoint (Claude integration with MCP)
+│   │   ├── *-search.ts      # Search endpoints (health logs, incidents, workouts)
+│   │   └── ...
+│   ├── types/                # TypeScript type definitions
+│   │   ├── ai-chat.ts       # AI chat types and interfaces
+│   │   └── ...
+│   ├── scripts/               # Utility scripts
+│   │   └── generate-mcp-token.mjs  # Generate MCP authentication tokens
+│   └── proxy.ts               # Route protection (Next.js proxy/middleware)
+└── mcp-server/                # Local MCP server exposing the app's API to Claude Code
 ```
 
 ## Build, Lint, and Test Commands
 
+Run from the repo root (these forward into the `web/` workspace):
+
 ```bash
-npm run dev              # Start development server on localhost:3000
-npm run build            # Production build
-npm run lint             # Run ESLint (uses next/core-web-vitals and next/typescript configs)
-npm run generate-secrets # Generate JWT secret and password hash
+npm run dev               # Start Netlify Dev (app + functions) on localhost:8888
+npm run build             # Production build
+npm run lint               # Run ESLint (uses next/core-web-vitals and next/typescript configs)
+npm run generate-secrets  # Generate JWT secret and password hash
 ```
 
 **Note**: This project currently does not have automated tests. When adding tests in the future, follow Next.js testing conventions with Jest and React Testing Library.
