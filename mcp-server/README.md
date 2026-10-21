@@ -17,9 +17,9 @@ server the in-app "AI Chat" feature talks to via `MCP_SERVER_URL`.
 2. Generate a long-lived API token for this server, using the same
    `JWT_SECRET` your deployed site uses:
    ```
-   JWT_SECRET=<your JWT_SECRET> node ../scripts/generate-mcp-token.mjs
+   JWT_SECRET=<your JWT_SECRET> node ../web/scripts/generate-mcp-token.mjs
    ```
-   (run from `mcp-server/`, or drop the `../` if run from the repo root)
+   (run from `mcp-server/`, or use `web/scripts/generate-mcp-token.mjs` if run from the repo root)
 3. Copy `.env.example` to `.env` and fill in:
    - `API_BASE_URL` — your deployed site's API base, e.g.
      `https://your-site.netlify.app/api` (or `http://localhost:8888/api` for

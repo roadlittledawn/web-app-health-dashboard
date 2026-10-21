@@ -1,8 +1,8 @@
 [dev]
-  command = "next dev"
+  command = "cd \"$(git rev-parse --show-toplevel)/web\" && next dev"
 
 [functions]
-  directory = "netlify/functions"
+  directory = "/web/netlify/functions"
   node_bundler = "esbuild"
 
 [[redirects]]
