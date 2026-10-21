@@ -20,9 +20,18 @@ Personal health tracking dashboard with AI-powered insights and analytics.
 - **AI**: Anthropic Claude API
 - **Charts**: Recharts
 
+## Project Layout
+
+This is an npm workspaces monorepo:
+
+- `web/` — the Next.js app and Netlify Functions described below.
+- `mcp-server/` — a local MCP server exposing the app's API to Claude Code (see [mcp-server/README.md](mcp-server/README.md)).
+
 ## Setup
 
 ### 1. Install Dependencies
+
+From the repo root (installs and hoists dependencies for all workspaces):
 
 ```bash
 npm install
@@ -30,11 +39,18 @@ npm install
 
 ### 2. Configure Environment Variables
 
-Copy `.env.example` to `.env` and fill in your values:
+Copy `web/.env.example` to `.env.local` **at the repo root** (not inside
+`web/`) and fill in your values:
 
 ```bash
-cp .env.example .env
+cp web/.env.example .env.local
 ```
+
+**Important:** `netlify dev` injects environment variables into Netlify
+Functions based on `.env`/`.env.local` files found at the monorepo's
+workspace root (the directory with the top-level `package.json`), not inside
+`web/`. Next.js itself also gets these via `netlify dev`'s env injection, so
+a root-level file is sufficient — no `web/.env` needed.
 
 Required environment variables:
 
@@ -73,11 +89,15 @@ The application uses the following MongoDB collections in the `health-fitness` d
 
 ### 5. Run Development Server
 
-**Important:** This app uses Netlify Functions for API endpoints. You must use Netlify Dev, not `npm run dev`.
+**Important:** This app uses Netlify Functions for API endpoints. You must use Netlify Dev, not `next dev` directly.
+
+From the repo root:
 
 ```bash
-netlify dev
+npm run dev
 ```
+
+(this runs `netlify dev` inside the `web/` workspace)
 
 Open [http://localhost:8888](http://localhost:8888) in your browser.
 
@@ -91,34 +111,44 @@ npm run build
 
 ## Deployment on Netlify
 
+**Important:** since this is now an npm workspaces monorepo, you must set
+**Package directory** to `web` in the Netlify dashboard (Project configuration
+> Build & deploy > Continuous deployment > Build settings). Leave **Base
+directory** unset (defaults to the repo root). `web/netlify.toml` holds the
+actual build/functions/redirects config for the site and is picked up
+automatically once the package directory is set correctly.
+
 1. Connect your Git repository to Netlify
-2. Set build command: `npm run build`
-3. Set publish directory: `.next`
-4. Add all environment variables in Netlify dashboard
+2. Set **Package directory**: `web`
+3. Set build command: `npm run build`
+4. Set publish directory: `.next`
+5. Add all environment variables in Netlify dashboard
 5. Deploy!
 
 ## Project Structure
 
 ```
 /
-├── app/                      # Next.js app directory
-│   ├── dashboard/           # Main dashboard
-│   ├── login/               # Login page
-│   ├── health-logs/         # Health issue tracking
-│   ├── lab-results/         # Lab results tracking
-│   ├── workouts/            # Strava workouts and goals
-│   └── ...
-├── components/              # React components
-├── lib/                     # Utilities
-│   ├── auth.ts             # Authentication helpers
-│   ├── mongodb.ts          # Database connection
-│   └── ...
-├── netlify/functions/       # Serverless API
-│   ├── auth-login.ts       # Login endpoint
-│   ├── auth-verify.ts      # Token verification
-│   └── ...
-├── types/                   # TypeScript definitions
-└── middleware.ts            # Route protection
+├── web/                      # The Next.js app (this is the Netlify site)
+│   ├── app/                  # Next.js app directory
+│   │   ├── dashboard/       # Main dashboard
+│   │   ├── login/           # Login page
+│   │   ├── health-logs/     # Health issue tracking
+│   │   ├── lab-results/     # Lab results tracking
+│   │   ├── workouts/        # Strava workouts and goals
+│   │   └── ...
+│   ├── components/           # React components
+│   ├── lib/                  # Utilities
+│   │   ├── auth.ts          # Authentication helpers
+│   │   ├── mongodb.ts       # Database connection
+│   │   └── ...
+│   ├── netlify/functions/    # Serverless API
+│   │   ├── auth-login.ts    # Login endpoint
+│   │   ├── auth-verify.ts   # Token verification
+│   │   └── ...
+│   ├── types/                 # TypeScript definitions
+│   └── proxy.ts               # Route protection
+└── mcp-server/                # Local MCP server exposing the app's API to Claude Code
 ```
 
 ## API Endpoints

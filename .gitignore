@@ -1,5 +1,6 @@
 # Dependencies
 /node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,7 +13,7 @@
 /coverage
 
 # Next.js
-/.next/
+.next/
 /out/
 
 # Production
@@ -37,6 +38,9 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# mcp-server workspace build output
+mcp-server/dist
 
 # Netlify
 .netlify
