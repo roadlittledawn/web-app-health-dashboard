@@ -96,6 +96,69 @@ const createIncidentShape = {
 const createIncidentSchema = z.object(createIncidentShape);
 type CreateIncidentArgs = z.infer<typeof createIncidentSchema>;
 
+const updateIncidentShape = {
+  _id: z.string().describe("The incident's MongoDB _id (from search_incidents / query_incidents)."),
+  incidentId: z.string().optional().describe("New human-readable ID. Must not already exist on another incident."),
+  painLocations: z.array(z.string()).optional().describe("Replaces the full list of body areas."),
+  injurySource: z.string().optional(),
+  description: z.string().optional(),
+  dateStarted: z.string().optional().describe("ISO date the incident started."),
+  endDate: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("ISO date the incident resolved. Pass null to clear it when reopening an incident."),
+  painIntensity: z.number().min(0).max(10).nullable().optional().describe("Peak pain intensity, 0-10."),
+  status: z
+    .array(z.string())
+    .optional()
+    .describe("Replaces the full status array, e.g. ['resolved'] or ['improving']."),
+  symptoms: createIncidentShape.symptoms.describe(
+    "Replaces the whole symptoms object; include every sub-field you want to keep."
+  ),
+  treatments: createIncidentShape.treatments.describe(
+    "Replaces the whole treatments object; include every sub-field you want to keep."
+  ),
+};
+const updateIncidentSchema = z.object(updateIncidentShape);
+type UpdateIncidentArgs = z.infer<typeof updateIncidentSchema>;
+
+const addPainReadingShape = {
+  _id: z.string().describe("The incident's MongoDB _id (from search_incidents / query_incidents)."),
+  intensity: z.number().int().min(0).max(10).describe("Pain intensity, 0-10."),
+  date: z
+    .string()
+    .optional()
+    .describe("ISO date (YYYY-MM-DD) or datetime of the reading. Defaults to now."),
+};
+const addPainReadingSchema = z.object(addPainReadingShape);
+type AddPainReadingArgs = z.infer<typeof addPainReadingSchema>;
+
+type PainReading = { date: string; intensity: number };
+
+/**
+ * Appends a reading to an incident's painIntensityOverTime. The API only
+ * supports replacing the whole array, so this reads the incident, appends,
+ * and PATCHes it back (same as the web UI's PainLevelForm). Concurrent writes
+ * to the same incident can drop a reading.
+ */
+export async function addPainReading(incidentObjectId: string, intensity: number, date?: string) {
+  const res = (await apiClient.get("/incidents-query", { _id: incidentObjectId })) as {
+    data?: Array<{ painIntensityOverTime?: PainReading[] }>;
+  };
+  const incident = res.data?.[0];
+  if (!incident) throw new Error(`Incident ${incidentObjectId} not found`);
+
+  // Date-only values are pinned to local noon, matching the UI, so they don't shift a day across timezones.
+  const when = date ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T12:00:00` : date) : new Date();
+  if (Number.isNaN(when.getTime())) throw new Error(`Invalid date: ${date}`);
+
+  const reading: PainReading = { date: when.toISOString(), intensity };
+  const painIntensityOverTime = [...(incident.painIntensityOverTime ?? []), reading];
+  await apiClient.patch("/incidents-update", { _id: incidentObjectId, painIntensityOverTime });
+  return { reading, totalReadings: painIntensityOverTime.length };
+}
+
 export function registerIncidentTools(server: McpServer) {
   server.registerTool(
     "search_incidents",
@@ -136,5 +199,25 @@ export function registerIncidentTools(server: McpServer) {
       inputSchema: createIncidentShape,
     },
     wrapTool(async (args: CreateIncidentArgs) => apiClient.post("/incidents-create", args))
+  );
+
+  server.registerTool(
+    "update_incident",
+    {
+      description:
+        "Update fields on an existing health incident. Only the fields you pass are changed; arrays and the symptoms/treatments objects are replaced wholesale, so fetch the incident first with query_incidents if you need to merge. Keep status and endDate consistent: when marking an incident ['resolved'], also set endDate; when reopening it, change status and pass endDate: null. To record a pain reading, use add_pain_intensity_reading instead.",
+      inputSchema: updateIncidentShape,
+    },
+    wrapTool(async (args: UpdateIncidentArgs) => apiClient.patch("/incidents-update", args))
+  );
+
+  server.registerTool(
+    "add_pain_intensity_reading",
+    {
+      description:
+        "Record a pain reading on an incident's pain-over-time chart without overwriting existing readings. If you are also writing a progress note, pass pain_intensity to create_health_log instead so both happen in one call.",
+      inputSchema: addPainReadingShape,
+    },
+    wrapTool(async (args: AddPainReadingArgs) => addPainReading(args._id, args.intensity, args.date))
   );
 }

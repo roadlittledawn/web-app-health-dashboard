@@ -290,6 +290,10 @@ export const handler: Handler = async (
         updated_at: new Date(),
       };
 
+      // Store dates as Date (like create) so progress calculation can match workouts by date range
+      if (updates?.start_date) updateData.start_date = new Date(updates.start_date);
+      if (updates?.end_date) updateData.end_date = new Date(updates.end_date);
+
       const result = await goalsCollection.findOneAndUpdate(
         { _id: new ObjectId(id) },
         { $set: updateData },
