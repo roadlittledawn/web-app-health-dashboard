@@ -8,6 +8,7 @@ import { ObjectId } from "mongodb";
 import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
 import { LabResult } from "../../types/labs";
+import { LIPID_FIELDS, withFlag } from "../../lib/labUtils";
 
 interface ErrorResponse {
   error: {
@@ -130,6 +131,18 @@ export const handler: Handler = async (
       ...updates,
       updated_at: new Date(),
     };
+
+    // Store test_date as a Date (like create) so date filters and sorting keep working
+    if (updates.test_date) {
+      updateData.test_date = new Date(updates.test_date);
+    }
+
+    // Recalculate flags for changed lipid measurements, matching create
+    for (const field of LIPID_FIELDS) {
+      if (updates[field]) {
+        updateData[field] = withFlag(updates[field]);
+      }
+    }
 
     // Get database and collection
     const db = await getDatabase();

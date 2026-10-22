@@ -7,19 +7,13 @@ import {
 import { getDatabase } from "../../lib/mongodb";
 import { verifyToken, extractToken } from "../../lib/auth";
 import { LabResult } from "../../types/labs";
+import { calculateFlag } from "../../lib/labUtils";
 
 interface ErrorResponse {
   error: {
     code: string;
     message: string;
   };
-}
-
-// Helper function to calculate flag based on reference range
-function calculateFlag(value: number, refRange: { min: number; max: number }): 'high' | 'low' | 'normal' {
-  if (value < refRange.min) return 'low';
-  if (value > refRange.max) return 'high';
-  return 'normal';
 }
 
 /**
