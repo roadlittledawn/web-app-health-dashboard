@@ -141,7 +141,7 @@ export default function IncidentsPage() {
               <Typography variant="h6">Filters</Typography>
             </Box>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <FormControl fullWidth size="small" sx={{ minWidth: 200 }}>
                   <InputLabel>Status</InputLabel>
                   <Select
@@ -160,7 +160,7 @@ export default function IncidentsPage() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Button
                   fullWidth
                   variant="outlined"
@@ -197,7 +197,7 @@ export default function IncidentsPage() {
         {!loading && incidents.length > 0 && (
           <Grid container spacing={2}>
             {incidents.map((incident) => (
-              <Grid item xs={12} key={incident._id?.toString()}>
+              <Grid size={12} key={incident._id?.toString()}>
                 <Card>
                   <CardContent>
                     <Box

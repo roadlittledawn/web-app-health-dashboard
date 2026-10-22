@@ -143,7 +143,7 @@ export default function IncidentDetailPage() {
         )}
 
         <Grid container spacing={3}>
-          <Grid item xs={12} md={8}>
+          <Grid size={{ xs: 12, md: 8 }}>
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Box
@@ -190,13 +190,13 @@ export default function IncidentDetailPage() {
                 </MarkdownContent>
 
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid size={6}>
                     <Typography variant="subtitle2">Date Started</Typography>
                     <Typography variant="body2">
                       {formatLocalDateTime(incident.dateStarted)}
                     </Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={6}>
                     <Typography variant="subtitle2">Pain Intensity</Typography>
                     <Typography variant="body2">
                       {incident.painIntensity}/10
@@ -260,7 +260,7 @@ export default function IncidentDetailPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             {/* Symptoms Card */}
             <Card sx={{ mb: 2 }}>
               <CardContent>
