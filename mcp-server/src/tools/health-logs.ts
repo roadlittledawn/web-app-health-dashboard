@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { apiClient } from "../apiClient.js";
 import { wrapTool } from "../toolHelpers.js";
+import { addPainReading } from "./incidents.js";
 
 const issueTypeEnum = z.enum(["update", "doctor_visit_notes"]);
 
@@ -50,6 +51,15 @@ const createHealthLogShape = {
     .string()
     .describe("Free-text log content, e.g. symptoms, what happened, pain level, doctor's notes."),
   timestamp: z.string().optional().describe("ISO datetime this entry occurred. Defaults to now."),
+  pain_intensity: z
+    .number()
+    .int()
+    .min(0)
+    .max(10)
+    .optional()
+    .describe(
+      "Pain level 0-10 mentioned in this entry. If set, it is also added to the incident's pain-over-time chart, dated at the log's timestamp."
+    ),
 };
 const createHealthLogSchema = z.object(createHealthLogShape);
 type CreateHealthLogArgs = z.infer<typeof createHealthLogSchema>;
@@ -95,10 +105,24 @@ export function registerHealthLogTools(server: McpServer) {
     "create_health_log",
     {
       description:
-        "Add a new log entry (progress note or doctor visit note) to an existing health incident. Get the incident_id from search_incidents or create_incident first.",
+        "Add a new log entry (progress note or doctor visit note) to an existing health incident. Get the incident_id from search_incidents or create_incident first. If the entry mentions a pain level, pass pain_intensity so the incident's pain-over-time chart is updated too.",
       inputSchema: createHealthLogShape,
     },
-    wrapTool(async (args: CreateHealthLogArgs) => apiClient.post("/health-logs-create", args))
+    wrapTool(async ({ pain_intensity, ...log }: CreateHealthLogArgs) => {
+      const created = (await apiClient.post("/health-logs-create", log)) as {
+        data?: { timestamp?: string };
+      };
+      if (pain_intensity === undefined) return created;
+
+      try {
+        const painReading = await addPainReading(log.incident_id, pain_intensity, created.data?.timestamp);
+        return { ...created, painReading };
+      } catch (error) {
+        // The log is already saved; report the pain reading failure without hiding that.
+        const message = error instanceof Error ? error.message : String(error);
+        return { ...created, painReadingError: `Log created, but adding the pain reading failed: ${message}` };
+      }
+    })
   );
 
   server.registerTool(

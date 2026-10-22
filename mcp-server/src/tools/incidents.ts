@@ -123,6 +123,42 @@ const updateIncidentShape = {
 const updateIncidentSchema = z.object(updateIncidentShape);
 type UpdateIncidentArgs = z.infer<typeof updateIncidentSchema>;
 
+const addPainReadingShape = {
+  _id: z.string().describe("The incident's MongoDB _id (from search_incidents / query_incidents)."),
+  intensity: z.number().int().min(0).max(10).describe("Pain intensity, 0-10."),
+  date: z
+    .string()
+    .optional()
+    .describe("ISO date (YYYY-MM-DD) or datetime of the reading. Defaults to now."),
+};
+const addPainReadingSchema = z.object(addPainReadingShape);
+type AddPainReadingArgs = z.infer<typeof addPainReadingSchema>;
+
+type PainReading = { date: string; intensity: number };
+
+/**
+ * Appends a reading to an incident's painIntensityOverTime. The API only
+ * supports replacing the whole array, so this reads the incident, appends,
+ * and PATCHes it back (same as the web UI's PainLevelForm). Concurrent writes
+ * to the same incident can drop a reading.
+ */
+export async function addPainReading(incidentObjectId: string, intensity: number, date?: string) {
+  const res = (await apiClient.get("/incidents-query", { _id: incidentObjectId })) as {
+    data?: Array<{ painIntensityOverTime?: PainReading[] }>;
+  };
+  const incident = res.data?.[0];
+  if (!incident) throw new Error(`Incident ${incidentObjectId} not found`);
+
+  // Date-only values are pinned to local noon, matching the UI, so they don't shift a day across timezones.
+  const when = date ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T12:00:00` : date) : new Date();
+  if (Number.isNaN(when.getTime())) throw new Error(`Invalid date: ${date}`);
+
+  const reading: PainReading = { date: when.toISOString(), intensity };
+  const painIntensityOverTime = [...(incident.painIntensityOverTime ?? []), reading];
+  await apiClient.patch("/incidents-update", { _id: incidentObjectId, painIntensityOverTime });
+  return { reading, totalReadings: painIntensityOverTime.length };
+}
+
 export function registerIncidentTools(server: McpServer) {
   server.registerTool(
     "search_incidents",
@@ -173,5 +209,15 @@ export function registerIncidentTools(server: McpServer) {
       inputSchema: updateIncidentShape,
     },
     wrapTool(async (args: UpdateIncidentArgs) => apiClient.patch("/incidents-update", args))
+  );
+
+  server.registerTool(
+    "add_pain_intensity_reading",
+    {
+      description:
+        "Record a pain reading on an incident's pain-over-time chart without overwriting existing readings. If you are also writing a progress note, pass pain_intensity to create_health_log instead so both happen in one call.",
+      inputSchema: addPainReadingShape,
+    },
+    wrapTool(async (args: AddPainReadingArgs) => addPainReading(args._id, args.intensity, args.date))
   );
 }
