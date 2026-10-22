@@ -25,6 +25,58 @@ const labTrendsShape = {
 const labTrendsSchema = z.object(labTrendsShape);
 type LabTrendsArgs = z.infer<typeof labTrendsSchema>;
 
+const measurementShape = z
+  .object({
+    value: z.number(),
+    unit: z.string().describe("e.g. 'mg/dL'."),
+    reference_range: z.object({ min: z.number(), max: z.number() }),
+  })
+  .describe("The high/low/normal flag is calculated from value and reference_range.");
+
+const customResultShape = z.object({
+  test_name: z.string().describe("e.g. 'Vitamin D, 25-Hydroxy'."),
+  value: z.union([z.number(), z.string()]),
+  unit: z.string().optional(),
+  reference_range: z.object({ min: z.number().optional(), max: z.number().optional() }).optional(),
+  flag: z.enum(["high", "low", "normal", "critical"]).optional(),
+});
+
+const labResultFields = {
+  lab_name: z.string().optional().describe("Lab facility name."),
+  notes: z.string().optional().describe("Doctor notes or observations."),
+  total_cholesterol: measurementShape.optional(),
+  ldl_cholesterol: measurementShape.optional(),
+  hdl_cholesterol: measurementShape.optional(),
+  triglycerides: measurementShape.optional(),
+  custom_results: z
+    .array(customResultShape)
+    .optional()
+    .describe("Results for any test not covered by the lipid fields. Replaces the whole list on update."),
+};
+
+const createLabResultShape = {
+  test_date: z.string().describe("ISO date the sample was taken."),
+  test_type: z.string().describe("e.g. 'lipid_panel', 'metabolic', 'custom'. Reuse existing types from query_lab_results."),
+  ordered_by: z.string().describe("Doctor/provider name."),
+  ...labResultFields,
+};
+const createLabResultSchema = z.object(createLabResultShape);
+type CreateLabResultArgs = z.infer<typeof createLabResultSchema>;
+
+const updateLabResultShape = {
+  id: z.string().describe("The lab result's _id (from query_lab_results)."),
+  updates: z
+    .object({
+      test_date: z.string().optional(),
+      test_type: z.string().optional(),
+      ordered_by: z.string().optional(),
+      ...labResultFields,
+    })
+    .describe("Fields to change. Only these fields are updated."),
+};
+const updateLabResultSchema = z.object(updateLabResultShape);
+type UpdateLabResultArgs = z.infer<typeof updateLabResultSchema>;
+
 export function registerLabTools(server: McpServer) {
   server.registerTool(
     "query_lab_results",
@@ -43,5 +95,25 @@ export function registerLabTools(server: McpServer) {
       inputSchema: labTrendsShape,
     },
     wrapTool(async (args: LabTrendsArgs) => apiClient.get("/lab-results-trends", args))
+  );
+
+  server.registerTool(
+    "create_lab_result",
+    {
+      description:
+        "Record a new lab test result. Use the lipid fields for lipid panels and custom_results for anything else; a single result can have both.",
+      inputSchema: createLabResultShape,
+    },
+    wrapTool(async (args: CreateLabResultArgs) => apiClient.post("/lab-results-create", args))
+  );
+
+  server.registerTool(
+    "update_lab_result",
+    {
+      description:
+        "Update fields on an existing lab result, e.g. to fix a typo in a value or add notes. Lipid measurement flags are recalculated.",
+      inputSchema: updateLabResultShape,
+    },
+    wrapTool(async (args: UpdateLabResultArgs) => apiClient.patch("/lab-results-update", args))
   );
 }

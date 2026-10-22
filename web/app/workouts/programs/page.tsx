@@ -149,7 +149,7 @@ export default function ProgramsPage() {
 
         <Grid container spacing={3}>
           {programs.map((program) => (
-            <Grid item xs={12} sm={6} md={4} key={program._id?.toString()}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={program._id?.toString()}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
