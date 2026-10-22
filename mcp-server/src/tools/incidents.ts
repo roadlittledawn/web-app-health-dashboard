@@ -96,6 +96,33 @@ const createIncidentShape = {
 const createIncidentSchema = z.object(createIncidentShape);
 type CreateIncidentArgs = z.infer<typeof createIncidentSchema>;
 
+const updateIncidentShape = {
+  _id: z.string().describe("The incident's MongoDB _id (from search_incidents / query_incidents)."),
+  incidentId: z.string().optional().describe("New human-readable ID. Must not already exist on another incident."),
+  painLocations: z.array(z.string()).optional().describe("Replaces the full list of body areas."),
+  injurySource: z.string().optional(),
+  description: z.string().optional(),
+  dateStarted: z.string().optional().describe("ISO date the incident started."),
+  endDate: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("ISO date the incident resolved. Pass null to clear it when reopening an incident."),
+  painIntensity: z.number().min(0).max(10).nullable().optional().describe("Peak pain intensity, 0-10."),
+  status: z
+    .array(z.string())
+    .optional()
+    .describe("Replaces the full status array, e.g. ['resolved'] or ['improving']."),
+  symptoms: createIncidentShape.symptoms.describe(
+    "Replaces the whole symptoms object; include every sub-field you want to keep."
+  ),
+  treatments: createIncidentShape.treatments.describe(
+    "Replaces the whole treatments object; include every sub-field you want to keep."
+  ),
+};
+const updateIncidentSchema = z.object(updateIncidentShape);
+type UpdateIncidentArgs = z.infer<typeof updateIncidentSchema>;
+
 export function registerIncidentTools(server: McpServer) {
   server.registerTool(
     "search_incidents",
@@ -136,5 +163,15 @@ export function registerIncidentTools(server: McpServer) {
       inputSchema: createIncidentShape,
     },
     wrapTool(async (args: CreateIncidentArgs) => apiClient.post("/incidents-create", args))
+  );
+
+  server.registerTool(
+    "update_incident",
+    {
+      description:
+        "Update fields on an existing health incident. Only the fields you pass are changed; arrays and the symptoms/treatments objects are replaced wholesale, so fetch the incident first with query_incidents if you need to merge. Keep status and endDate consistent: when marking an incident ['resolved'], also set endDate; when reopening it, change status and pass endDate: null. To record a pain reading, use add_pain_intensity_reading instead.",
+      inputSchema: updateIncidentShape,
+    },
+    wrapTool(async (args: UpdateIncidentArgs) => apiClient.patch("/incidents-update", args))
   );
 }
