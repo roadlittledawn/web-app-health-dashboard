@@ -32,6 +32,7 @@ import {
   FitnessCenter,
 } from '@mui/icons-material';
 import { WorkoutProgram } from '@/types/workout-programs';
+import { authFetch } from "@/lib/authClient";
 
 export default function ProgramsPage() {
   const router = useRouter();
@@ -52,9 +53,7 @@ export default function ProgramsPage() {
 
   const fetchPrograms = async () => {
     try {
-      const token = localStorage.getItem('auth-token');
-      const response = await fetch('/api/workout-programs', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await authFetch('/api/workout-programs', {
       });
 
       if (!response.ok) throw new Error('Failed to fetch programs');
@@ -70,12 +69,10 @@ export default function ProgramsPage() {
 
   const handleCreateProgram = async () => {
     try {
-      const token = localStorage.getItem('auth-token');
-      const response = await fetch('/api/workout-programs', {
+      const response = await authFetch('/api/workout-programs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -99,10 +96,8 @@ export default function ProgramsPage() {
     if (!selectedProgram?._id) return;
 
     try {
-      const token = localStorage.getItem('auth-token');
-      const response = await fetch(`/api/workout-programs?id=${selectedProgram._id.toString()}`, {
+      const response = await authFetch(`/api/workout-programs?id=${selectedProgram._id.toString()}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) throw new Error('Failed to delete program');

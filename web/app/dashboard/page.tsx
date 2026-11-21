@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   AppBar,
@@ -16,11 +14,11 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
+import { useAuth } from "@/components/AuthProvider";
 import {
   LocalHospital,
   Biotech,
   FitnessCenter,
-  Chat,
   ArrowForward,
   Logout,
 } from "@mui/icons-material";
@@ -47,62 +45,12 @@ const dashboardCards = [
     href: "/workouts",
     color: "#10B981",
   },
-  {
-    title: "AI Chat",
-    description: "Ask questions about your health data",
-    icon: Chat,
-    href: "/chat",
-    color: "#8B5CF6",
-  },
 ];
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const { status, user, signOut } = useAuth();
 
-  useEffect(() => {
-    const verifyAuth = async () => {
-      const token = localStorage.getItem("auth-token");
-
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/auth-verify", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          localStorage.removeItem("auth-token");
-          router.push("/login");
-          return;
-        }
-
-        const data = await response.json();
-        setUser(data.user);
-      } catch (error) {
-        console.error("Auth verification failed:", error);
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    verifyAuth();
-  }, [router]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("auth-token");
-    document.cookie = "auth-token=; path=/; max-age=0";
-    router.push("/login");
-  };
-
-  if (loading) {
+  if (status !== "authenticated") {
     return (
       <Box
         display="flex"
@@ -124,10 +72,15 @@ export default function DashboardPage() {
             Health Dashboard
           </Typography>
           <Typography variant="body2" sx={{ mr: 2 }}>
-            {user?.username}
+            {user?.name || user?.email}
           </Typography>
-          <Button color="inherit" onClick={handleLogout} startIcon={<Logout />}>
-            Logout
+          <Button
+            color="inherit"
+            onClick={() => void signOut()}
+            startIcon={<Logout />}
+            title="Signs you out of all clintonlangosch.com apps"
+          >
+            Sign out
           </Button>
         </Toolbar>
       </AppBar>

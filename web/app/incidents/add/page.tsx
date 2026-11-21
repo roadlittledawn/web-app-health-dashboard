@@ -38,6 +38,7 @@ import {
   STATUS_OPTIONS,
   formatOptionLabel,
 } from "@/lib/healthIncidentOptions";
+import { authFetch } from "@/lib/authClient";
 
 interface AutocompleteData {
   body_areas: string[];
@@ -86,17 +87,9 @@ export default function AddIncidentPage() {
   // Fetch autocomplete data on mount
   useEffect(() => {
     const fetchAutocompleteData = async () => {
-      const token = localStorage.getItem("auth-token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
 
       try {
-        const response = await fetch("/api/health-logs-autocomplete", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await authFetch("/api/health-logs-autocomplete", {
         });
 
         if (response.ok) {
@@ -130,18 +123,12 @@ export default function AddIncidentPage() {
     setError("");
     setSaving(true);
 
-    const token = localStorage.getItem("auth-token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
 
     try {
-      const response = await fetch("/api/incidents-create", {
+      const response = await authFetch("/api/incidents-create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,

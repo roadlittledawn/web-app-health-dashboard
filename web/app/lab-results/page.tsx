@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   AppBar,
@@ -29,6 +28,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { formatLocalDate } from '@/lib/dateUtils';
 import { LabResult } from '@/types/labs';
+import { authFetch } from "@/lib/authClient";
 
 export default function LabResultsPage() {
   const [results, setResults] = useState<LabResult[]>([]);
@@ -37,7 +37,6 @@ export default function LabResultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [view, setView] = useState(0); // 0 = chart, 1 = list
-  const router = useRouter();
 
   useEffect(() => {
     fetchData();
@@ -47,20 +46,13 @@ export default function LabResultsPage() {
     setLoading(true);
     setError('');
 
-    const token = localStorage.getItem('auth-token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
 
     try {
       // Fetch both list and trends
       const [resultsRes, trendsRes] = await Promise.all([
-        fetch('/api/lab-results-query?limit=20', {
-          headers: { 'Authorization': `Bearer ${token}` },
+        authFetch('/api/lab-results-query?limit=20', {
         }),
-        fetch('/api/lab-results-trends', {
-          headers: { 'Authorization': `Bearer ${token}` },
+        authFetch('/api/lab-results-trends', {
         }),
       ]);
 

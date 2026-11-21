@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import MarkdownContent from "@/components/MarkdownContent";
 import {
@@ -34,6 +33,7 @@ import {
 import { HealthIncident } from "@/types/health";
 import { formatLocalDateTime } from "@/lib/dateUtils";
 import { STATUS_OPTIONS, formatOptionLabel } from "@/lib/healthIncidentOptions";
+import { authFetch } from "@/lib/authClient";
 
 export default function IncidentsPage() {
   const [incidents, setIncidents] = useState<HealthIncident[]>([]);
@@ -42,7 +42,6 @@ export default function IncidentsPage() {
   const [filters, setFilters] = useState({
     status: "",
   });
-  const router = useRouter();
 
   useEffect(() => {
     fetchIncidents();
@@ -52,17 +51,9 @@ export default function IncidentsPage() {
     setLoading(true);
     setError("");
 
-    const token = localStorage.getItem("auth-token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
 
     try {
-      const response = await fetch("/api/incidents-query", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await authFetch("/api/incidents-query", {
       });
 
       if (!response.ok) {

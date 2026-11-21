@@ -19,6 +19,7 @@ import {
 import { Add, Save, Cancel } from "@mui/icons-material";
 import { formatForDateTimeLocal } from "@/lib/dateUtils";
 import MarkdownEditor from "@/components/MarkdownEditor";
+import { authFetch } from "@/lib/authClient";
 
 interface HealthLogFormProps {
   incidentId: string;
@@ -44,15 +45,12 @@ export default function HealthLogForm({
     setError("");
     setSaving(true);
 
-    const token = localStorage.getItem("auth-token");
-    if (!token) return;
 
     try {
-      const response = await fetch("/api/health-logs-create", {
+      const response = await authFetch("/api/health-logs-create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,

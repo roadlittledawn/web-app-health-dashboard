@@ -47,6 +47,7 @@ import {
   UnfoldMore,
 } from '@mui/icons-material';
 import { PopulatedWorkoutProgram, Exercise } from '@/types/workout-programs';
+import { authFetch } from "@/lib/authClient";
 
 export default function ProgramDetailPage() {
   const router = useRouter();
@@ -79,9 +80,7 @@ export default function ProgramDetailPage() {
 
   const fetchProgram = async () => {
     try {
-      const token = localStorage.getItem('auth-token');
-      const response = await fetch(`/api/workout-programs?id=${programId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await authFetch(`/api/workout-programs?id=${programId}`, {
       });
 
       if (!response.ok) throw new Error('Failed to fetch program');
@@ -97,9 +96,7 @@ export default function ProgramDetailPage() {
 
   const fetchExercises = async () => {
     try {
-      const token = localStorage.getItem('auth-token');
-      const response = await fetch('/api/exercises', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await authFetch('/api/exercises', {
       });
 
       if (!response.ok) throw new Error('Failed to fetch exercises');
@@ -115,7 +112,6 @@ export default function ProgramDetailPage() {
     if (!program) return;
 
     try {
-      const token = localStorage.getItem('auth-token');
       const newExercise = {
         exercise_id: exercise._id,
         order: program.exercises.length,
@@ -133,11 +129,10 @@ export default function ProgramDetailPage() {
         notes: e.notes,
       })), newExercise];
 
-      const response = await fetch('/api/workout-programs', {
+      const response = await authFetch('/api/workout-programs', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id: programId, updates: { exercises: updatedExercises } }),
       });
@@ -160,7 +155,6 @@ export default function ProgramDetailPage() {
     if (!program) return;
 
     try {
-      const token = localStorage.getItem('auth-token');
       const updatedExercises = program.exercises
         .filter((_, i) => i !== index)
         .map((e, i) => ({
@@ -172,11 +166,10 @@ export default function ProgramDetailPage() {
           notes: e.notes,
         }));
 
-      const response = await fetch('/api/workout-programs', {
+      const response = await authFetch('/api/workout-programs', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id: programId, updates: { exercises: updatedExercises } }),
       });
@@ -206,7 +199,6 @@ export default function ProgramDetailPage() {
     if (!program || editingExerciseIndex === null) return;
 
     try {
-      const token = localStorage.getItem('auth-token');
       const updatedExercises = program.exercises.map((e, i) => ({
         exercise_id: e.exercise_id,
         order: e.order,
@@ -216,11 +208,10 @@ export default function ProgramDetailPage() {
         notes: i === editingExerciseIndex ? exerciseConfig.notes || undefined : e.notes,
       }));
 
-      const response = await fetch('/api/workout-programs', {
+      const response = await authFetch('/api/workout-programs', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id: programId, updates: { exercises: updatedExercises } }),
       });
@@ -254,7 +245,6 @@ export default function ProgramDetailPage() {
     if (draggedIndex === null || draggedIndex === dropIndex || !program) return;
 
     try {
-      const token = localStorage.getItem('auth-token');
       const reorderedExercises = [...program.exercises];
       const [draggedItem] = reorderedExercises.splice(draggedIndex, 1);
       reorderedExercises.splice(dropIndex, 0, draggedItem);
@@ -268,11 +258,10 @@ export default function ProgramDetailPage() {
         notes: e.notes,
       }));
 
-      const response = await fetch('/api/workout-programs', {
+      const response = await authFetch('/api/workout-programs', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id: programId, updates: { exercises: updatedExercises } }),
       });

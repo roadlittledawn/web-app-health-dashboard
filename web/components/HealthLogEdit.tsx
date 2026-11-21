@@ -15,6 +15,7 @@ import { formatForDateTimeLocal, formatLocalDateTime } from '@/lib/dateUtils';
 import { HealthLog } from '@/types/health';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import MarkdownContent from '@/components/MarkdownContent';
+import { authFetch } from "@/lib/authClient";
 
 interface HealthLogEditProps {
   log: HealthLog;
@@ -37,15 +38,12 @@ export default function HealthLogEdit({ log, incidentId, onSuccess }: HealthLogE
     setError('');
     setSaving(true);
 
-    const token = localStorage.getItem('auth-token');
-    if (!token) return;
 
     try {
-      const response = await fetch('/api/health-logs-update', {
+      const response = await authFetch('/api/health-logs-update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           id: log._id,
