@@ -1,13 +1,13 @@
 # Health Dashboard
 
-Personal health tracking dashboard with AI-powered insights and analytics.
+Personal health tracking dashboard. Sign-in is handled by [clang-auth](https://auth.clintonlangosch.com), shared with the other `*.clintonlangosch.com` apps.
 
 ## Features
 
 - **Health Issue Tracking**: Log and monitor health issues with detailed incident tracking
 - **Lab Results**: Track lab results over time with trend visualization (lipid panels, custom tests)
 - **Strava Integration**: Sync workouts and track fitness goals
-- **AI Chat**: Ask natural language questions about your health data using Claude AI
+- **Claude Code access**: the local MCP server in `mcp-server/` lets Claude Code query and update your data
 - **Doctor Visit Preparation**: Generate summaries and discussion outlines for appointments
 
 ## Tech Stack
@@ -15,9 +15,8 @@ Personal health tracking dashboard with AI-powered insights and analytics.
 - **Frontend**: Next.js 15+ with TypeScript
 - **Backend**: Netlify Functions (serverless)
 - **Database**: MongoDB
-- **Authentication**: JWT + bcrypt
+- **Authentication**: clang-auth (ES256 `ca_access` cookie verified with `jose`); an API key for the local MCP server
 - **UI**: TailwindCSS
-- **AI**: Anthropic Claude API
 - **Charts**: Recharts
 
 ## Project Layout
@@ -55,28 +54,29 @@ a root-level file is sufficient — no `web/.env` needed.
 Required environment variables:
 
 - `MONGODB_CONNECTION_STRING`: Your MongoDB connection string
-- `ADMIN_USERNAME`: Your admin username
-- `ADMIN_PASSWORD_HASH`: Bcrypt hash of your password (see below)
-- `JWT_SECRET`: Secret key for JWT signing
-- `ANTHROPIC_API_KEY`: Your Anthropic API key
+- `AUTH_BASE_URL`: the clang-auth service, `https://auth.clintonlangosch.com` (locally `http://auth.localtest.me:4000`)
+- `AUTH_APP_SLUG`: `health`
+- `MCP_API_KEY_SHA256`: SHA-256 of the local MCP server's API key (see below)
 - `STRAVA_CLIENT_ID` & `STRAVA_CLIENT_SECRET`: (Optional) For Strava integration
 
-### 3. Generate Secrets
+### 3. Sign-in and the MCP API key
 
-Run the built-in script to generate your JWT secret and password hash:
+There's no login page or password in this app. Register it with clang-auth and grant yourself access (from outside the clang-auth repo for production):
 
 ```bash
-npm run generate-secrets
+clang-auth app create health --name Health --origin https://health.clintonlangosch.com
+clang-auth grant set <your email> health --role admin
 ```
 
-This will:
+For local development, register `http://health.localtest.me:8888` in your **local** clang-auth instead and grant `dev@localtest.me`.
 
-- Generate a secure random JWT secret
-- Prompt you for your admin password
-- Generate a bcrypt hash of your password (salt rounds = 12)
-- Display both values to copy into your `.env` file
+The local MCP server authenticates with an API key. Generate one:
 
-Copy the generated values into your `.env` file.
+```bash
+npm run generate-mcp-key
+```
+
+Put `MCP_API_TOKEN=<key>` in `mcp-server/.env`, and `MCP_API_KEY_SHA256=<hash>` in Netlify (and your root `.env.local`). API-key requests can read and write but can't delete.
 
 ### 4. Database Setup
 
@@ -99,7 +99,7 @@ npm run dev
 
 (this runs `netlify dev` inside the `web/` workspace)
 
-Open [http://localhost:8888](http://localhost:8888) in your browser.
+Open [http://health.localtest.me:8888](http://health.localtest.me:8888) in your browser (with your local clang-auth running). `*.localtest.me` resolves to `127.0.0.1`, so it shares the login cookie with `auth.localtest.me`.
 
 **Note:** The app runs on port 8888 (not 3000) when using Netlify Dev. This is required for the API endpoints to work correctly.
 
@@ -132,19 +132,19 @@ automatically once the package directory is set correctly.
 ├── web/                      # The Next.js app (this is the Netlify site)
 │   ├── app/                  # Next.js app directory
 │   │   ├── dashboard/       # Main dashboard
-│   │   ├── login/           # Login page
 │   │   ├── health-logs/     # Health issue tracking
 │   │   ├── lab-results/     # Lab results tracking
 │   │   ├── workouts/        # Strava workouts and goals
 │   │   └── ...
 │   ├── components/           # React components
 │   ├── lib/                  # Utilities
-│   │   ├── auth.ts          # Authentication helpers
+│   │   ├── clang-auth.ts    # clang-auth token verification
+│   │   ├── authenticate.ts  # Function auth: cookie or MCP API key
+│   │   ├── authClient.ts    # Browser: authFetch, refresh, logout
 │   │   ├── mongodb.ts       # Database connection
 │   │   └── ...
 │   ├── netlify/functions/    # Serverless API
-│   │   ├── auth-login.ts    # Login endpoint
-│   │   ├── auth-verify.ts   # Token verification
+│   │   ├── me.ts            # Signed-in user (drives AuthProvider)
 │   │   └── ...
 │   ├── types/                 # TypeScript definitions
 │   └── proxy.ts               # Route protection
@@ -155,8 +155,9 @@ automatically once the package directory is set correctly.
 
 ### Authentication
 
-- `POST /api/auth-login` - Authenticate and get JWT token
-- `GET /api/auth-verify` - Verify JWT token
+Every endpoint requires either the clang-auth `ca_access` cookie (browser) or `Authorization: Bearer <MCP API key>` (no `DELETE`). Cookie-authenticated writes must come from the app's own origin.
+
+- `GET /api/me` - The signed-in user and token expiry
 
 ### Health Logs
 
@@ -183,7 +184,6 @@ automatically once the package directory is set correctly.
 
 ### Coming Soon
 
-- AI chat and summaries
 - Doctor visit preparation
 
 ## Development Roadmap
@@ -192,7 +192,6 @@ automatically once the package directory is set correctly.
 - [x] Phase 2: Health Logs Integration
 - [x] Phase 3: Lab Results Tracking
 - [x] Phase 4: Strava Integration
-- [ ] Phase 5: AI Chat & Summaries
 - [ ] Phase 6: Dashboard & Analytics
 
 ## Strava Setup
