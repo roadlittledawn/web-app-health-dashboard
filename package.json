@@ -11,9 +11,10 @@
     "build": "npm run build -w web",
     "start": "npm run start -w web",
     "lint": "npm run lint -w web",
-    "generate-secrets": "npm run generate-secrets -w web",
     "migrate": "npm run migrate -w web",
     "migrate:arrays": "npm run migrate:arrays -w web",
-    "sync-strava-full": "npm run sync-strava-full -w web"
+    "sync-strava-full": "npm run sync-strava-full -w web",
+    "test:auth": "npm run test:auth -w web",
+    "generate-mcp-key": "npm run generate-mcp-key -w web"
   }
 }
