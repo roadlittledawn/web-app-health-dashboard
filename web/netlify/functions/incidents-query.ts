@@ -1,7 +1,7 @@
 import { Handler, HandlerEvent, HandlerContext, HandlerResponse } from "@netlify/functions";
 import { ObjectId } from "mongodb";
 import { getDatabase } from "../../lib/mongodb";
-import { verifyToken, extractToken } from "../../lib/auth";
+import { authenticate } from "../../lib/authenticate";
 import { HealthIncident } from "../../types/health";
 
 export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext): Promise<HandlerResponse> => {
@@ -14,16 +14,8 @@ export const handler: Handler = async (event: HandlerEvent, _context: HandlerCon
   }
 
   try {
-    const token = extractToken(event.headers.authorization);
-    if (!token) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ error: { code: "NO_TOKEN", message: "No authentication token provided" } }),
-        headers: { "Content-Type": "application/json" },
-      };
-    }
-
-    verifyToken(token);
+    const auth = await authenticate(event);
+    if (!auth.ok) return auth.response;
 
     const params = event.queryStringParameters || {};
     const { _id, status, limit = "50", skip = "0", sort_by = "dateStarted", sort_order = "desc" } = params;
