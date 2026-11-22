@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { MongoClient, ObjectId } from 'mongodb';
-import jwt from 'jsonwebtoken';
+import { authenticate } from '../../lib/authenticate';
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== 'PATCH') {
@@ -11,17 +11,8 @@ const handler: Handler = async (event) => {
   }
 
   try {
-    // Verify JWT token
-    const authHeader = event.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ error: 'No token provided' }),
-      };
-    }
-
-    const token = authHeader.substring(7);
-    jwt.verify(token, process.env.JWT_SECRET!);
+    const auth = await authenticate(event);
+    if (!auth.ok) return auth.response;
 
     const body = JSON.parse(event.body || '{}');
     const _id = body._id || body.id;

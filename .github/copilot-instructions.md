@@ -9,9 +9,9 @@ This is a personal health tracking dashboard with AI-powered insights and analyt
 - **Frontend**: Next.js 15+ with App Router, TypeScript, React 19+
 - **Backend**: Netlify Functions (serverless)
 - **Database**: MongoDB (database name: `health-fitness`)
-- **Authentication**: JWT + bcrypt
+- **Authentication**: clang-auth (shared SSO; ES256 `ca_access` cookie verified with `jose`) plus an API key for the local MCP server
 - **UI**: TailwindCSS, Material-UI (MUI)
-- **AI**: Anthropic Claude API, MCP (Model Context Protocol) server integration
+- **AI**: none in the app; `mcp-server/` exposes the API to Claude Code
 - **Charts**: Recharts
 - **Third-party APIs**: Strava (optional)
 
@@ -24,9 +24,7 @@ server for Claude Code lives in `mcp-server/`.
 /
 ├── web/                      # The Next.js app (this is the Netlify site)
 │   ├── app/                  # Next.js app directory (App Router)
-│   │   ├── chat/             # AI chat interface
 │   │   ├── dashboard/        # Main dashboard
-│   │   ├── login/            # Login page
 │   │   ├── incidents/        # Health issue tracking
 │   │   ├── lab-results/      # Lab results tracking
 │   │   ├── workouts/         # Strava workouts and goals
@@ -34,20 +32,21 @@ server for Claude Code lives in `mcp-server/`.
 │   │   └── globals.css       # Global styles
 │   ├── components/           # React components
 │   ├── lib/                  # Shared utilities
-│   │   ├── auth.ts          # Authentication helpers (JWT, bcrypt)
+│   │   ├── clang-auth.ts    # clang-auth token verification
+│   │   ├── authenticate.ts  # Function auth: cookie or MCP API key
+│   │   ├── authClient.ts    # Browser: authFetch, refresh, logout
 │   │   ├── mongodb.ts       # Database connection
 │   │   ├── searchRanking.ts # Search result ranking algorithms
 │   │   ├── workoutUtils.ts  # Workout calculations (distance, elevation, pace)
 │   │   └── ...
 │   ├── netlify/functions/    # Serverless API endpoints
-│   │   ├── ai-chat.ts       # AI chat endpoint (Claude integration with MCP)
 │   │   ├── *-search.ts      # Search endpoints (health logs, incidents, workouts)
 │   │   └── ...
 │   ├── types/                # TypeScript type definitions
-│   │   ├── ai-chat.ts       # AI chat types and interfaces
+│   │   ├── stats.ts         # Types for /api/ai-chat-stats
 │   │   └── ...
 │   ├── scripts/               # Utility scripts
-│   │   └── generate-mcp-token.mjs  # Generate MCP authentication tokens
+│   │   └── generate-mcp-key.mjs  # Generate the MCP server's API key
 │   └── proxy.ts               # Route protection (Next.js proxy/middleware)
 └── mcp-server/                # Local MCP server exposing the app's API to Claude Code
 ```
@@ -60,7 +59,8 @@ Run from the repo root (these forward into the `web/` workspace):
 npm run dev               # Start Netlify Dev (app + functions) on localhost:8888
 npm run build             # Production build
 npm run lint               # Run ESLint (uses next/core-web-vitals and next/typescript configs)
-npm run generate-secrets  # Generate JWT secret and password hash
+npm run generate-mcp-key  # API key for the local MCP server
+npm run test:auth         # Auth tests
 ```
 
 **Note**: This project currently does not have automated tests. When adding tests in the future, follow Next.js testing conventions with Jest and React Testing Library.
@@ -70,7 +70,7 @@ npm run generate-secrets  # Generate JWT secret and password hash
 ### TypeScript
 
 - **Strict mode enabled**: All TypeScript strict checks are on
-- **Path aliases**: Use `@/` for imports from project root (e.g., `import { auth } from '@/lib/auth'`)
+- **Path aliases**: Use `@/` for imports from project root (e.g., `import { authFetch } from '@/lib/authClient'`)
 - **Type safety**: Always define interfaces for API responses, function parameters, and component props
 - **Explicit typing**: Prefer explicit return types for functions
 
@@ -83,11 +83,9 @@ npm run generate-secrets  # Generate JWT secret and password hash
 
 ### Authentication
 
-- **JWT tokens**: 24-hour expiration by default (configurable via `JWT_EXPIRATION` env var)
-- **Password hashing**: bcrypt with 12 salt rounds
-- **Token format**: Bearer tokens in Authorization header
-- **Token extraction**: Use `extractToken()` from `lib/auth.ts`
-- **Token verification**: Use `verifyToken()` from `lib/auth.ts`
+- **Sign-in**: clang-auth at `AUTH_BASE_URL`. No passwords or signing secrets in this app. See `docs/clang-auth-migration.md`.
+- **Functions**: call `authenticate(event)` from `lib/authenticate.ts` first: `const auth = await authenticate(event); if (!auth.ok) return auth.response;`. It accepts the `ca_access` cookie (writes must be same-origin) or the MCP API key (`Authorization: Bearer`, no `DELETE`).
+- **Browser**: use `authFetch()` from `lib/authClient.ts` for `/api/*` calls; never store tokens. `useAuth()` from `components/AuthProvider.tsx` gives the signed-in user and `signOut()`.
 
 ### API Response Format
 
@@ -150,10 +148,8 @@ Serverless functions should return consistent response structures:
 
 Required environment variables (see `.env.example`):
 - `MONGODB_CONNECTION_STRING`: MongoDB connection URI
-- `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`: Authentication credentials
-- `JWT_SECRET`: Secret for JWT signing
-- `ANTHROPIC_API_KEY`: For AI chat features
-- `MCP_SERVER_URL` (optional): MCP server URL for AI chat (defaults to remote server)
+- `AUTH_BASE_URL`, `AUTH_APP_SLUG`: clang-auth settings
+- `MCP_API_KEY_SHA256`: hash of the local MCP server's API key
 - `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET` (optional): For Strava integration
 
 ### Documentation
@@ -164,15 +160,13 @@ Required environment variables (see `.env.example`):
 - **Example**:
   ```typescript
   /**
-   * Validates and extracts JWT token from request headers.
-   * @param headers - HTTP headers from the request
-   * @returns Extracted token string or null if not found/invalid format
+   * Read one cookie from a raw `Cookie` header.
+   * @param cookieHeader - The request's Cookie header
+   * @param name - Cookie name
+   * @returns The cookie's value, or undefined if absent
    */
-  export function extractToken(headers: Record<string, string | undefined>): string | null {
-    const authHeader = headers.authorization || headers.Authorization;
-    // Bearer token format is required by our authentication system
-    if (!authHeader?.startsWith('Bearer ')) return null;
-    return authHeader.substring(7);
+  export function readCookie(cookieHeader: string | undefined, name: string): string | undefined {
+    // ...
   }
   ```
 
@@ -180,7 +174,7 @@ Required environment variables (see `.env.example`):
 
 - **No secrets in code**: All secrets must be in environment variables
 - **Input validation**: Validate all user inputs before database operations
-- **Authentication**: Protect all API endpoints except `/api/auth-login` and `/api/strava-oauth`
+- **Authentication**: Every API endpoint calls `authenticate()` (`strava-oauth`, a browser redirect, checks the cookie itself)
 - **Error messages**: Don't expose sensitive information in error messages
 
 ## Common Patterns
@@ -197,7 +191,7 @@ Required environment variables (see `.env.example`):
 **Example**:
 ```typescript
 import { Handler } from '@netlify/functions';
-import { extractToken, verifyToken } from '@/lib/auth';
+import { authenticate } from '@/lib/authenticate';
 import { getDatabase } from '@/lib/mongodb';
 
 export const handler: Handler = async (event) => {
@@ -211,14 +205,8 @@ export const handler: Handler = async (event) => {
   }
 
   // Authenticate
-  const token = extractToken(event.headers);
-  if (!token || !verifyToken(token)) {
-    return {
-      statusCode: 401,
-      body: JSON.stringify({ error: { code: 'UNAUTHORIZED', message: 'Invalid token' } }),
-      headers: { 'Content-Type': 'application/json' }
-    };
-  }
+  const auth = await authenticate(event);
+  if (!auth.ok) return auth.response;
 
   // Database operation
   try {

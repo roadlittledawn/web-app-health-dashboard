@@ -41,6 +41,7 @@ import {
   Route as RouteIcon,
 } from '@mui/icons-material';
 import { formatLocalDateTime } from '@/lib/dateUtils';
+import { authFetch } from "@/lib/authClient";
 
 const WorkoutMapModal = dynamic(() => import('@/components/WorkoutMapModal'), { ssr: false });
 interface Workout {
@@ -90,12 +91,9 @@ function WorkoutsPageContent() {
   }, []);
 
   const fetchActivityTypes = async () => {
-    const token = localStorage.getItem('auth-token');
-    if (!token) return;
 
     try {
-      const response = await fetch('/api/strava-workout-types', {
-        headers: { 'Authorization': `Bearer ${token}` },
+      const response = await authFetch('/api/strava-workout-types', {
       });
 
       if (response.ok) {
@@ -111,11 +109,6 @@ function WorkoutsPageContent() {
     setLoading(true);
     setError('');
 
-    const token = localStorage.getItem('auth-token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
 
     try {
       const activeLimit = overrideLimit !== undefined ? overrideLimit : limit;
@@ -130,8 +123,7 @@ function WorkoutsPageContent() {
         params.append('end_date', endDate.format('YYYY-MM-DD'));
       }
 
-      const response = await fetch(`/api/strava-workouts?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+      const response = await authFetch(`/api/strava-workouts?${params}`, {
       });
 
       if (response.ok) {
@@ -158,14 +150,12 @@ function WorkoutsPageContent() {
     setSyncing(true);
     setError('');
 
-    const token = localStorage.getItem('auth-token');
 
     try {
-      const response = await fetch('/api/strava-sync', {
+      const response = await authFetch('/api/strava-sync', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ perPage: 50 }),
       });

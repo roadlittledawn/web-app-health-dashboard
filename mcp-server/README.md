@@ -5,8 +5,8 @@ tools to read and write your Strava workouts, health incidents/logs, lab
 results, exercise library, and workout programs — by calling this repo's
 existing `/api/*` Netlify Functions over HTTP.
 
-It's a separate, local-only (stdio) server. It is unrelated to the remote MCP
-server the in-app "AI Chat" feature talks to via `MCP_SERVER_URL`.
+It's a local-only (stdio) server. It authenticates to the API with an API
+key; the web app itself uses clang-auth for browser sign-in.
 
 ## Setup
 
@@ -14,17 +14,18 @@ server the in-app "AI Chat" feature talks to via `MCP_SERVER_URL`.
    ```
    npm install
    ```
-2. Generate a long-lived API token for this server, using the same
-   `JWT_SECRET` your deployed site uses:
+2. Generate an API key for this server (from the repo root):
    ```
-   JWT_SECRET=<your JWT_SECRET> node ../web/scripts/generate-mcp-token.mjs
+   npm run generate-mcp-key
    ```
-   (run from `mcp-server/`, or use `web/scripts/generate-mcp-token.mjs` if run from the repo root)
+   It prints the key and its SHA-256. Set the hash as `MCP_API_KEY_SHA256`
+   in Netlify (and in the root `.env.local` for `netlify dev`). The key
+   itself goes only in `mcp-server/.env`. To rotate, run it again and update
+   both.
 3. Copy `.env.example` to `.env` and fill in:
-   - `API_BASE_URL` — your deployed site's API base, e.g.
-     `https://your-site.netlify.app/api` (or `http://localhost:8888/api` for
-     `netlify dev`)
-   - `MCP_API_TOKEN` — the token from step 2
+   - `API_BASE_URL` — `https://health.clintonlangosch.com/api` (or
+     `http://health.localtest.me:8888/api` for `netlify dev`)
+   - `MCP_API_TOKEN` — the key from step 2
 4. Build it:
    ```
    npm run build
@@ -86,8 +87,8 @@ These endpoints intentionally have no tool:
 
 - `DELETE /exercises`, `DELETE /workout-programs`, `DELETE /fitness-goals`:
   these permanently delete records, so deletes stay in the web UI.
-- `auth-login`, `auth-verify`, `strava-oauth`, `mcp-status`, `ai-chat`:
-  auth, OAuth and infrastructure endpoints, not data actions.
+- `me`, `strava-oauth`: browser sign-in and OAuth endpoints, not data
+  actions. API-key requests can't `DELETE` at all (the API refuses them).
 
 ## Adding a tool
 

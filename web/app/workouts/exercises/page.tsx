@@ -41,6 +41,7 @@ import {
   UnfoldMore,
 } from '@mui/icons-material';
 import { Exercise } from '@/types/workout-programs';
+import { authFetch } from "@/lib/authClient";
 
 export default function ExercisesPage() {
   const router = useRouter();
@@ -80,9 +81,7 @@ export default function ExercisesPage() {
 
   const fetchExercises = async () => {
     try {
-      const token = localStorage.getItem('auth-token');
-      const response = await fetch('/api/exercises', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await authFetch('/api/exercises', {
       });
 
       if (!response.ok) throw new Error('Failed to fetch exercises');
@@ -141,7 +140,6 @@ export default function ExercisesPage() {
 
   const handleCreateExercise = async () => {
     try {
-      const token = localStorage.getItem('auth-token');
       const payload = {
         name: formData.name,
         aliases: formData.aliases.split(',').map(a => a.trim()).filter(Boolean),
@@ -154,11 +152,10 @@ export default function ExercisesPage() {
         media: formData.mediaUrl ? [{ type: 'youtube', url: formData.mediaUrl }] : [],
       };
 
-      const response = await fetch('/api/exercises', {
+      const response = await authFetch('/api/exercises', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -193,7 +190,6 @@ export default function ExercisesPage() {
     if (!selectedExercise?._id) return;
 
     try {
-      const token = localStorage.getItem('auth-token');
       const updates = {
         name: formData.name,
         aliases: formData.aliases.split(',').map(a => a.trim()).filter(Boolean),
@@ -206,11 +202,10 @@ export default function ExercisesPage() {
         media: formData.mediaUrl ? [{ type: 'youtube', url: formData.mediaUrl }] : [],
       };
 
-      const response = await fetch('/api/exercises', {
+      const response = await authFetch('/api/exercises', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id: selectedExercise._id.toString(), updates }),
       });
@@ -235,10 +230,8 @@ export default function ExercisesPage() {
     if (!selectedExercise?._id) return;
 
     try {
-      const token = localStorage.getItem('auth-token');
-      const response = await fetch(`/api/exercises?id=${selectedExercise._id.toString()}`, {
+      const response = await authFetch(`/api/exercises?id=${selectedExercise._id.toString()}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) throw new Error('Failed to delete exercise');

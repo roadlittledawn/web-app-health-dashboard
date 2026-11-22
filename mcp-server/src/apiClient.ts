@@ -17,7 +17,7 @@ if (!API_BASE_URL) {
 }
 if (!MCP_API_TOKEN) {
   throw new Error(
-    "MCP_API_TOKEN is not set. Generate one with `node scripts/generate-mcp-token.mjs` (from the repo root) and add it to mcp-server/.env."
+    "MCP_API_TOKEN is not set. Generate one with `npm run generate-mcp-key` (from the repo root) and add it to mcp-server/.env."
   );
 }
 

@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { formatLocalDate } from '@/lib/dateUtils';
+import { authFetch } from "@/lib/authClient";
 
 interface PainLevelEntry {
   date: Date;
@@ -45,7 +46,6 @@ export default function PainLevelForm({ incidentId, painLevels, onUpdate }: Pain
     setError('');
 
     try {
-      const token = localStorage.getItem('auth-token');
       const updatedPainLevels = [...painLevels];
       
       const newEntry = {
@@ -59,11 +59,10 @@ export default function PainLevelForm({ incidentId, painLevels, onUpdate }: Pain
         updatedPainLevels.push(newEntry);
       }
 
-      const response = await fetch('/api/incidents-update', {
+      const response = await authFetch('/api/incidents-update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           _id: incidentId,
@@ -96,14 +95,12 @@ export default function PainLevelForm({ incidentId, painLevels, onUpdate }: Pain
   const handleDelete = async (index: number) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('auth-token');
       const updatedPainLevels = painLevels.filter((_, i) => i !== index);
 
-      const response = await fetch('/api/incidents-update', {
+      const response = await authFetch('/api/incidents-update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           _id: incidentId,

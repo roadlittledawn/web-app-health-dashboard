@@ -21,6 +21,7 @@ import {
   Alert,
 } from "@mui/material";
 import { ArrowBack, Save } from "@mui/icons-material";
+import { authFetch } from "@/lib/authClient";
 
 export default function AddLabResultPage() {
   const router = useRouter();
@@ -45,11 +46,6 @@ export default function AddLabResultPage() {
     setError("");
     setSaving(true);
 
-    const token = localStorage.getItem("auth-token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
 
     try {
       // Build lab result payload
@@ -106,11 +102,10 @@ export default function AddLabResultPage() {
         };
       }
 
-      const response = await fetch("/api/lab-results-create", {
+      const response = await authFetch("/api/lab-results-create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
