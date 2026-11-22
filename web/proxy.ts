@@ -10,8 +10,20 @@ import { ACCESS_COOKIE, authSettings, loginUrl, resolveToken } from "./lib/clang
  *
  * - no / expired / invalid ca_access → 302 to the clang-auth sign-in page
  * - valid token without a `health` grant → 403 (a redirect would loop)
+ *
+ * Requests for the old production host go to the new domain first. The
+ * netlify.toml redirect only catches /api/*, because this proxy runs before
+ * Netlify's redirect rules for pages.
  */
+const OLD_HOST = "clang-health.netlify.app";
+const NEW_ORIGIN = "https://health.clintonlangosch.com";
+
 export async function proxy(request: NextRequest) {
+  if (requestHost(request) === OLD_HOST) {
+    const { pathname, search } = request.nextUrl;
+    return NextResponse.redirect(`${NEW_ORIGIN}${pathname}${search}`, 301);
+  }
+
   let settings;
   try {
     settings = authSettings();
@@ -42,13 +54,18 @@ export async function proxy(request: NextRequest) {
  * prefer the forwarded headers. clang-auth only redirects back to registered
  * origins, so a spoofed header can't become an open redirect.
  */
-function publicOrigin(request: NextRequest): string {
+function requestHost(request: NextRequest): string | null {
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  return host ? host.split(",")[0].trim().toLowerCase() : null;
+}
+
+function publicOrigin(request: NextRequest): string {
+  const host = requestHost(request);
   if (!host) return request.nextUrl.origin;
   const proto =
     request.headers.get("x-forwarded-proto")?.split(",")[0].trim() ??
     request.nextUrl.protocol.replace(/:$/, "");
-  return `${proto}://${host.split(",")[0].trim()}`;
+  return `${proto}://${host}`;
 }
 
 export const config = {
