@@ -7,6 +7,8 @@ import {
 import { getDatabase } from "../../lib/mongodb";
 import { exchangeStravaCode } from "../../lib/strava";
 import { StravaOAuthTokens } from "../../types/strava";
+import { header, requestOrigin } from "../../lib/authenticate";
+import { ACCESS_COOKIE, loginUrl, readCookie, resolveToken } from "../../lib/clang-auth";
 
 interface ErrorResponse {
   error: {
@@ -18,7 +20,9 @@ interface ErrorResponse {
 /**
  * GET /api/strava-oauth
  * OAuth callback handler for Strava authentication
- * Receives authorization code and exchanges for tokens
+ * Receives authorization code and exchanges for tokens.
+ * A browser navigation, so it requires the clang-auth cookie: without it,
+ * anyone holding a Strava code could replace the stored tokens.
  */
 export const handler: Handler = async (
   event: HandlerEvent,
@@ -38,6 +42,25 @@ export const handler: Handler = async (
         "Content-Type": "application/json",
         "Allow": "GET",
       },
+    };
+  }
+
+  // Require a signed-in user with access before touching stored tokens.
+  const state = await resolveToken(readCookie(header(event, "cookie"), ACCESS_COOKIE));
+  if (state.status === "anonymous") {
+    const origin = requestOrigin(event) ?? "";
+    const path = event.rawUrl ? new URL(event.rawUrl).search : "";
+    return {
+      statusCode: 302,
+      headers: { Location: loginUrl(`${origin}/api/strava-oauth${path}`), "Cache-Control": "no-store" },
+      body: "",
+    };
+  }
+  if (state.status === "forbidden") {
+    return {
+      statusCode: 403,
+      body: JSON.stringify({ error: { code: "FORBIDDEN", message: "No access to this app" } } as ErrorResponse),
+      headers: { "Content-Type": "application/json" },
     };
   }
 

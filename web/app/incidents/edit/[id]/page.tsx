@@ -40,6 +40,7 @@ import {
   STATUS_OPTIONS,
   formatOptionLabel,
 } from "@/lib/healthIncidentOptions";
+import { authFetch } from "@/lib/authClient";
 
 interface AutocompleteData {
   body_areas: string[];
@@ -91,18 +92,10 @@ export default function EditIncidentPage() {
   // Fetch autocomplete data and incident data on mount
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("auth-token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
 
       try {
         // Fetch autocomplete data
-        const autocompleteResponse = await fetch("/api/health-logs-autocomplete", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const autocompleteResponse = await authFetch("/api/health-logs-autocomplete", {
         });
 
         if (autocompleteResponse.ok) {
@@ -114,10 +107,7 @@ export default function EditIncidentPage() {
         }
 
         // Fetch incident data
-        const incidentResponse = await fetch(`/api/incidents-query?_id=${incidentId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const incidentResponse = await authFetch(`/api/incidents-query?_id=${incidentId}`, {
         });
 
         if (!incidentResponse.ok) {
@@ -179,18 +169,12 @@ export default function EditIncidentPage() {
     setError("");
     setSaving(true);
 
-    const token = localStorage.getItem("auth-token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
 
     try {
-      const response = await fetch("/api/incidents-update", {
+      const response = await authFetch("/api/incidents-update", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id: incidentId,

@@ -5,7 +5,7 @@ import {
   HandlerResponse,
 } from "@netlify/functions";
 import { getDatabase } from "../../lib/mongodb";
-import { verifyToken, extractToken } from "../../lib/auth";
+import { authenticate } from "../../lib/authenticate";
 import { LabResult } from "../../types/labs";
 import { calculateFlag } from "../../lib/labUtils";
 
@@ -43,39 +43,8 @@ export const handler: Handler = async (
   }
 
   try {
-    // Verify authentication
-    const token = extractToken(event.headers.authorization);
-    if (!token) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({
-          error: {
-            code: "NO_TOKEN",
-            message: "No authentication token provided",
-          },
-        } as ErrorResponse),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-    }
-
-    try {
-      verifyToken(token);
-    } catch {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({
-          error: {
-            code: "INVALID_TOKEN",
-            message: "Invalid or expired token",
-          },
-        } as ErrorResponse),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-    }
+    const auth = await authenticate(event);
+    if (!auth.ok) return auth.response;
 
     // Parse request body
     if (!event.body) {

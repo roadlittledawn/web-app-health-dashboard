@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   AppBar,
@@ -37,6 +36,7 @@ import {
   Archive,
   Unarchive,
 } from "@mui/icons-material";
+import { authFetch } from "@/lib/authClient";
 
 interface Goal {
   _id: string;
@@ -58,7 +58,6 @@ interface Goal {
 }
 
 export default function FitnessGoalsPage() {
-  const router = useRouter();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -83,12 +82,9 @@ export default function FitnessGoalsPage() {
   }, []);
 
   const fetchActivityTypes = async () => {
-    const token = localStorage.getItem("auth-token");
-    if (!token) return;
 
     try {
-      const response = await fetch("/api/strava-workout-types", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await authFetch("/api/strava-workout-types", {
       });
 
       if (response.ok) {
@@ -104,15 +100,9 @@ export default function FitnessGoalsPage() {
     setLoading(true);
     setError("");
 
-    const token = localStorage.getItem("auth-token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
 
     try {
-      const response = await fetch("/api/fitness-goals", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await authFetch("/api/fitness-goals", {
       });
 
       if (!response.ok) {
@@ -133,14 +123,12 @@ export default function FitnessGoalsPage() {
     setSaving(true);
     setError("");
 
-    const token = localStorage.getItem("auth-token");
 
     try {
-      const response = await fetch("/api/fitness-goals", {
+      const response = await authFetch("/api/fitness-goals", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,
@@ -175,12 +163,10 @@ export default function FitnessGoalsPage() {
   };
 
   const handleDeleteGoal = async (id: string) => {
-    const token = localStorage.getItem("auth-token");
 
     try {
-      const response = await fetch(`/api/fitness-goals?id=${id}`, {
+      const response = await authFetch(`/api/fitness-goals?id=${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
@@ -195,14 +181,12 @@ export default function FitnessGoalsPage() {
   };
 
   const handleCompleteGoal = async (id: string) => {
-    const token = localStorage.getItem("auth-token");
 
     try {
-      const response = await fetch("/api/fitness-goals", {
+      const response = await authFetch("/api/fitness-goals", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id,
@@ -222,14 +206,12 @@ export default function FitnessGoalsPage() {
   };
 
   const handleArchiveGoal = async (id: string, archive: boolean) => {
-    const token = localStorage.getItem("auth-token");
 
     try {
-      const response = await fetch("/api/fitness-goals", {
+      const response = await authFetch("/api/fitness-goals", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id,

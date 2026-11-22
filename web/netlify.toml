@@ -9,6 +9,15 @@
   directory = "/web/netlify/functions"
   node_bundler = "esbuild"
 
+# Old production host -> the clang-auth domain. The sign-in cookie can't reach
+# *.netlify.app, so the old host would be a dead end. Matching the exact host
+# leaves deploy previews (deploy-preview-N--clang-health.netlify.app) alone.
+[[redirects]]
+  from = "https://clang-health.netlify.app/*"
+  to = "https://health.clintonlangosch.com/:splat"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"

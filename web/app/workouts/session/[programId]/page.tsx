@@ -26,6 +26,7 @@ import {
   FitnessCenter,
 } from "@mui/icons-material";
 import { PopulatedWorkoutProgram } from "@/types/workout-programs";
+import { authFetch } from "@/lib/authClient";
 
 export default function WorkoutSessionPage() {
   const router = useRouter();
@@ -48,9 +49,7 @@ export default function WorkoutSessionPage() {
 
   const fetchProgram = async () => {
     try {
-      const token = localStorage.getItem("auth-token");
-      const response = await fetch(`/api/workout-programs?id=${programId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await authFetch(`/api/workout-programs?id=${programId}`, {
       });
 
       if (!response.ok) throw new Error("Failed to fetch program");

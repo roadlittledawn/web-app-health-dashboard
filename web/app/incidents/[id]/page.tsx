@@ -31,6 +31,7 @@ import HealthLogEdit from "@/components/HealthLogEdit";
 import PainLevelChart from "@/components/PainLevelChart";
 import PainLevelForm from "@/components/PainLevelForm";
 import Link from "next/link";
+import { authFetch } from "@/lib/authClient";
 
 export default function IncidentDetailPage() {
   const [incident, setIncident] = useState<HealthIncident | null>(null);
@@ -49,13 +50,11 @@ export default function IncidentDetailPage() {
 
   const fetchIncidentData = async () => {
     try {
-      const token = localStorage.getItem("auth-token");
 
       // Fetch incident details
-      const incidentResponse = await fetch(
+      const incidentResponse = await authFetch(
         `/api/incidents-query?_id=${incidentId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -64,10 +63,9 @@ export default function IncidentDetailPage() {
       setIncident(incidentData.data[0]);
 
       // Fetch associated logs
-      const logsResponse = await fetch(
+      const logsResponse = await authFetch(
         `/api/health-logs-query?incident_id=${incidentId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
